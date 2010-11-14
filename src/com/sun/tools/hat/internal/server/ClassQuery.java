@@ -33,9 +33,9 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.*;
-import com.sun.tools.hat.internal.util.ArraySorter;
-import com.sun.tools.hat.internal.util.Comparer;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Enumeration;
 
 /**
@@ -89,10 +89,8 @@ class ClassQuery extends QueryHandler {
 
         out.println("<h2>Instance Data Members:</h2>");
         JavaField[] ff = clazz.getFields().clone();
-        ArraySorter.sort(ff, new Comparer() {
-            public int compare(Object lhs, Object rhs) {
-                JavaField left = (JavaField) lhs;
-                JavaField right = (JavaField) rhs;
+        Arrays.sort(ff, new Comparator<JavaField>() {
+            public int compare(JavaField left, JavaField right) {
                 return left.getName().compareTo(right.getName());
             }
         });
@@ -151,7 +149,7 @@ class ClassQuery extends QueryHandler {
         }
         out.println("<h2>References to this object:</h2>");
         out.flush();
-        Enumeration referers = obj.getReferers();
+        Enumeration<JavaThing> referers = obj.getReferers();
         while (referers.hasMoreElements()) {
             JavaHeapObject ref = (JavaHeapObject) referers.nextElement();
             printThing(ref);

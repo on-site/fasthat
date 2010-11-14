@@ -32,10 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.oql.*;
-import com.sun.tools.hat.internal.util.ArraySorter;
-import com.sun.tools.hat.internal.util.Comparer;
 
 /**
  * This handles Object Query Language (OQL) queries.

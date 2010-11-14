@@ -58,10 +58,10 @@ class AllClassesQuery extends QueryHandler {
             startHtml("All Classes (including platform)");
         }
 
-        Iterator classes = snapshot.getClasses();
+        Iterator<JavaClass> classes = snapshot.getClasses();
         String lastPackage = null;
         while (classes.hasNext()) {
-            JavaClass clazz = (JavaClass) classes.next();
+            JavaClass clazz = classes.next();
             if (excludePlatform && PlatformClasses.isPlatformClass(clazz)) {
                 // skip this..
                 continue;

@@ -48,7 +48,7 @@ public class JavaByte extends JavaValue {
     }
 
     public String toString() {
-        return "0x" + Integer.toString(((int) value) & 0xff, 16);
+        return "0x" + Integer.toString(value & 0xff, 16);
     }
 
 }

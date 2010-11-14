@@ -60,7 +60,7 @@ public class JavaObjectArray extends JavaLazyReadObject {
             // Modern heap dumps do this
             JavaThing t = snapshot.findThing(classID);
             if (t instanceof JavaClass) {
-                clazz = (JavaClass) t;
+                clazz = t;
             }
         }
         if (!(clazz instanceof JavaClass)) {

@@ -47,13 +47,13 @@ public class RefsByTypeQuery extends QueryHandler {
         } else {
             Map<JavaClass, Long> referrersStat = new HashMap<JavaClass, Long>();
             final Map<JavaClass, Long> refereesStat = new HashMap<JavaClass, Long>();
-            Enumeration instances = clazz.getInstances(false);
+            Enumeration<JavaHeapObject> instances = clazz.getInstances(false);
             while (instances.hasMoreElements()) {
-                JavaHeapObject instance = (JavaHeapObject) instances.nextElement();
+                JavaHeapObject instance = instances.nextElement();
                 if (instance.getId() == -1) {
                     continue;
                 }
-                Enumeration e = instance.getReferers();
+                Enumeration<JavaThing> e = instance.getReferers();
                 while (e.hasMoreElements()) {
                     JavaHeapObject ref = (JavaHeapObject) e.nextElement();
                     JavaClass cl = ref.getClazz();
@@ -63,9 +63,9 @@ public class RefsByTypeQuery extends QueryHandler {
                     }
                     Long count = referrersStat.get(cl);
                     if (count == null) {
-                        count = new Long(1);
+                        count = 1L;
                     } else {
-                        count = new Long(count.longValue() + 1);
+                        ++count;
                     }
                     referrersStat.put(cl, count);
                 }
@@ -75,9 +75,9 @@ public class RefsByTypeQuery extends QueryHandler {
                             JavaClass cl = obj.getClazz();
                             Long count = refereesStat.get(cl);
                             if (count == null) {
-                                count = new Long(1);
+                                count = 1L;
                             } else {
-                                count = new Long(count.longValue() + 1);
+                                ++count;
                             }
                             refereesStat.put(cl, count);
                         }

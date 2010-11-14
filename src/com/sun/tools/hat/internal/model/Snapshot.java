@@ -81,7 +81,7 @@ public class Snapshot {
                  new HashMap<JavaHeapObject, Root>();
 
     // soft cache of finalizeable objects - lazily initialized
-    private SoftReference<Vector> finalizablesCache;
+    private SoftReference<Vector<JavaHeapObject>> finalizablesCache;
 
     // represents null reference
     private JavaThing nullThing;
@@ -383,7 +383,7 @@ public class Snapshot {
     /**
      * Return an Iterator of all of the classes in this snapshot.
      **/
-    public Iterator getClasses() {
+    public Iterator<JavaClass> getClasses() {
         // note that because classes is a TreeMap
         // classes are already sorted by name
         return classes.values().iterator();
@@ -395,8 +395,8 @@ public class Snapshot {
         return res;
     }
 
-    public synchronized Enumeration getFinalizerObjects() {
-        Vector obj;
+    public synchronized Enumeration<JavaHeapObject> getFinalizerObjects() {
+        Vector<JavaHeapObject> obj;
         if (finalizablesCache != null &&
             (obj = finalizablesCache.get()) != null) {
             return obj.elements();
@@ -418,7 +418,7 @@ public class Snapshot {
                 finalizables.add(referent);
             }
         }
-        finalizablesCache = new SoftReference<Vector>(finalizables);
+        finalizablesCache = new SoftReference<Vector<JavaHeapObject>>(finalizables);
         return finalizables.elements();
     }
 
@@ -455,7 +455,7 @@ public class Snapshot {
                 // Even though curr is in the rootset, we want to explore its
                 // referers, because they might be more interesting.
             }
-            Enumeration referers = curr.getReferers();
+            Enumeration<JavaThing> referers = curr.getReferers();
             while (referers.hasMoreElements()) {
                 JavaHeapObject t = (JavaHeapObject) referers.nextElement();
                 if (t != null && !visited.containsKey(t)) {
@@ -581,9 +581,9 @@ public class Snapshot {
     // Internals only below this point
     private Number makeId(long id) {
         if (identifierSize == 4) {
-            return new Integer((int)id);
+            return (int)id;
         } else {
-            return new Long(id);
+            return id;
         }
     }
 

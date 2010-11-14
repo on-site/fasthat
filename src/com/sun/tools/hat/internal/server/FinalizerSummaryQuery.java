@@ -37,7 +37,7 @@ import java.util.*;
 
 public class FinalizerSummaryQuery extends QueryHandler {
     public void run() {
-        Enumeration objs = snapshot.getFinalizerObjects();
+        Enumeration<JavaHeapObject> objs = snapshot.getFinalizerObjects();
         startHtml("Finalizer Summary");
 
         out.println("<p align='center'>");
@@ -74,12 +74,12 @@ public class FinalizerSummaryQuery extends QueryHandler {
         private long count;
     }
 
-    private void printFinalizerSummary(Enumeration objs) {
+    private void printFinalizerSummary(Enumeration<? extends JavaHeapObject> objs) {
         int count = 0;
         Map<JavaClass, HistogramElement> map = new HashMap<JavaClass, HistogramElement>();
 
         while (objs.hasMoreElements()) {
-            JavaHeapObject obj = (JavaHeapObject) objs.nextElement();
+            JavaHeapObject obj = objs.nextElement();
             count++;
             JavaClass clazz = obj.getClazz();
             if (! map.containsKey(clazz)) {

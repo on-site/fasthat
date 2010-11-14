@@ -158,7 +158,7 @@ public class JavaValueArray extends JavaLazyReadObject
     }
 
     public void resolve(Snapshot snapshot) {
-        if (clazz instanceof JavaClass) {
+        if (clazz != null) {
             return;
         }
         byte elementSig = getElementType();
@@ -352,7 +352,7 @@ public class JavaValueArray extends JavaLazyReadObject
         byte elementSignature = getElementType();
         if (elementSignature == 'C')  {
             result = new StringBuffer();
-            for (int i = 0; i < value.length; ) {
+            for (int i = 0; i < max; ) {
                 char val = charAt(i, value);
                 result.append(val);
                 i += 2;
@@ -364,7 +364,7 @@ public class JavaValueArray extends JavaLazyReadObject
             }
             result = new StringBuffer("{");
             int num = 0;
-            for (int i = 0; i < value.length; ) {
+            for (int i = 0; i < max; ) {
                 if (num > 0) {
                     result.append(", ");
                 }

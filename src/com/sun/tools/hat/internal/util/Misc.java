@@ -31,7 +31,6 @@
  */
 
 package com.sun.tools.hat.internal.util;
-import java.util.*;
 
 /**
  * Miscellaneous functions I couldn't think of a good place to put.
@@ -51,7 +50,7 @@ public class Misc {
         for (int s = 28; s >= 0; s -= 4) {
             buf[i++] = digits[(addr >> s) & 0xf];
         }
-        return "0x" + new String(buf);
+        return new StringBuilder("0x").append(buf).toString();
     }
 
     public final static String toHex(long addr) {

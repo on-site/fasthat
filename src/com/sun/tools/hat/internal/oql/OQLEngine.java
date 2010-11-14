@@ -204,10 +204,10 @@ public class OQLEngine {
                 evalMethod.invoke(engine, new Object[] { whereCode });
             }
 
-            if (q.className != null) {
-                Enumeration objects = clazz.getInstances(q.isInstanceOf);
+            if (clazz != null) {
+                Enumeration<JavaHeapObject> objects = clazz.getInstances(q.isInstanceOf);
                 while (objects.hasMoreElements()) {
-                    JavaHeapObject obj = (JavaHeapObject) objects.nextElement();
+                    JavaHeapObject obj = objects.nextElement();
                     Object[] args = new Object[] { wrapJavaObject(obj) };
                     boolean b = (whereCode == null);
                     if (!b) {

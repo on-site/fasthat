@@ -77,7 +77,7 @@ class MappedReadBuffer implements ReadBuffer {
         return prop == null || prop.equals("false");
     }
 
-    private void seek(long pos) throws IOException {
+    private void seek(long pos) {
         assert pos <= Integer.MAX_VALUE :  "position overflow";
         buf.position((int)pos);
     }

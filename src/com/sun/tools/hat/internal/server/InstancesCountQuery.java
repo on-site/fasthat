@@ -33,8 +33,9 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.*;
-import com.sun.tools.hat.internal.util.ArraySorter;
-import com.sun.tools.hat.internal.util.Comparer;
+
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Enumeration;
 
 /**
@@ -71,10 +72,8 @@ class InstancesCountQuery extends QueryHandler {
             System.arraycopy(classes, 0, tmp, 0, tmp.length);
             classes = tmp;
         }
-        ArraySorter.sort(classes, new Comparer() {
-            public int compare(Object lhso, Object rhso) {
-                JavaClass lhs = (JavaClass) lhso;
-                JavaClass rhs = (JavaClass) rhso;
+        Arrays.sort(classes, new Comparator<JavaClass>() {
+            public int compare(JavaClass lhs, JavaClass rhs) {
                 int diff = lhs.getInstancesCount(false)
                                 - rhs.getInstancesCount(false);
                 if (diff != 0) {
@@ -94,7 +93,6 @@ class InstancesCountQuery extends QueryHandler {
             }
         });
 
-        String lastPackage = null;
         long totalSize = 0;
         long instances = 0;
         for (int i = 0; i < classes.length; i++) {
@@ -111,10 +109,10 @@ class InstancesCountQuery extends QueryHandler {
             }
             out.print("</a> ");
             if (snapshot.getHasNewSet()) {
-                Enumeration objects = clazz.getInstances(false);
+                Enumeration<JavaHeapObject> objects = clazz.getInstances(false);
                 int newInst = 0;
                 while (objects.hasMoreElements()) {
-                    JavaHeapObject obj = (JavaHeapObject)objects.nextElement();
+                    JavaHeapObject obj = objects.nextElement();
                     if (obj.isNew()) {
                         newInst++;
                     }

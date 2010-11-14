@@ -32,11 +32,10 @@
 
 package com.sun.tools.hat.internal.server;
 
-import  java.util.Enumeration;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import com.sun.tools.hat.internal.model.*;
-import com.sun.tools.hat.internal.util.ArraySorter;
-import com.sun.tools.hat.internal.util.Comparer;
 
 /**
  *
@@ -99,12 +98,12 @@ class ObjectQuery extends ClassQuery {
         final JavaField[] fields = obj.getClazz().getFieldsForInstance();
         Integer[] hack = new Integer[things.length];
         for (int i = 0; i < things.length; i++) {
-            hack[i] = new Integer(i);
+            hack[i] = i;
         }
-        ArraySorter.sort(hack, new Comparer() {
-            public int compare(Object lhs, Object rhs) {
-                JavaField left = fields[((Integer) lhs).intValue()];
-                JavaField right = fields[((Integer) rhs).intValue()];
+        Arrays.sort(hack, new Comparator<Integer>() {
+            public int compare(Integer lhs, Integer rhs) {
+                JavaField left = fields[lhs];
+                JavaField right = fields[rhs];
                 return left.getName().compareTo(right.getName());
             }
         });

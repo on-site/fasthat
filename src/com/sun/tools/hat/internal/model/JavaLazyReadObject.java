@@ -83,7 +83,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
             ReadBuffer buf = getClazz().getReadBuffer();
             int idSize = getClazz().getIdentifierSize();
             if (idSize == 4) {
-                return ((long)buf.getInt(offset)) & Snapshot.SMALL_ID_MASK;
+                return buf.getInt(offset) & Snapshot.SMALL_ID_MASK;
             } else {
                 return buf.getLong(offset);
             }
@@ -100,9 +100,9 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
     // make Integer or Long for given object ID
     protected static Number makeId(long id) {
         if ((id & ~Snapshot.SMALL_ID_MASK) == 0) {
-            return new Integer((int)id);
+            return (int)id;
         } else {
-            return new Long(id);
+            return id;
         }
     }
 
@@ -119,7 +119,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
     protected final long objectIdAt(int index, byte[] data) {
         int idSize = getClazz().getIdentifierSize();
         if (idSize == 4) {
-            return ((long)intAt(index, data)) & Snapshot.SMALL_ID_MASK;
+            return intAt(index, data) & Snapshot.SMALL_ID_MASK;
         } else {
             return longAt(index, data);
         }
@@ -135,22 +135,22 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
     }
 
     protected static char charAt(int index, byte[] value) {
-        int b1 = ((int) value[index++] & 0xff);
-        int b2 = ((int) value[index++] & 0xff);
+        int b1 = value[index++] & 0xff;
+        int b2 = value[index++] & 0xff;
         return (char) ((b1 << 8) + b2);
     }
 
     protected static short shortAt(int index, byte[] value) {
-        int b1 = ((int) value[index++] & 0xff);
-        int b2 = ((int) value[index++] & 0xff);
+        int b1 = value[index++] & 0xff;
+        int b2 = value[index++] & 0xff;
         return (short) ((b1 << 8) + b2);
     }
 
     protected static int intAt(int index, byte[] value) {
-        int b1 = ((int) value[index++] & 0xff);
-        int b2 = ((int) value[index++] & 0xff);
-        int b3 = ((int) value[index++] & 0xff);
-        int b4 = ((int) value[index++] & 0xff);
+        int b1 = value[index++] & 0xff;
+        int b2 = value[index++] & 0xff;
+        int b3 = value[index++] & 0xff;
+        int b4 = value[index++] & 0xff;
         return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
     }
 
@@ -158,7 +158,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
         long val = 0;
         for (int j = 0; j < 8; j++) {
             val = val << 8;
-            int b = ((int)value[index++]) & 0xff;
+            int b = value[index++] & 0xff;
             val |= b;
         }
         return val;

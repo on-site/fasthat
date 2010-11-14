@@ -33,11 +33,9 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.Snapshot;
 
 import java.util.LinkedList;
 import java.io.InputStream;
-import java.io.Reader;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;

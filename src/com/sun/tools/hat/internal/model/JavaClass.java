@@ -229,11 +229,11 @@ public class JavaClass extends JavaHeapObject {
         return name.indexOf('[') != -1;
     }
 
-    public Enumeration getInstances(boolean includeSubclasses) {
+    public Enumeration<JavaHeapObject> getInstances(boolean includeSubclasses) {
         if (includeSubclasses) {
-            Enumeration res = instances.elements();
+            Enumeration<JavaHeapObject> res = instances.elements();
             for (int i = 0; i < subclasses.length; i++) {
-                res = new CompositeEnumeration(res,
+                res = new CompositeEnumeration<JavaHeapObject>(res,
                               subclasses[i].getInstances(true));
             }
             return res;
@@ -394,7 +394,7 @@ public class JavaClass extends JavaHeapObject {
         // get the size of each instance and sum it
         long result = 0;
         for (int i = 0; i < count; i++) {
-            JavaThing t = (JavaThing) instances.elementAt(i);
+            JavaThing t = instances.elementAt(i);
             result += t.getSize();
         }
         return result;

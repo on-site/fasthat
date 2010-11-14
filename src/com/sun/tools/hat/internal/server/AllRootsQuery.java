@@ -32,11 +32,10 @@
 
 package com.sun.tools.hat.internal.server;
 
-import java.util.Vector;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import com.sun.tools.hat.internal.model.*;
-import com.sun.tools.hat.internal.util.ArraySorter;
-import com.sun.tools.hat.internal.util.Comparer;
 
 /**
  *
@@ -53,10 +52,8 @@ class AllRootsQuery extends QueryHandler {
         startHtml("All Members of the Rootset");
 
         Root[] roots = snapshot.getRootsArray();
-        ArraySorter.sort(roots, new Comparer() {
-            public int compare(Object lhs, Object rhs) {
-                Root left = (Root) lhs;
-                Root right = (Root) rhs;
+        Arrays.sort(roots, new Comparator<Root>() {
+            public int compare(Root left, Root right) {
                 int d = left.getType() - right.getType();
                 if (d != 0) {
                     return -d;  // More interesting values are *higher*

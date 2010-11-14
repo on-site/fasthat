@@ -38,13 +38,13 @@ public class ScriptEnginePool {
     private static final int DEFAULT_CAPACITY = 10;
     private int capacity;
     private int size;
-    private LinkedList pool;
+    private LinkedList<ScriptEngine> pool;
     private ScriptEngineFactory fact;
     private boolean multiThreaded;
     
     public ScriptEnginePool(ScriptEngineFactory fact, int capacity) {
         
-        pool = new LinkedList();
+        pool = new LinkedList<ScriptEngine>();
         this.capacity = capacity;
         this.fact = fact;
         this.size = 0;
@@ -75,9 +75,9 @@ public class ScriptEnginePool {
             //there engines in pool awaiting reuse
             if (multiThreaded) {
                 //always return first (only) engine.. do not remove
-                return (ScriptEngine)pool.getFirst();
+                return pool.getFirst();
             } else {
-                return (ScriptEngine)pool.removeFirst();
+                return pool.removeFirst();
             }
         } else if (size < capacity) {
             //create a new engine
@@ -97,7 +97,7 @@ public class ScriptEnginePool {
                 } catch (InterruptedException e) {
                 }
             }
-            return (ScriptEngine)pool.removeFirst();
+            return pool.removeFirst();
         }
     }
     

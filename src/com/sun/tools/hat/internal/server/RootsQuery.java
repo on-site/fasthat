@@ -32,11 +32,10 @@
 
 package com.sun.tools.hat.internal.server;
 
-import java.util.Vector;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import com.sun.tools.hat.internal.model.*;
-import com.sun.tools.hat.internal.util.ArraySorter;
-import com.sun.tools.hat.internal.util.Comparer;
 
 /**
  *
@@ -72,10 +71,8 @@ class RootsQuery extends QueryHandler {
 
         ReferenceChain[] refs
             = snapshot.rootsetReferencesTo(target, includeWeak);
-        ArraySorter.sort(refs, new Comparer() {
-            public int compare(Object lhs, Object rhs) {
-                ReferenceChain left = (ReferenceChain) lhs;
-                ReferenceChain right = (ReferenceChain) rhs;
+        Arrays.sort(refs, new Comparator<ReferenceChain>() {
+            public int compare(ReferenceChain left, ReferenceChain right) {
                 Root leftR = left.getObj().getRoot();
                 Root rightR = right.getObj().getRoot();
                 int d = leftR.getType() - rightR.getType();

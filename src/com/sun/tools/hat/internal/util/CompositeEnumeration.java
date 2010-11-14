@@ -35,11 +35,11 @@ package com.sun.tools.hat.internal.util;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 
-public class CompositeEnumeration implements Enumeration {
-    Enumeration e1;
-    Enumeration e2;
+public class CompositeEnumeration<T> implements Enumeration<T> {
+    Enumeration<? extends T> e1;
+    Enumeration<? extends T> e2;
 
-    public CompositeEnumeration(Enumeration e1, Enumeration e2) {
+    public CompositeEnumeration(Enumeration<? extends T> e1, Enumeration<? extends T> e2) {
         this.e1 = e1;
         this.e2 = e2;
     }
@@ -48,7 +48,7 @@ public class CompositeEnumeration implements Enumeration {
         return e1.hasMoreElements() || e2.hasMoreElements();
     }
 
-    public Object nextElement() {
+    public T nextElement() {
         if (e1.hasMoreElements()) {
             return e1.nextElement();
         }

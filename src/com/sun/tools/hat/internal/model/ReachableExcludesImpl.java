@@ -35,11 +35,11 @@ package com.sun.tools.hat.internal.model;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import java.util.Hashtable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This represents a set of data members that should be excluded from the
@@ -52,9 +52,9 @@ import java.util.Hashtable;
  */
 public class ReachableExcludesImpl implements ReachableExcludes {
 
-    private File excludesFile;
-    private long lastModified;
-    private Hashtable methods;  // Hashtable<String, String>, used as a bag
+    private final File excludesFile;
+    private volatile long lastModified;
+    private volatile Set<String> methods;
 
     /**
      * Create a new ReachableExcludesImpl over the given file.  The file will be
@@ -77,7 +77,7 @@ public class ReachableExcludesImpl implements ReachableExcludes {
 
     private void readFile() {
         long lm = excludesFile.lastModified();
-        Hashtable<String, String> m = new Hashtable<String, String>();
+        Set<String> m = new HashSet<String>();
 
         try {
             BufferedReader r = new BufferedReader(new InputStreamReader(
@@ -85,7 +85,7 @@ public class ReachableExcludesImpl implements ReachableExcludes {
 
             String method;
             while ((method = r.readLine()) != null) {
-                m.put(method, method);
+                m.add(method);
             }
             lastModified = lm;
             methods = m;        // We want this to be atomic
@@ -100,6 +100,6 @@ public class ReachableExcludesImpl implements ReachableExcludes {
      */
     public boolean isExcluded(String fieldName) {
         readFileIfNeeded();
-        return methods.get(fieldName) != null;
+        return methods.contains(fieldName);
     }
 }

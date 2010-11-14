@@ -32,9 +32,6 @@
 
 package com.sun.tools.hat.internal.model;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
-
 
 /**
  *
@@ -47,7 +44,7 @@ import java.util.Hashtable;
  * a field.  This includes JavaHeapObject, JavaObjectRef, and JavaValue.
  */
 
-public abstract class JavaThing {
+public abstract class JavaThing implements Comparable<JavaThing> {
 
     protected JavaThing() {
     }

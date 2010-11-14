@@ -40,17 +40,8 @@ package com.sun.tools.hat.internal.server;
 
 import java.net.Socket;
 import java.net.ServerSocket;
-import java.net.InetAddress;
 
-import java.io.InputStream;
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.Writer;
-import java.io.BufferedWriter;
-import java.io.PrintWriter;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.BufferedOutputStream;
 
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;

@@ -70,7 +70,7 @@ public class DeTagifier {
         int state = START;
         while (-1 != (i = reader.read())) {
             //ignore control-M
-            if (i == (int)'\r') {
+            if (i == '\r') {
                 continue;
             }
             
@@ -86,8 +86,7 @@ public class DeTagifier {
         return charHolder.getString();
     }
     
-    public int processChar(int state, char c, CharHolder charHolder)
-                throws IOException {
+    public int processChar(int state, char c, CharHolder charHolder) {
                     
          switch (state) {
              case START:

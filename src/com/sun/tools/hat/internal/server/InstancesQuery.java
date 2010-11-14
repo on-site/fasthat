@@ -73,11 +73,11 @@ class InstancesQuery extends QueryHandler {
             out.print("<strong>");
             printClass(clazz);
             out.print("</strong><br><br>");
-            Enumeration objects = clazz.getInstances(includeSubclasses);
+            Enumeration<JavaHeapObject> objects = clazz.getInstances(includeSubclasses);
             long totalSize = 0;
             long instances = 0;
             while (objects.hasMoreElements()) {
-                JavaHeapObject obj = (JavaHeapObject) objects.nextElement();
+                JavaHeapObject obj = objects.nextElement();
                 if (newObjects && !obj.isNew())
                     continue;
                 printThing(obj);
