@@ -34,8 +34,8 @@ package com.sun.tools.hat.internal.oql;
 
 import com.sun.tools.hat.internal.model.*;
 import java.io.*;
-import java.lang.reflect.*;
 import java.util.*;
+import javax.script.*;
 
 /**
  * This is Object Query Language Interpreter
@@ -43,20 +43,9 @@ import java.util.*;
  */
 public class OQLEngine {
     static {
-        try {
-            // Do we have javax.script support?
-            // create ScriptEngineManager
-            Class<?> managerClass = Class.forName("javax.script.ScriptEngineManager");
-            Object manager = managerClass.newInstance();
-
-            // create JavaScript engine
-            Method getEngineMethod = managerClass.getMethod("getEngineByName",
-                                new Class[] { String.class });
-            Object jse = getEngineMethod.invoke(manager, new Object[] {"js"});
-            oqlSupported = (jse != null);
-        } catch (Exception exp) {
-            oqlSupported = false;
-        }
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine jse = manager.getEngineByName("rhino-nonjdk");
+        oqlSupported = jse != null;
     }
 
     // check OQL is supported or not before creating OQLEngine
@@ -199,9 +188,9 @@ public class OQLEngine {
 
         // compile select expression and where condition
         try {
-            evalMethod.invoke(engine, new Object[] { selectCode });
+            evalScript(selectCode);
             if (whereCode != null) {
-                evalMethod.invoke(engine, new Object[] { whereCode });
+                evalScript(whereCode);
             }
 
             if (clazz != null) {
@@ -228,7 +217,7 @@ public class OQLEngine {
                 }
             } else {
                 // simple "select <expr>" query
-                Object select = call("__select__", new Object[] {});
+                Object select = call("__select__");
                 visitor.visit(select);
             }
         } catch (Exception e) {
@@ -236,20 +225,20 @@ public class OQLEngine {
         }
     }
 
-    public Object evalScript(String script) throws Exception {
-        return evalMethod.invoke(engine, new Object[] { script });
+    public Object evalScript(String script) throws ScriptException {
+        return engine.eval(script);
     }
 
-    public Object wrapJavaObject(JavaHeapObject obj) throws Exception {
-        return call("wrapJavaObject", new Object[] { obj });
+    public Object wrapJavaObject(JavaHeapObject obj) throws ScriptException, NoSuchMethodException {
+        return call("wrapJavaObject", obj);
     }
 
-    public Object toHtml(Object obj) throws Exception {
-        return call("toHtml", new Object[] { obj });
+    public Object toHtml(Object obj) throws ScriptException, NoSuchMethodException {
+        return call("toHtml", obj);
     }
 
-    public Object call(String func, Object[] args) throws Exception {
-        return invokeMethod.invoke(engine, new Object[] { func, args });
+    public Object call(String func, Object... args) throws ScriptException, NoSuchMethodException {
+        return ((Invocable) engine).invokeFunction(func, args);
     }
 
     private static void debugPrint(String msg) {
@@ -258,40 +247,11 @@ public class OQLEngine {
 
     private void init(Snapshot snapshot) throws RuntimeException {
         this.snapshot = snapshot;
+        ScriptEngineManager manager = new ScriptEngineManager();
         try {
-            // create ScriptEngineManager
-            Class<?> managerClass = Class.forName("javax.script.ScriptEngineManager");
-            Object manager = managerClass.newInstance();
-
-            // create JavaScript engine
-            Method getEngineMethod = managerClass.getMethod("getEngineByName",
-                                new Class[] { String.class });
-            engine = getEngineMethod.invoke(manager, new Object[] {"js"});
-
-            // initialize engine with init file (hat.js)
-            InputStream strm = getInitStream();
-            Class<?> engineClass = Class.forName("javax.script.ScriptEngine");
-            evalMethod = engineClass.getMethod("eval",
-                                new Class[] { Reader.class });
-            evalMethod.invoke(engine, new Object[] {new InputStreamReader(strm)});
-
-            // initialize ScriptEngine.eval(String) and
-            // Invocable.invokeFunction(String, Object[]) methods.
-            Class<?> invocableClass = Class.forName("javax.script.Invocable");
-
-            evalMethod = engineClass.getMethod("eval",
-                                  new Class[] { String.class });
-            invokeMethod = invocableClass.getMethod("invokeFunction",
-                                  new Class[] { String.class, Object[].class });
-
-            // initialize ScriptEngine.put(String, Object) method
-            Method putMethod = engineClass.getMethod("put",
-                                  new Class[] { String.class, Object.class });
-
-            // call ScriptEngine.put to initialize built-in heap object
-            putMethod.invoke(engine, new Object[] {
-                        "heap", call("wrapHeapSnapshot", new Object[] { snapshot })
-                    });
+            engine = manager.getEngineByName("rhino-nonjdk");
+            engine.eval(new InputStreamReader(getInitStream()));
+            engine.put("heap", call("wrapHeapSnapshot", snapshot));
         } catch (Exception e) {
             if (debug) e.printStackTrace();
             throw new RuntimeException(e);
@@ -302,10 +262,8 @@ public class OQLEngine {
         return getClass().getResourceAsStream("/com/sun/tools/hat/resources/hat.js");
     }
 
-    private Object engine;
-    private Method evalMethod;
-    private Method invokeMethod;
+    private ScriptEngine engine;
     private Snapshot snapshot;
     private static boolean debug = false;
-    private static boolean oqlSupported;
+    private static final boolean oqlSupported;
 }
