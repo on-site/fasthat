@@ -53,7 +53,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
         implements  Invocable, Compilable {
     
     public static final boolean DEBUG = false;
-    private static final String TOPLEVEL_SCRIPT_NAME = "META-INF/toplevel.js";
+    private static final String TOPLEVEL_SCRIPT_NAME = "resources/toplevel.js";
 
     /* Scope where standard JavaScript objects and our
      * extensions to it are stored. Note that these are not
@@ -291,6 +291,15 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             "    }                                         \n" +
             "    context.getWriter().println(String(str)); \n" +
             "}";
+    private static final Script printScript;
+    static {
+        Context cx = enterContext();
+        try {
+            printScript = cx.compileString(printSource, "print", 1, null);
+        } finally {
+            cx.exit();
+        }
+    }
     
     Scriptable getRuntimeScope(ScriptContext ctxt) {
         if (ctxt == null) {
@@ -310,7 +319,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
         // define "print" function in the new scope
         Context cx = enterContext();
         try {
-            cx.evaluateString(newScope, printSource, "print", 1, null);
+            printScript.exec(cx, newScope);
         } finally {
             cx.exit();
         }
@@ -332,9 +341,8 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             if (filename == null) {
                 filename = "<Unknown Source>";
             }
-            
-            Scriptable scope = getRuntimeScope(context);
-            Script scr = cx.compileReader(scope, preProcessScriptSource(script), filename, 1, null);
+
+            Script scr = cx.compileReader(preProcessScriptSource(script), filename, 1, null);
             ret = new RhinoCompiledScript(this, scr);
         } catch (Exception e) {
             if (DEBUG) e.printStackTrace();
@@ -386,7 +394,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
     }
 
     protected void processTopLevelScript(String scriptName, Context cx) {    
-        InputStream toplevelScript = this.getClass().getClassLoader().getResourceAsStream(scriptName);
+        InputStream toplevelScript = this.getClass().getResourceAsStream(scriptName);
         if (toplevelScript != null) {
             Reader reader = new InputStreamReader(toplevelScript);
             try {
