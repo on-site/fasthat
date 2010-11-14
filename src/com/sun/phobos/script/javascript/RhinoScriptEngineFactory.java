@@ -174,30 +174,19 @@ public class RhinoScriptEngineFactory extends ScriptEngineFactoryBase {
         System.out.println(fact.getParameter(ScriptEngine.ENGINE_VERSION));
     }
 
-    private static List<String> names;
-    private static List<String> mimeTypes;
-    private static List<String> extensions;
+    private static final List<String> names;
+    private static final List<String> mimeTypes;
+    private static final List<String> extensions;
     
     static {
-        names = new ArrayList<String>(7);
-        names.add("rhino-nonjdk");
-        names.add("js");
-        names.add("rhino");
-        names.add("JavaScript");
-        names.add("javascript");
-        names.add("ECMAScript");
-        names.add("ecmascript");
-        names = Collections.unmodifiableList(names);
+        names = Collections.unmodifiableList(Arrays.asList("rhino-nonjdk",
+                "js", "rhino", "JavaScript", "javascript", "ECMAScript",
+                "ecmascript"));
 
-        mimeTypes = new ArrayList<String>(4);
-        mimeTypes.add("application/javascript");
-        mimeTypes.add("application/ecmascript");
-        mimeTypes.add("text/javascript");
-        mimeTypes.add("text/ecmascript");
-        mimeTypes = Collections.unmodifiableList(mimeTypes);
+        mimeTypes = Collections.unmodifiableList(Arrays.asList(
+                "application/javascript", "application/ecmascript",
+                "text/javascript", "text/ecmascript"));
 
-        extensions = new ArrayList<String>(1);
-        extensions.add("js");
-        extensions = Collections.unmodifiableList(extensions);
+        extensions = Collections.unmodifiableList(Arrays.asList("js"));
     }
 }

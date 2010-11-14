@@ -25,7 +25,6 @@
 package com.sun.phobos.script.javascript;
 
 import org.mozilla.javascript.*;
-import java.util.*;
 
 /**
  * JSAdapter is java.lang.reflect.Proxy equivalent for JavaScript. JSAdapter
@@ -69,7 +68,7 @@ import java.util.*;
  * @author A. Sundararajan
  * @since 1.6
  */
-public final class JSAdapter implements Scriptable, Function {
+public final class JSAdapter implements Function {
     private JSAdapter(Scriptable obj) {
         setAdaptee(obj);
     }
@@ -242,7 +241,7 @@ public final class JSAdapter implements Scriptable, Function {
         }
     }
     
-    public Object getDefaultValue(Class hint) {
+    public Object getDefaultValue(Class<?> hint) {
         return getAdaptee().getDefaultValue(hint);
     }
     

@@ -66,7 +66,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
     /* map used to store indexed properties in engine scope
      * refer to comment on 'indexedProps' in ExternalScriptable.java.
      */
-    private Map indexedProps;
+    private Map<Object, Object> indexedProps;
 
     private ScriptEngineFactory factory;
     private InterfaceImplementor implementor;
@@ -128,17 +128,17 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             
             processAllTopLevelScripts(cx);
         } finally {
-            cx.exit();
+            Context.exit();
         }
         
-        indexedProps = new HashMap();
+        indexedProps = new HashMap<Object, Object>();
  
         //construct object used to implement getInterface
         implementor = new InterfaceImplementor(this) {
                 protected Object convertResult(Method method, Object res)
                                             throws ScriptException {
-                    Class desiredType = method.getReturnType();
-                    if (desiredType == Void.TYPE) {
+                    Class<?> desiredType = method.getReturnType();
+                    if (desiredType == void.class) {
                         return null;
                     } else {
                         return Context.jsToJava(res, desiredType);
@@ -185,7 +185,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
         } catch (IOException ee) {
             throw new ScriptException(ee);
         } finally {
-            cx.exit();
+            Context.exit();
         }
         
         return unwrapReturnValue(ret);
@@ -226,7 +226,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             }
 
             if (thiz != null && !(thiz instanceof Scriptable)) {
-                thiz = cx.toObject(thiz, topLevel);
+                thiz = Context.toObject(thiz, topLevel);
             }
             
             Scriptable engineScope = getRuntimeScope(context);
@@ -258,7 +258,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             int line = (line = re.lineNumber()) == 0 ? -1 : line;
             throw new ExtendedScriptException(re, re.toString(), re.sourceName(), line);
         } finally {
-            cx.exit();
+            Context.exit();
         }
     }
    
@@ -297,7 +297,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
         try {
             printScript = cx.compileString(printSource, "print", 1, null);
         } finally {
-            cx.exit();
+            Context.exit();
         }
     }
     
@@ -321,7 +321,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
         try {
             printScript.exec(cx, newScope);
         } finally {
-            cx.exit();
+            Context.exit();
         }
         return newScope;
     }
@@ -348,7 +348,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
             if (DEBUG) e.printStackTrace();
             throw new ScriptException(e);
         } finally {
-            cx.exit();
+            Context.exit();
         }
         return ret;
     }
@@ -439,7 +439,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
                            ScriptableObject.getTopLevelScope(thisObj));
             }
         }
-        return cx.getUndefinedValue();
+        return Context.getUndefinedValue();
     }
    
     /** 
@@ -471,7 +471,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
                 return res;
             }
         }
-        return cx.getUndefinedValue();
+        return Context.getUndefinedValue();
     }
  
     /**

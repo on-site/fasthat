@@ -50,7 +50,7 @@ final class ExternalScriptable implements Scriptable {
      * to store such variables of this scope. This map is not exposed to
      * JSR 223 API. We can just script objects "as is" and need not convert.
      */
-    private Map indexedProps;
+    private Map<Object, Object> indexedProps;
 
     // my prototype
     private Scriptable prototype;
@@ -58,10 +58,10 @@ final class ExternalScriptable implements Scriptable {
     private Scriptable parent;
 
     ExternalScriptable(ScriptContext context) {
-        this(context, new HashMap());
+        this(context, new HashMap<Object, Object>());
     }
 
-    ExternalScriptable(ScriptContext context, Map indexedProps) {
+    ExternalScriptable(ScriptContext context, Map<Object, Object> indexedProps) {
         if (context == null) {
             throw new NullPointerException("context is null");
         }
@@ -71,10 +71,6 @@ final class ExternalScriptable implements Scriptable {
 
     ScriptContext getContext() {
         return context;
-    }
-
-    private boolean isInIndexedProps(Object key) {
-        return indexedProps != null && indexedProps.containsKey(key);
     }
 
     private boolean isEmpty(String name) {
@@ -126,7 +122,7 @@ final class ExternalScriptable implements Scriptable {
      * @return the value of the property (may be null), or NOT_FOUND
      */
     public synchronized Object get(int index, Scriptable start) {
-        Integer key = new Integer(index);
+        Integer key = index;
         if (indexedProps.containsKey(index)) {
             return indexedProps.get(key);
         } else {
@@ -159,7 +155,7 @@ final class ExternalScriptable implements Scriptable {
      * @return true if and only if the property was found in the object
      */
     public synchronized boolean has(int index, Scriptable start) {
-        Integer key = new Integer(index);
+        Integer key = index;
         return indexedProps.containsKey(key);
     }
 
@@ -200,7 +196,7 @@ final class ExternalScriptable implements Scriptable {
     public void put(int index, Scriptable start, Object value) {
         if (start == this) {
             synchronized (this) {
-                indexedProps.put(new Integer(index), value);
+                indexedProps.put(index, value);
             }
         } else {
             start.put(index, start, value);
@@ -235,7 +231,7 @@ final class ExternalScriptable implements Scriptable {
      * @param index the numeric index for the property
      */
     public void delete(int index) {
-        indexedProps.remove(new Integer(index));
+        indexedProps.remove(index);
     }
 
     /**
@@ -305,10 +301,10 @@ final class ExternalScriptable implements Scriptable {
      * @param hint the type hint
      * @return the default value
      */
-    public Object getDefaultValue(Class typeHint) {
+    public Object getDefaultValue(Class<?> typeHint) {
         for (int i=0; i < 2; i++) {
             boolean tryToString;
-            if (typeHint == ScriptRuntime.StringClass) {
+            if (typeHint == String.class) {
                 tryToString = (i == 0);
             } else {
                 tryToString = (i == 1);
@@ -321,31 +317,30 @@ final class ExternalScriptable implements Scriptable {
                 args = ScriptRuntime.emptyArgs;
             } else {
                 methodName = "valueOf";
-                args = new Object[1];
                 String hint;
                 if (typeHint == null) {
                     hint = "undefined";
-                } else if (typeHint == ScriptRuntime.StringClass) {
+                } else if (typeHint == String.class) {
                     hint = "string";
-                } else if (typeHint == ScriptRuntime.ScriptableClass) {
+                } else if (typeHint == Scriptable.class) {
                     hint = "object";
-                } else if (typeHint == ScriptRuntime.FunctionClass) {
+                } else if (typeHint == Function.class) {
                     hint = "function";
-                } else if (typeHint == ScriptRuntime.BooleanClass
-                           || typeHint == Boolean.TYPE)
+                } else if (typeHint == Boolean.class
+                           || typeHint == boolean.class)
                 {
                     hint = "boolean";
-                } else if (typeHint == ScriptRuntime.NumberClass ||
-                         typeHint == ScriptRuntime.ByteClass ||
-                         typeHint == Byte.TYPE ||
-                         typeHint == ScriptRuntime.ShortClass ||
-                         typeHint == Short.TYPE ||
-                         typeHint == ScriptRuntime.IntegerClass ||
-                         typeHint == Integer.TYPE ||
-                         typeHint == ScriptRuntime.FloatClass ||
-                         typeHint == Float.TYPE ||
-                         typeHint == ScriptRuntime.DoubleClass ||
-                         typeHint == Double.TYPE)
+                } else if (typeHint == Number.class ||
+                         typeHint == Byte.class ||
+                         typeHint == byte.class ||
+                         typeHint == Short.class ||
+                         typeHint == short.class ||
+                         typeHint == Integer.class ||
+                         typeHint == int.class ||
+                         typeHint == Float.class ||
+                         typeHint == float.class ||
+                         typeHint == Double.class ||
+                         typeHint == double.class)
                 {
                     hint = "number";
                 } else {
@@ -353,7 +348,7 @@ final class ExternalScriptable implements Scriptable {
                         "Invalid JavaScript value of type " + 
                         typeHint.toString());
                 }
-                args[0] = hint;
+                args = new Object[] {hint};
             }
             Object v = ScriptableObject.getProperty(this, methodName);
             if (!(v instanceof Function))
@@ -363,14 +358,14 @@ final class ExternalScriptable implements Scriptable {
             try {
                 v = fun.call(cx, fun.getParentScope(), this, args);
             } finally {
-                cx.exit();
+                Context.exit();
             }
             if (v != null) {
                 if (!(v instanceof Scriptable)) {
                     return v;
                 }
-                if (typeHint == ScriptRuntime.ScriptableClass
-                    || typeHint == ScriptRuntime.FunctionClass)
+                if (typeHint == Scriptable.class
+                    || typeHint == Function.class)
                 {
                     return v;
                 }

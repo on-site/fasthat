@@ -25,7 +25,6 @@
 package com.sun.phobos.script.javascript;
 import javax.script.*;
 import java.util.*;
-import org.mozilla.javascript.*;
 import com.sun.phobos.script.util.*;
 
 /**
@@ -33,9 +32,6 @@ import com.sun.phobos.script.util.*;
  *
  */
 public class EmbeddedRhinoScriptEngineFactory extends ScriptEngineFactoryBase {
-
-    private Properties properties;
-    private boolean initialized;
         
     public EmbeddedRhinoScriptEngineFactory() {
     }
@@ -68,10 +64,6 @@ public class EmbeddedRhinoScriptEngineFactory extends ScriptEngineFactoryBase {
         } else {
             throw new IllegalArgumentException("Invalid key");
         }
-    }
-
-    public void setProperties(Properties properties) {
-        this.properties = properties;
     }
 
     public ScriptEngine getScriptEngine() {
@@ -119,24 +111,18 @@ public class EmbeddedRhinoScriptEngineFactory extends ScriptEngineFactoryBase {
         System.out.println(fact.getParameter(ScriptEngine.ENGINE_VERSION));
     }
     
-    private static List<String> names;
-    private static List<String> mimeTypes;
-    private static List<String> extensions;
+    private static final List<String> names;
+    private static final List<String> mimeTypes;
+    private static final List<String> extensions;
     
     static {
-        names = new ArrayList<String>(6);
-        names.add("ejs");
-        names.add("EmbeddedJavaScript");
-        names.add("embeddedjavascript");
-        names = Collections.unmodifiableList(names);
+        names = Collections.unmodifiableList(Arrays.asList("ejs",
+                "EmbeddedJavaScript", "embeddedjavascript"));
 
-        mimeTypes = new ArrayList<String>(4);
-        mimeTypes.add("application/embeddedjavascript");
-        mimeTypes.add("text/embeddedjavascript");
-        mimeTypes = Collections.unmodifiableList(mimeTypes);
+        mimeTypes = Collections.unmodifiableList(Arrays.asList(
+                "application/embeddedjavascript",
+                "text/embeddedjavascript"));
 
-        extensions = new ArrayList<String>(1);
-        extensions.add("ejs");
-        extensions = Collections.unmodifiableList(extensions);
+        extensions = Collections.unmodifiableList(Arrays.asList("ejs"));
     }
 }

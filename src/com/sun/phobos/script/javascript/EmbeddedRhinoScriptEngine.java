@@ -27,7 +27,6 @@ package com.sun.phobos.script.javascript;
 import com.sun.phobos.script.util.*;
 import javax.script.*;
 import java.io.*;
-import java.util.*;
 
 /**
  * Embedded javascript interpreter.
