@@ -31,9 +31,6 @@ import javax.script.ScriptException;
  * the cause of an exception to be set.
  */
 public class ExtendedScriptException extends ScriptException {
-    
-    private Throwable cause;
-    
     public ExtendedScriptException(
             Throwable cause,
             String message,
@@ -41,24 +38,24 @@ public class ExtendedScriptException extends ScriptException {
             int lineNumber,
             int columnNumber) {
         super(message, fileName, lineNumber, columnNumber);
-        this.cause = cause;
+        initCause(cause);
     }
 
     public ExtendedScriptException(String s) {
         super(s);
     }
-    
+
     public ExtendedScriptException(Exception e) {
         super(e);
     }
-    
+
     public ExtendedScriptException(String message, String fileName, int lineNumber) {
         super(message, fileName, lineNumber);
     }
-    
+
     public ExtendedScriptException(Throwable cause, String message, String fileName, int lineNumber) {
         super(message, fileName, lineNumber);
-        this.cause = cause;
+        initCause(cause);
     }
 
     public ExtendedScriptException(String message,
@@ -66,9 +63,5 @@ public class ExtendedScriptException extends ScriptException {
             int lineNumber,
             int columnNumber) {
         super(message, fileName, lineNumber, columnNumber);
-    }
-    
-    public Throwable getCause() {
-        return cause;
     }
 }

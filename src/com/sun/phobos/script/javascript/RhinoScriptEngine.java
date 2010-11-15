@@ -213,12 +213,19 @@ public class RhinoScriptEngine extends AbstractScriptEngine
     //Invocable methods
     public Object invokeFunction(String name, Object... args)
     throws ScriptException, NoSuchMethodException {
-        return invokeMethod(null, name, args);
+        return invoke(null, name, args);
     }
     
     public Object invokeMethod(Object thiz, String name, Object... args)
     throws ScriptException, NoSuchMethodException {
-        
+        if (thiz == null) {
+            throw new IllegalArgumentException("script object can not be null");
+        }
+        return invoke(thiz, name, args);
+    }
+
+    private Object invoke(Object thiz, String name, Object... args)
+    throws ScriptException, NoSuchMethodException {
         Context cx = enterContext();
         try {
             if (name == null) {
@@ -283,13 +290,19 @@ public class RhinoScriptEngine extends AbstractScriptEngine
     }
 
     private static final String printSource = 
-            "function print(str) {                         \n" +
+            "function print(str, newline) {                \n" +
             "    if (typeof(str) == 'undefined') {         \n" +
             "        str = 'undefined';                    \n" +
             "    } else if (str == null) {                 \n" +
             "        str = 'null';                         \n" +
             "    }                                         \n" +
-            "    context.getWriter().println(String(str)); \n" +
+            "    var out = context.getWriter();            \n" +
+            "    out.print(String(str));                   \n" +
+            "    if (newline) out.print('\\n');            \n" +
+            "    out.flush();                              \n" +
+            "}\n" +
+            "function println(str) {                       \n" +
+            "    print(str, true);                         \n" +
             "}";
     private static final Script printScript;
     static {
@@ -316,7 +329,7 @@ public class RhinoScriptEngine extends AbstractScriptEngine
         // define "context" variable in the new scope
         newScope.put("context", newScope, ctxt);
        
-        // define "print" function in the new scope
+        // define "print", "println" functions in the new scope
         Context cx = enterContext();
         try {
             printScript.exec(cx, newScope);

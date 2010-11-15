@@ -156,7 +156,23 @@ public class RhinoScriptEngineFactory extends ScriptEngineFactoryBase {
     }
     
     public String getOutputStatement(String toDisplay) {
-        return "print(" + toDisplay + ")";
+        StringBuilder buf = new StringBuilder();
+        int len = toDisplay.length();
+        buf.append("print(\"");
+        for (int i = 0; i < len; i++) {
+            char ch = toDisplay.charAt(i);
+            switch (ch) {
+            case '"':
+            case '\\':
+                buf.append('\\');
+                // $FALL-THROUGH$
+            default:
+                buf.append(ch);
+                break;
+            }
+        }
+        buf.append("\")");
+        return buf.toString();
     }
     
     public String getProgram(String... statements) {
