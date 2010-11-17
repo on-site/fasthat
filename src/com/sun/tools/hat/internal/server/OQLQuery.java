@@ -94,7 +94,7 @@ class OQLQuery extends QueryHandler {
                              out.println("</pre>");
                          }
                          out.println("</td></tr>");
-                         return false;
+                         return out.checkError();
                      }
                  });
             out.println("</table>");
@@ -106,5 +106,5 @@ class OQLQuery extends QueryHandler {
         }
     }
 
-    private OQLEngine engine;
+    private final OQLEngine engine;
 }

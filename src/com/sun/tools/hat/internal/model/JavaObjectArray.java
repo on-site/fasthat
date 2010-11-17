@@ -114,10 +114,9 @@ public class JavaObjectArray extends JavaLazyReadObject {
 
     public void visitReferencedObjects(JavaHeapObjectVisitor v) {
         super.visitReferencedObjects(v);
-        JavaThing[] elements = getElements();
-        for (int i = 0; i < elements.length; i++) {
-            if (elements[i] != null && elements[i] instanceof JavaHeapObject) {
-                v.visit((JavaHeapObject) elements[i]);
+        for (JavaThing element : getElements()) {
+            if (element != null && element instanceof JavaHeapObject) {
+                v.visit((JavaHeapObject) element);
             }
         }
     }

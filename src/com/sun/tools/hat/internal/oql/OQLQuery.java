@@ -46,9 +46,9 @@ class OQLQuery {
         this.whereExpr = whereExpr;
     }
 
-    String   selectExpr;
-    boolean  isInstanceOf;
-    String   className;
-    String   identifier;
-    String   whereExpr;
+    final String   selectExpr;
+    final boolean  isInstanceOf;
+    final String   className;
+    final String   identifier;
+    final String   whereExpr;
 }

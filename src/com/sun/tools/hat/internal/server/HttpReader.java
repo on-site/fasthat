@@ -53,17 +53,21 @@ import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 
 public class HttpReader implements Runnable {
+    private class EngineThreadLocal extends ThreadLocal<OQLEngine> {
+        @Override
+        protected OQLEngine initialValue() {
+            return new OQLEngine(snapshot);
+        }
+    }
 
-
-    private Socket socket;
+    private final Socket socket;
     private PrintWriter out;
-    private Snapshot snapshot;
-    private OQLEngine engine;
+    private final Snapshot snapshot;
+    private final EngineThreadLocal engine = new EngineThreadLocal();
 
-    public HttpReader (Socket s, Snapshot snapshot, OQLEngine engine) {
+    public HttpReader (Socket s, Snapshot snapshot) {
         this.socket = s;
         this.snapshot = snapshot;
-        this.engine = engine;
     }
 
     public void run() {
@@ -82,7 +86,7 @@ public class HttpReader implements Runnable {
                 outputError("Protocol error");
             }
             int data;
-            StringBuffer queryBuf = new StringBuffer();
+            StringBuilder queryBuf = new StringBuilder();
             while ((data = in.read()) != -1 && data != ' ') {
                 char ch = (char) data;
                 queryBuf.append(ch);
@@ -94,23 +98,23 @@ public class HttpReader implements Runnable {
                 outputError("The heap snapshot is still being read.");
                 return;
             } else if (query.equals("/")) {
-                handler = new AllClassesQuery(true, engine != null);
+                handler = new AllClassesQuery(true, OQLEngine.isOQLSupported());
                 handler.setUrlStart("");
                 handler.setQuery("");
             } else if (query.startsWith("/oql/")) {
-                if (engine != null) {
-                    handler = new OQLQuery(engine);
+                if (OQLEngine.isOQLSupported()) {
+                    handler = new OQLQuery(engine.get());
                     handler.setUrlStart("");
                     handler.setQuery(query.substring(5));
                 }
             } else if (query.startsWith("/oqlhelp/")) {
-                if (engine != null) {
+                if (OQLEngine.isOQLSupported()) {
                     handler = new OQLHelp();
                     handler.setUrlStart("");
                     handler.setQuery("");
                 }
             } else if (query.equals("/allClassesWithPlatform/")) {
-                handler = new AllClassesQuery(false, engine != null);
+                handler = new AllClassesQuery(false, OQLEngine.isOQLSupported());
                 handler.setUrlStart("../");
                 handler.setQuery("");
             } else if (query.equals("/showRoots/")) {

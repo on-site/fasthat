@@ -36,7 +36,6 @@ import com.sun.tools.hat.internal.model.*;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Enumeration;
 
 /**
  *
@@ -80,10 +79,9 @@ class ClassQuery extends QueryHandler {
         printThing(clazz.getProtectionDomain());
 
         out.println("<h2>Subclasses:</h2>");
-        JavaClass[] sc = clazz.getSubclasses();
-        for (int i = 0; i < sc.length; i++) {
+        for (JavaClass sc : clazz.getSubclasses()) {
             out.print("    ");
-            printClass(sc[i]);
+            printClass(sc);
             out.println("<br>");
         }
 
@@ -94,16 +92,16 @@ class ClassQuery extends QueryHandler {
                 return left.getName().compareTo(right.getName());
             }
         });
-        for (int i = 0; i < ff.length; i++) {
+        for (JavaField f : ff) {
             out.print("    ");
-            printField(ff[i]);
+            printField(f);
             out.println("<br>");
         }
 
         out.println("<h2>Static Data Members:</h2>");
         JavaStatic[] ss = clazz.getStatics();
-        for (int i = 0; i < ss.length; i++) {
-            printStatic(ss[i]);
+        for (JavaStatic s : ss) {
+            printStatic(s);
             out.println("<br>");
         }
 
@@ -149,9 +147,7 @@ class ClassQuery extends QueryHandler {
         }
         out.println("<h2>References to this object:</h2>");
         out.flush();
-        Enumeration<JavaThing> referers = obj.getReferers();
-        while (referers.hasMoreElements()) {
-            JavaHeapObject ref = (JavaHeapObject) referers.nextElement();
+        for (JavaHeapObject ref : obj.getReferers()) {
             printThing(ref);
             print (" : " + ref.describeReferenceTo(obj, snapshot));
             // If there are more than one references, this only gets the

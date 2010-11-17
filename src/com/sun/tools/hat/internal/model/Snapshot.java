@@ -57,17 +57,17 @@ public class Snapshot {
     private static final JavaStatic[] EMPTY_STATIC_ARRAY = new JavaStatic[0];
 
     // all heap objects
-    private Hashtable<Number, JavaHeapObject> heapObjects =
-                 new Hashtable<Number, JavaHeapObject>();
+    private final Map<Number, JavaHeapObject> heapObjects =
+                 new HashMap<Number, JavaHeapObject>();
 
-    private Hashtable<Number, JavaClass> fakeClasses =
-                 new Hashtable<Number, JavaClass>();
+    private final Map<Number, JavaClass> fakeClasses =
+                 new HashMap<Number, JavaClass>();
 
     // all Roots in this Snapshot
-    private Vector<Root> roots = new Vector<Root>();
+    private final List<Root> roots = new ArrayList<Root>();
 
     // name-to-class map
-    private Map<String, JavaClass> classes =
+    private final Map<String, JavaClass> classes =
                  new TreeMap<String, JavaClass>();
 
     // new objects relative to a baseline - lazily initialized
@@ -77,11 +77,11 @@ public class Snapshot {
     private volatile Map<JavaHeapObject, StackTrace> siteTraces;
 
     // object-to-Root map for all objects
-    private Map<JavaHeapObject, Root> rootsMap =
+    private final Map<JavaHeapObject, Root> rootsMap =
                  new HashMap<JavaHeapObject, Root>();
 
     // soft cache of finalizeable objects - lazily initialized
-    private SoftReference<Vector<JavaHeapObject>> finalizablesCache;
+    private SoftReference<List<JavaHeapObject>> finalizablesCache;
 
     // represents null reference
     private JavaThing nullThing;
@@ -168,7 +168,7 @@ public class Snapshot {
 
     public void addRoot(Root r) {
         r.setIndex(roots.size());
-        roots.addElement(r);
+        roots.add(r);
     }
 
     public void addClass(long id, JavaClass c) {
@@ -306,10 +306,6 @@ public class Snapshot {
         if (calculateRefs) {
             System.out.println("");
         }
-
-        // to ensure that Iterator.remove() on getClasses()
-        // result will throw exception..
-        classes = Collections.unmodifiableMap(classes);
     }
 
     private void calculateReferencesToObjects() {
@@ -357,8 +353,8 @@ public class Snapshot {
         }
     }
 
-    public Enumeration<JavaHeapObject> getThings() {
-        return heapObjects.elements();
+    public Collection<JavaHeapObject> getThings() {
+        return heapObjects.values();
     }
 
 
@@ -383,29 +379,28 @@ public class Snapshot {
     /**
      * Return an Iterator of all of the classes in this snapshot.
      **/
-    public Iterator<JavaClass> getClasses() {
+    public Collection<JavaClass> getClasses() {
         // note that because classes is a TreeMap
         // classes are already sorted by name
-        return classes.values().iterator();
+        return Collections.unmodifiableCollection(classes.values());
     }
 
     public JavaClass[] getClassesArray() {
-        JavaClass[] res = new JavaClass[classes.size()];
-        classes.values().toArray(res);
-        return res;
+        return classes.values().toArray(new JavaClass[classes.size()]);
     }
 
-    public synchronized Enumeration<JavaHeapObject> getFinalizerObjects() {
-        Vector<JavaHeapObject> obj;
-        if (finalizablesCache != null &&
-            (obj = finalizablesCache.get()) != null) {
-            return obj.elements();
+    public synchronized Collection<JavaHeapObject> getFinalizerObjects() {
+        if (finalizablesCache != null) {
+            List<JavaHeapObject> obj = finalizablesCache.get();
+            if (obj != null) {
+                return obj;
+            }
         }
 
         JavaClass clazz = findClass("java.lang.ref.Finalizer");
         JavaObject queue = (JavaObject) clazz.getStaticField("queue");
         JavaThing tmp = queue.getField("head");
-        Vector<JavaHeapObject> finalizables = new Vector<JavaHeapObject>();
+        List<JavaHeapObject> finalizables = new ArrayList<JavaHeapObject>();
         if (tmp != getNullThing()) {
             JavaObject head = (JavaObject) tmp;
             while (true) {
@@ -418,60 +413,50 @@ public class Snapshot {
                 finalizables.add(referent);
             }
         }
-        finalizablesCache = new SoftReference<Vector<JavaHeapObject>>(finalizables);
-        return finalizables.elements();
+        finalizablesCache = new SoftReference<List<JavaHeapObject>>(finalizables);
+        return finalizables;
     }
 
-    public Enumeration<Root> getRoots() {
-        return roots.elements();
+    public Collection<Root> getRoots() {
+        return roots;
     }
 
     public Root[] getRootsArray() {
-        Root[] res = new Root[roots.size()];
-        roots.toArray(res);
-        return res;
+        return roots.toArray(new Root[roots.size()]);
     }
 
     public Root getRootAt(int i) {
-        return roots.elementAt(i);
+        return roots.get(i);
     }
 
     public ReferenceChain[]
     rootsetReferencesTo(JavaHeapObject target, boolean includeWeak) {
-        Vector<ReferenceChain> fifo = new Vector<ReferenceChain>();  // This is slow... A real fifo would help
+        Queue<ReferenceChain> fifo = new ArrayDeque<ReferenceChain>();
             // Must be a fifo to go breadth-first
-        Hashtable<JavaHeapObject, JavaHeapObject> visited = new Hashtable<JavaHeapObject, JavaHeapObject>();
+        Set<JavaHeapObject> visited = new HashSet<JavaHeapObject>();
         // Objects are added here right after being added to fifo.
-        Vector<ReferenceChain> result = new Vector<ReferenceChain>();
-        visited.put(target, target);
-        fifo.addElement(new ReferenceChain(target, null));
+        List<ReferenceChain> result = new ArrayList<ReferenceChain>();
+        visited.add(target);
+        fifo.add(new ReferenceChain(target, null));
 
-        while (fifo.size() > 0) {
-            ReferenceChain chain = fifo.elementAt(0);
-            fifo.removeElementAt(0);
+        while (!fifo.isEmpty()) {
+            ReferenceChain chain = fifo.remove();
             JavaHeapObject curr = chain.getObj();
             if (curr.getRoot() != null) {
-                result.addElement(chain);
+                result.add(chain);
                 // Even though curr is in the rootset, we want to explore its
                 // referers, because they might be more interesting.
             }
-            Enumeration<JavaThing> referers = curr.getReferers();
-            while (referers.hasMoreElements()) {
-                JavaHeapObject t = (JavaHeapObject) referers.nextElement();
-                if (t != null && !visited.containsKey(t)) {
+            for (JavaHeapObject t : curr.getReferers()) {
+                if (t != null && !visited.contains(t)) {
                     if (includeWeak || !t.refersOnlyWeaklyTo(this, curr)) {
-                        visited.put(t, t);
-                        fifo.addElement(new ReferenceChain(t, chain));
+                        visited.add(t);
+                        fifo.add(new ReferenceChain(t, chain));
                     }
                 }
             }
         }
-
-        ReferenceChain[] realResult = new ReferenceChain[result.size()];
-        for (int i = 0; i < result.size(); i++) {
-            realResult[i] =  result.elementAt(i);
-        }
-        return realResult;
+        return result.toArray(new ReferenceChain[result.size()]);
     }
 
     public boolean getUnresolvedObjectsOK() {

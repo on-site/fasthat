@@ -40,30 +40,26 @@ package com.sun.tools.hat.internal.server;
 
 import java.net.Socket;
 import java.net.ServerSocket;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import java.io.IOException;
 
 import com.sun.tools.hat.internal.model.Snapshot;
-import com.sun.tools.hat.internal.oql.OQLEngine;
 
 public class QueryListener implements Runnable {
 
-
+    private final Executor executor = Executors.newCachedThreadPool();
     private Snapshot snapshot;
-    private OQLEngine engine;
-    private int port;
+    private final int port;
 
     public QueryListener(int port) {
         this.port = port;
         this.snapshot = null;   // Client will setModel when it's ready
-        this.engine = null; // created when snapshot is set
     }
 
     public void setModel(Snapshot ss) {
         this.snapshot = ss;
-        if (OQLEngine.isOQLSupported()) {
-            this.engine = new OQLEngine(ss);
-        }
     }
 
     public void run() {
@@ -77,25 +73,9 @@ public class QueryListener implements Runnable {
 
     private void waitForRequests() throws IOException {
         ServerSocket ss = new ServerSocket(port);
-        Thread last = null;
-        for (;;) {
+        while (true) {
             Socket s = ss.accept();
-            Thread t = new Thread(new HttpReader(s, snapshot, engine));
-            if (snapshot == null) {
-                t.setPriority(Thread.NORM_PRIORITY+1);
-            } else {
-                t.setPriority(Thread.NORM_PRIORITY-1);
-                if (last != null) {
-                    try {
-                        last.setPriority(Thread.NORM_PRIORITY-2);
-                    } catch (Throwable ignored) {
-                    }
-                    // If the thread is no longer alive, we'll get a
-                    // NullPointerException
-                }
-            }
-            t.start();
-            last = t;
+            executor.execute(new HttpReader(s, snapshot));
         }
     }
 

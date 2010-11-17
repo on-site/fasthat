@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaLong extends JavaValue {
 
-    long value;
+    private final long value;
 
     public JavaLong(long value) {
         this.value = value;

@@ -35,6 +35,7 @@ package com.sun.tools.hat.internal.server;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import com.google.common.primitives.Ints;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -45,6 +46,25 @@ import com.sun.tools.hat.internal.model.*;
 
 class ObjectQuery extends ClassQuery {
         // We inherit printFullClass from ClassQuery
+
+    private static class FieldThing {
+        public final JavaField field;
+        public final JavaThing thing;
+
+        public FieldThing(JavaField field, JavaThing thing) {
+            this.field = field;
+            this.thing = thing;
+        }
+
+        public static FieldThing[] make(JavaField[] fields, JavaThing[] things) {
+            int len = Ints.min(fields.length, things.length);
+            FieldThing[] result = new FieldThing[len];
+            for (int i = 0; i < len; ++i) {
+                result[i] = new FieldThing(fields[i], things[i]);
+            }
+            return result;
+        }
+    }
 
     public ObjectQuery() {
     }
@@ -94,24 +114,17 @@ class ObjectQuery extends ClassQuery {
         printClass(obj.getClazz());
 
         out.println("<h2>Instance data members:</h2>");
-        final JavaThing[] things = obj.getFields();
-        final JavaField[] fields = obj.getClazz().getFieldsForInstance();
-        Integer[] hack = new Integer[things.length];
-        for (int i = 0; i < things.length; i++) {
-            hack[i] = i;
-        }
-        Arrays.sort(hack, new Comparator<Integer>() {
-            public int compare(Integer lhs, Integer rhs) {
-                JavaField left = fields[lhs];
-                JavaField right = fields[rhs];
-                return left.getName().compareTo(right.getName());
+        FieldThing[] fieldThings = FieldThing.make(
+                obj.getClazz().getFieldsForInstance(), obj.getFields());
+        Arrays.sort(fieldThings, new Comparator<FieldThing>() {
+            public int compare(FieldThing lhs, FieldThing rhs) {
+                return lhs.field.getName().compareTo(rhs.field.getName());
             }
         });
-        for (int i = 0; i < things.length; i++) {
-            int index = hack[i].intValue();
-            printField(fields[index]);
+        for (FieldThing fieldThing : fieldThings) {
+            printField(fieldThing.field);
             out.print(" : ");
-            printThing(things[index]);
+            printThing(fieldThing.thing);
             out.println("<br>");
         }
     }

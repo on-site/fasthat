@@ -37,18 +37,17 @@ import java.util.*;
 
 public class FinalizerSummaryQuery extends QueryHandler {
     public void run() {
-        Enumeration<JavaHeapObject> objs = snapshot.getFinalizerObjects();
         startHtml("Finalizer Summary");
 
         out.println("<p align='center'>");
         out.println("<b><a href='/'>All Classes (excluding platform)</a></b>");
         out.println("</p>");
 
-        printFinalizerSummary(objs);
+        printFinalizerSummary(snapshot.getFinalizerObjects());
         endHtml();
     }
 
-    private static class HistogramElement {
+    private static class HistogramElement implements Comparable<HistogramElement> {
         public HistogramElement(JavaClass clazz) {
             this.clazz = clazz;
         }
@@ -57,7 +56,8 @@ public class FinalizerSummaryQuery extends QueryHandler {
             this.count++;
         }
 
-        public int compare(HistogramElement other) {
+        @Override
+        public int compareTo(HistogramElement other) {
             long diff = other.count - count;
             return (diff == 0L)? 0 : ((diff > 0L)? +1 : -1);
         }
@@ -70,16 +70,15 @@ public class FinalizerSummaryQuery extends QueryHandler {
             return count;
         }
 
-        private JavaClass clazz;
+        private final JavaClass clazz;
         private long count;
     }
 
-    private void printFinalizerSummary(Enumeration<? extends JavaHeapObject> objs) {
+    private void printFinalizerSummary(Collection<? extends JavaHeapObject> objs) {
         int count = 0;
         Map<JavaClass, HistogramElement> map = new HashMap<JavaClass, HistogramElement>();
 
-        while (objs.hasMoreElements()) {
-            JavaHeapObject obj = objs.nextElement();
+        for (JavaHeapObject obj : objs) {
             count++;
             JavaClass clazz = obj.getClazz();
             if (! map.containsKey(clazz)) {
@@ -106,21 +105,16 @@ public class FinalizerSummaryQuery extends QueryHandler {
         }
 
         // calculate and print histogram
-        HistogramElement[] elements = new HistogramElement[map.size()];
-        map.values().toArray(elements);
-        Arrays.sort(elements, new Comparator<HistogramElement>() {
-                    public int compare(HistogramElement o1, HistogramElement o2) {
-                        return o1.compare(o2);
-                    }
-                });
+        HistogramElement[] elements = map.values().toArray(new HistogramElement[map.size()]);
+        Arrays.sort(elements);
 
         out.println("<table border=1 align=center>");
         out.println("<tr><th>Count</th><th>Class</th></tr>");
-        for (int j = 0; j < elements.length; j++) {
+        for (HistogramElement element : elements) {
             out.println("<tr><td>");
-            out.println(elements[j].getCount());
+            out.println(element.getCount());
             out.println("</td><td>");
-            printClass(elements[j].getClazz());
+            printClass(element.getClazz());
             out.println("</td><tr>");
         }
         out.println("</table>");

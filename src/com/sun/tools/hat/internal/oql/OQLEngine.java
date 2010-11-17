@@ -163,7 +163,7 @@ public class OQLEngine {
             }
         }
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("function __select__(");
         if (q.identifier != null) {
             buf.append(q.identifier);
@@ -176,7 +176,7 @@ public class OQLEngine {
         debugPrint(selectCode);
         String whereCode = null;
         if (q.whereExpr != null) {
-            buf = new StringBuffer();
+            buf = new StringBuilder();
             buf.append("function __where__(");
             buf.append(q.identifier);
             buf.append(") { return ");
@@ -194,9 +194,7 @@ public class OQLEngine {
             }
 
             if (clazz != null) {
-                Enumeration<JavaHeapObject> objects = clazz.getInstances(q.isInstanceOf);
-                while (objects.hasMoreElements()) {
-                    JavaHeapObject obj = objects.nextElement();
+                for (JavaHeapObject obj : clazz.getInstances(q.isInstanceOf)) {
                     Object[] args = new Object[] { wrapJavaObject(obj) };
                     boolean b = (whereCode == null);
                     if (!b) {

@@ -41,16 +41,14 @@ package com.sun.tools.hat.internal.util;
 
 public class Misc {
 
-    private static char[] digits = { '0', '1', '2', '3', '4', '5', '6', '7',
-                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    private static final String digits = "0123456789abcdef";
 
     public final static String toHex(int addr) {
-        char[] buf = new char[8];
-        int i = 0;
+        StringBuilder sb = new StringBuilder("0x");
         for (int s = 28; s >= 0; s -= 4) {
-            buf[i++] = digits[(addr >> s) & 0xf];
+            sb.append(digits.charAt((addr >>> s) & 0xf));
         }
-        return new StringBuilder("0x").append(buf).toString();
+        return sb.toString();
     }
 
     public final static String toHex(long addr) {
@@ -82,7 +80,7 @@ public class Misc {
 
     public static String encodeHtml(String str) {
         final int len = str.length();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < len; i++) {
             char ch = str.charAt(i);
             if (ch == '<') {
@@ -97,13 +95,25 @@ public class Misc {
                 buf.append("&amp;");
             } else if (ch < ' ') {
                 buf.append("&#" + Integer.toString(ch) + ";");
-            } else {
+            } else if (!Character.isHighSurrogate(ch)) {
+                if (Character.isLowSurrogate(ch)) {
+                    throw new IllegalArgumentException("Stray low surrogate");
+                }
                 int c = (ch & 0xFFFF);
                 if (c > 127) {
-                    buf.append("&#" + Integer.toString(c) + ";");
+                    buf.append("&#" + c + ";");
                 } else {
                     buf.append(ch);
                 }
+            } else if (++i < len) {
+                char ch2 = str.charAt(i);
+                if (!Character.isLowSurrogate(ch2)) {
+                    throw new IllegalArgumentException("Stray high surrogate");
+                }
+                int c = Character.toCodePoint(ch, ch2);
+                buf.append("&#" + c + ";");
+            } else {
+                throw new IllegalArgumentException("Stray high surrogate");
             }
         }
         return buf.toString();

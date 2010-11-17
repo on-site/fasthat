@@ -42,7 +42,7 @@ import java.io.RandomAccessFile;
  */
 class FileReadBuffer implements ReadBuffer {
     // underlying file to read
-    private RandomAccessFile file;
+    private final RandomAccessFile file;
 
     FileReadBuffer(RandomAccessFile file) {
         this.file = file;

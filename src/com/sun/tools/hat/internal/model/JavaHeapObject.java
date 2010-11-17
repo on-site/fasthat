@@ -32,9 +32,11 @@
 
 package com.sun.tools.hat.internal.model;
 
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.AbstractList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.sun.tools.hat.internal.util.Misc;
 
 
@@ -60,7 +62,7 @@ public abstract class JavaHeapObject extends JavaThing {
     // be appended to.  When resolved, referers has no duplicates or
     // empty slots.
     //
-    private JavaThing[] referers = null;
+    private JavaHeapObject[] referers = null;
     private int referersLen = 0;        // -1 when resolved
 
     public abstract JavaClass getClazz();
@@ -85,17 +87,14 @@ public abstract class JavaHeapObject extends JavaThing {
     //
     void setupReferers() {
         if (referersLen > 1) {
-            // Copy referers to map, screening out duplicates
-            Map<JavaThing, JavaThing> map = new HashMap<JavaThing, JavaThing>();
+            // Copy referers to set, screening out duplicates
+            Set<JavaThing> set = new HashSet<JavaThing>();
             for (int i = 0; i < referersLen; i++) {
-                if (map.get(referers[i]) == null) {
-                    map.put(referers[i], referers[i]);
-                }
+                set.add(referers[i]);
             }
 
             // Now copy into the array
-            referers = new JavaThing[map.size()];
-            map.keySet().toArray(referers);
+            referers = set.toArray(new JavaHeapObject[set.size()]);
         }
         referersLen = -1;
     }
@@ -137,9 +136,9 @@ public abstract class JavaHeapObject extends JavaThing {
 
     void addReferenceFrom(JavaHeapObject other) {
         if (referersLen == 0) {
-            referers = new JavaThing[1];        // It was null
+            referers = new JavaHeapObject[1];        // It was null
         } else if (referersLen == referers.length) {
-            JavaThing[] copy = new JavaThing[(3 * (referersLen + 1)) / 2];
+            JavaHeapObject[] copy = new JavaHeapObject[(3 * (referersLen + 1)) / 2];
             System.arraycopy(referers, 0, copy, 0, referersLen);
             referers = copy;
         }
@@ -164,22 +163,21 @@ public abstract class JavaHeapObject extends JavaThing {
     /**
      * Tell who refers to us.
      *
-     * @return an Enumeration of JavaHeapObject instances
+     * @return a list of JavaHeapObject instances
      */
-    public Enumeration<JavaThing> getReferers() {
+    public List<JavaHeapObject> getReferers() {
         if (referersLen != -1) {
-            throw new RuntimeException("not resolved: " + getIdString());
+            throw new IllegalStateException("not resolved: " + getIdString());
         }
-        return new Enumeration<JavaThing>() {
-
-            private int num = 0;
-
-            public boolean hasMoreElements() {
-                return referers != null && num < referers.length;
+        return new AbstractList<JavaHeapObject>() {
+            @Override
+            public int size() {
+                return referers != null ? referers.length : 0;
             }
 
-            public JavaThing nextElement() {
-                return referers[num++];
+            @Override
+            public JavaHeapObject get(int index) {
+                return referers[index];
             }
         };
     }

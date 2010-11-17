@@ -52,11 +52,11 @@ public class StackFrame {
     public final static int LINE_NUMBER_COMPILED = -2;
     public final static int LINE_NUMBER_NATIVE = -3;
 
-    private String methodName;
-    private String methodSignature;
-    private String className;
-    private String sourceFileName;
-    private int lineNumber;
+    private final String methodName;
+    private final String methodSignature;
+    private final String className;
+    private final String sourceFileName;
+    private final int lineNumber;
 
     public StackFrame(String methodName, String methodSignature,
                       String className, String sourceFileName, int lineNumber) {

@@ -98,10 +98,11 @@ public class ReachableObjects {
         });
         this.reachables = things;
 
-        this.totalSize = root.getSize();
-        for (i = 0; i < things.length; i++) {
-            this.totalSize += things[i].getSize();
+        long totalSize = root.getSize();
+        for (JavaThing thing : things) {
+            totalSize += thing.getSize();
         }
+        this.totalSize = totalSize;
 
         excludedFields = getElements(fieldsExcluded);
         usedFields = getElements(fieldsUsed);
@@ -133,9 +134,9 @@ public class ReachableObjects {
         return res;
     }
 
-    private JavaHeapObject root;
-    private JavaThing[] reachables;
-    private String[]  excludedFields;
-    private String[]  usedFields;
-    private long totalSize;
+    private final JavaHeapObject root;
+    private final JavaThing[] reachables;
+    private final String[]  excludedFields;
+    private final String[]  usedFields;
+    private final long totalSize;
 }

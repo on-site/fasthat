@@ -46,15 +46,12 @@ import java.io.UnsupportedEncodingException;
  */
 
 
-abstract class QueryHandler {
+abstract class QueryHandler implements Runnable {
 
     protected String urlStart;
     protected String query;
     protected PrintWriter out;
     protected Snapshot snapshot;
-
-    abstract void run();
-
 
     void setUrlStart(String s) {
         urlStart = s;
@@ -160,7 +157,6 @@ abstract class QueryHandler {
             out.println("null");
             return;
         }
-        String name = clazz.getName();
         printAnchorStart();
         out.print("class/");
         print(encodeForURL(clazz));
@@ -195,8 +191,7 @@ abstract class QueryHandler {
 
     protected void printStackTrace(StackTrace trace) {
         StackFrame[] frames = trace.getFrames();
-        for (int i = 0; i < frames.length; i++) {
-            StackFrame f = frames[i];
+        for (StackFrame f : frames) {
             String clazz = f.getClassName();
             out.print("<font color=purple>");
             print(clazz);

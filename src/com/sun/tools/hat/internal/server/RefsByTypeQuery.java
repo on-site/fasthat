@@ -47,15 +47,11 @@ public class RefsByTypeQuery extends QueryHandler {
         } else {
             Map<JavaClass, Long> referrersStat = new HashMap<JavaClass, Long>();
             final Map<JavaClass, Long> refereesStat = new HashMap<JavaClass, Long>();
-            Enumeration<JavaHeapObject> instances = clazz.getInstances(false);
-            while (instances.hasMoreElements()) {
-                JavaHeapObject instance = instances.nextElement();
+            for (JavaHeapObject instance : clazz.getInstances(false)) {
                 if (instance.getId() == -1) {
                     continue;
                 }
-                Enumeration<JavaThing> e = instance.getReferers();
-                while (e.hasMoreElements()) {
-                    JavaHeapObject ref = (JavaHeapObject) e.nextElement();
+                for (JavaHeapObject ref : instance.getReferers()) {
                     JavaClass cl = ref.getClazz();
                     if (cl == null) {
                          System.out.println("null class for " + ref);
@@ -109,9 +105,7 @@ public class RefsByTypeQuery extends QueryHandler {
 
     private void print(final Map<JavaClass, Long> map) {
         out.println("<table border='1' align='center'>");
-        Set<JavaClass> keys = map.keySet();
-        JavaClass[] classes = new JavaClass[keys.size()];
-        keys.toArray(classes);
+        JavaClass[] classes = map.keySet().toArray(new JavaClass[map.size()]);
         Arrays.sort(classes, new Comparator<JavaClass>() {
             public int compare(JavaClass first, JavaClass second) {
                 Long count1 = map.get(first);
@@ -121,8 +115,7 @@ public class RefsByTypeQuery extends QueryHandler {
         });
 
         out.println("<tr><th>Class</th><th>Count</th></tr>");
-        for (int i = 0; i < classes.length; i++) {
-            JavaClass clazz = classes[i];
+        for (JavaClass clazz : classes) {
             out.println("<tr><td>");
             out.print("<a href='/refsByType/");
             out.print(clazz.getIdString());

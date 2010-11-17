@@ -34,8 +34,10 @@ package com.sun.tools.hat.internal.parser;
 
 import java.io.*;
 import java.util.Date;
-import java.util.Hashtable;
-import com.sun.tools.hat.internal.model.ArrayTypeCodes;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.sun.tools.hat.internal.model.ArrayTypeCodes.*;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -44,7 +46,7 @@ import com.sun.tools.hat.internal.model.*;
  * @author      Bill Foote
  */
 
-public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes {
+public class HprofReader extends Reader {
 
     final static int MAGIC_NUMBER = 0x4a415641;
     // That's "JAVA", the first part of "JAVA PROFILE ..."
@@ -119,37 +121,33 @@ public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes 
 
     private int version;        // The version of .hprof being read
 
-    private int debugLevel;
+    private final int debugLevel;
     private long currPos;        // Current position in the file
 
     private int dumpsToSkip;
-    private boolean callStack;  // If true, read the call stack of objects
+    private final boolean callStack;  // If true, read the call stack of objects
 
     private int identifierSize;         // Size, in bytes, of identifiers.
-    private Hashtable<Long, String> names;
+    private final Map<Long, String> names;
 
-    // Hashtable<Integer, ThreadObject>, used to map the thread sequence number
-    // (aka "serial number") to the thread object ID for
-    // HPROF_GC_ROOT_THREAD_OBJ.  ThreadObject is a trivial inner class,
-    // at the end of this file.
-    private Hashtable<Integer, ThreadObject> threadObjects;
+    // used to map the thread sequence number (aka "serial number") to the
+    // thread object ID for HPROF_GC_ROOT_THREAD_OBJ.  ThreadObject is a
+    // trivial nested class, at the end of this file.
+    private final Map<Integer, ThreadObject> threadObjects;
 
-    // Hashtable<Long, String>, maps class object ID to class name
-    // (with / converted to .)
-    private Hashtable<Long, String> classNameFromObjectID;
+    // maps class object ID to class name (with / converted to .)
+    private final Map<Long, String> classNameFromObjectID;
 
-    // Hashtable<Integer, Integer>, maps class serial # to class object ID
-    private Hashtable<Integer, String> classNameFromSerialNo;
+    // maps class serial # to class name (with / converted to .)
+    private final Map<Integer, String> classNameFromSerialNo;
 
-    // Hashtable<Long, StackFrame> maps stack frame ID to StackFrame.
-    // Null if we're not tracking them.
-    private Hashtable<Long, StackFrame> stackFrames;
+    // maps stack frame ID to StackFrame. Null if we're not tracking them.
+    private final Map<Long, StackFrame> stackFrames;
 
-    // Hashtable<Integer, StackTrace> maps stack frame ID to StackTrace
-    // Null if we're not tracking them.
-    private Hashtable<Integer, StackTrace> stackTraces;
+    // maps stack frame ID to StackTrace. Null if we're not tracking them.
+    private final Map<Integer, StackTrace> stackTraces;
 
-    private Snapshot snapshot;
+    private final Snapshot snapshot;
 
     public HprofReader(String fileName, PositionDataInputStream in,
                        int dumpNumber, boolean callStack, int debugLevel)
@@ -160,13 +158,17 @@ public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes 
         this.dumpsToSkip = dumpNumber - 1;
         this.callStack = callStack;
         this.debugLevel = debugLevel;
-        names = new Hashtable<Long, String>();
-        threadObjects = new Hashtable<Integer, ThreadObject>(43);
-        classNameFromObjectID = new Hashtable<Long, String>();
+        names = new HashMap<Long, String>();
+        threadObjects = new HashMap<Integer, ThreadObject>(43);
+        classNameFromObjectID = new HashMap<Long, String>();
         if (callStack) {
-            stackFrames = new Hashtable<Long, StackFrame>(43);
-            stackTraces = new Hashtable<Integer, StackTrace>(43);
-            classNameFromSerialNo = new Hashtable<Integer, String>();
+            stackFrames = new HashMap<Long, StackFrame>(43);
+            stackTraces = new HashMap<Integer, StackTrace>(43);
+            classNameFromSerialNo = new HashMap<Integer, String>();
+        } else {
+            stackFrames = null;
+            stackTraces = null;
+            classNameFromSerialNo = null;
         }
     }
 
@@ -822,7 +824,7 @@ public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes 
         return bytesRead;
     }
 
-    private byte signatureFromTypeId(byte typeId) throws IOException {
+    private static byte signatureFromTypeId(byte typeId) throws IOException {
         switch (typeId) {
             case T_CLASS: {
                 return (byte) 'L';
@@ -873,10 +875,10 @@ public class HprofReader extends Reader /* imports */ implements ArrayTypeCodes 
     //
     // A trivial data-holder class for HPROF_GC_ROOT_THREAD_OBJ.
     //
-    private class ThreadObject {
+    private static class ThreadObject {
 
-        long threadId;
-        int stackSeq;
+        public final long threadId;
+        public final int stackSeq;
 
         ThreadObject(long threadId, int stackSeq) {
             this.threadId = threadId;

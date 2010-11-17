@@ -41,14 +41,14 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaShort extends JavaValue {
 
-    short value;
+    private final short value;
 
     public JavaShort(short value) {
         this.value = value;
     }
 
     public String toString() {
-        return "" + value;
+        return String.valueOf(value);
     }
 
 }

@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.model;
 
+import static com.sun.tools.hat.internal.model.ArrayTypeCodes.*;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 import java.io.IOException;
 
@@ -40,8 +41,7 @@ import java.io.IOException;
  *
  * @author      Bill Foote
  */
-public class JavaValueArray extends JavaLazyReadObject
-                /*imports*/ implements ArrayTypeCodes {
+public class JavaValueArray extends JavaLazyReadObject {
 
     private static String arrayTypeName(byte sig) {
         switch (sig) {
@@ -62,7 +62,7 @@ public class JavaValueArray extends JavaLazyReadObject
             case 'D':
                 return "double[]";
             default:
-                throw new RuntimeException("invalid array element sig: " + sig);
+                throw new IllegalArgumentException("invalid array element sig: " + sig);
         }
     }
 
@@ -81,7 +81,7 @@ public class JavaValueArray extends JavaLazyReadObject
             case T_DOUBLE:
                 return 8;
             default:
-                throw new RuntimeException("invalid array element type: " + type);
+                throw new IllegalArgumentException("invalid array element type: " + type);
         }
     }
 
@@ -192,7 +192,7 @@ public class JavaValueArray extends JavaLazyReadObject
                 divider = 8;
                 break;
             default:
-                throw new RuntimeException("unknown primitive type: " +
+                throw new IllegalArgumentException("unknown primitive type: " +
                                 elementSignature);
             }
             data |= (divider << LENGTH_DIVIDER_SHIFT);
@@ -271,7 +271,7 @@ public class JavaValueArray extends JavaLazyReadObject
                 return res;
             }
             default: {
-                throw new RuntimeException("unknown primitive type?");
+                throw new IllegalArgumentException("unknown primitive type?");
             }
         }
     }
@@ -288,7 +288,7 @@ public class JavaValueArray extends JavaLazyReadObject
 
     private void requireType(char type) {
         if (getElementType() != type) {
-            throw new RuntimeException("not of type : " + type);
+            throw new IllegalArgumentException("not of type : " + type);
         }
     }
 
@@ -346,12 +346,12 @@ public class JavaValueArray extends JavaLazyReadObject
 
     public String valueString(boolean bigLimit) {
         // Char arrays deserve special treatment
-        StringBuffer result;
+        StringBuilder result;
         byte[] value = getValue();
         int max = value.length;
         byte elementSignature = getElementType();
         if (elementSignature == 'C')  {
-            result = new StringBuffer();
+            result = new StringBuilder();
             for (int i = 0; i < max; ) {
                 char val = charAt(i, value);
                 result.append(val);
@@ -362,7 +362,7 @@ public class JavaValueArray extends JavaLazyReadObject
             if (bigLimit) {
                 limit = 1000;
             }
-            result = new StringBuffer("{");
+            result = new StringBuilder("{");
             int num = 0;
             for (int i = 0; i < max; ) {
                 if (num > 0) {
@@ -421,7 +421,7 @@ public class JavaValueArray extends JavaLazyReadObject
                         break;
                     }
                     default: {
-                        throw new RuntimeException("unknown primitive type?");
+                        throw new IllegalArgumentException("unknown primitive type?");
                     }
                 }
             }

@@ -32,11 +32,12 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.sun.tools.hat.internal.model.*;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Enumeration;
 
 /**
  *
@@ -45,9 +46,16 @@ import java.util.Enumeration;
 
 
 class InstancesCountQuery extends QueryHandler {
+    private enum NonPlatformPredicate implements Predicate<JavaClass> {
+        INSTANCE;
 
+        @Override
+        public boolean apply(JavaClass clazz) {
+            return !PlatformClasses.isPlatformClass(clazz);
+        }
+    }
 
-    private boolean excludePlatform;
+    private final boolean excludePlatform;
 
     public InstancesCountQuery(boolean excludePlatform) {
         this.excludePlatform = excludePlatform;
@@ -62,22 +70,16 @@ class InstancesCountQuery extends QueryHandler {
 
         JavaClass[] classes = snapshot.getClassesArray();
         if (excludePlatform) {
-            int num = 0;
-            for (int i = 0; i < classes.length; i++) {
-                if (! PlatformClasses.isPlatformClass(classes[i])) {
-                    classes[num++] = classes[i];
-                }
-            }
-            JavaClass[] tmp = new JavaClass[num];
-            System.arraycopy(classes, 0, tmp, 0, tmp.length);
-            classes = tmp;
+            classes = Collections2.filter(Arrays.asList(classes),
+                    NonPlatformPredicate.INSTANCE).toArray(new JavaClass[0]);
         }
         Arrays.sort(classes, new Comparator<JavaClass>() {
             public int compare(JavaClass lhs, JavaClass rhs) {
-                int diff = lhs.getInstancesCount(false)
-                                - rhs.getInstancesCount(false);
+                // Sort from biggest to smallest
+                int diff = rhs.getInstancesCount(false)
+                                - lhs.getInstancesCount(false);
                 if (diff != 0) {
-                    return -diff;       // Sort from biggest to smallest
+                    return -diff;
                 }
                 String left = lhs.getName();
                 String right = rhs.getName();
@@ -95,12 +97,11 @@ class InstancesCountQuery extends QueryHandler {
 
         long totalSize = 0;
         long instances = 0;
-        for (int i = 0; i < classes.length; i++) {
-            JavaClass clazz = classes[i];
+        for (JavaClass clazz : classes) {
             int count = clazz.getInstancesCount(false);
             print("" + count);
             printAnchorStart();
-            out.print("instances/" + encodeForURL(classes[i]));
+            out.print("instances/" + encodeForURL(clazz));
             out.print("\"> ");
             if (count == 1) {
                 print("instance");
@@ -109,26 +110,24 @@ class InstancesCountQuery extends QueryHandler {
             }
             out.print("</a> ");
             if (snapshot.getHasNewSet()) {
-                Enumeration<JavaHeapObject> objects = clazz.getInstances(false);
                 int newInst = 0;
-                while (objects.hasMoreElements()) {
-                    JavaHeapObject obj = objects.nextElement();
+                for (JavaHeapObject obj : clazz.getInstances(false)) {
                     if (obj.isNew()) {
                         newInst++;
                     }
                 }
                 print("(");
                 printAnchorStart();
-                out.print("newInstances/" + encodeForURL(classes[i]));
+                out.print("newInstances/" + encodeForURL(clazz));
                 out.print("\">");
                 print("" + newInst + " new");
                 out.print("</a>) ");
             }
             print("of ");
-            printClass(classes[i]);
+            printClass(clazz);
             out.println("<br>");
             instances += count;
-            totalSize += classes[i].getTotalInstanceSize();
+            totalSize += clazz.getTotalInstanceSize();
         }
         out.println("<h2>Total of " + instances + " instances occupying " + totalSize + " bytes.</h2>");
 

@@ -44,7 +44,7 @@ import com.sun.tools.hat.internal.model.*;
 
 
 public abstract class Reader {
-    protected PositionDataInputStream in;
+    protected final PositionDataInputStream in;
 
     protected Reader(PositionDataInputStream in) {
         this.in = in;

@@ -43,7 +43,7 @@ import java.nio.channels.FileChannel;
  * @author A. Sundararajan
  */
 class MappedReadBuffer implements ReadBuffer {
-    private MappedByteBuffer buf;
+    private final MappedByteBuffer buf;
 
     MappedReadBuffer(MappedByteBuffer buf) {
         this.buf = buf;

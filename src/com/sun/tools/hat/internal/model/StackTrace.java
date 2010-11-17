@@ -44,7 +44,7 @@ package com.sun.tools.hat.internal.model;
 
 public class StackTrace {
 
-    private StackFrame[] frames;
+    private final StackFrame[] frames;
 
     public StackTrace(StackFrame[] frames) {
         this.frames = frames;
@@ -66,8 +66,8 @@ public class StackTrace {
     }
 
     public void resolve(Snapshot snapshot) {
-        for (int i = 0; i < frames.length; i++) {
-            frames[i].resolve(snapshot);
+        for (StackFrame frame : frames) {
+            frame.resolve(snapshot);
         }
     }
 

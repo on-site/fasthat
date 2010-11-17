@@ -42,7 +42,7 @@ import com.sun.tools.hat.internal.util.Misc;
  * @author      Bill Foote
  */
 public class JavaObjectRef extends JavaThing {
-    private long id;
+    private final long id;
 
     public JavaObjectRef(long id) {
         this.id = id;

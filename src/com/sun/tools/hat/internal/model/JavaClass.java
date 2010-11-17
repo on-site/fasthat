@@ -32,9 +32,11 @@
 
 package com.sun.tools.hat.internal.model;
 
-import java.util.Vector;
-import java.util.Enumeration;
-import com.sun.tools.hat.internal.util.CompositeEnumeration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Iterables;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 
 /**
@@ -45,9 +47,9 @@ import com.sun.tools.hat.internal.parser.ReadBuffer;
 
 public class JavaClass extends JavaHeapObject {
     // my id
-    private long id;
+    private final long id;
     // my name
-    private String name;
+    private final String name;
 
     // These are JavaObjectRef before resolve
     private JavaThing superclass;
@@ -56,16 +58,15 @@ public class JavaClass extends JavaHeapObject {
     private JavaThing protectionDomain;
 
     // non-static fields
-    private JavaField[] fields;
+    private final JavaField[] fields;
     // static fields
-    private JavaStatic[] statics;
+    private final JavaStatic[] statics;
 
-    private static final JavaClass[] EMPTY_CLASS_ARRAY = new JavaClass[0];
     // my subclasses
-    private JavaClass[] subclasses = EMPTY_CLASS_ARRAY;
+    private final List<JavaClass> subclasses = new ArrayList<JavaClass>();
 
     // my instances
-    private Vector<JavaHeapObject> instances = new Vector<JavaHeapObject>();
+    private final List<JavaHeapObject> instances = new ArrayList<JavaHeapObject>();
 
     // Who I belong to.  Set on resolve.
     private Snapshot mySnapshot;
@@ -125,8 +126,8 @@ public class JavaClass extends JavaHeapObject {
         signers  = signers.dereference(snapshot, null);
         protectionDomain  = protectionDomain.dereference(snapshot, null);
 
-        for (int i = 0; i < statics.length; i++) {
-            statics[i].resolve(this, snapshot);
+        for (JavaStatic s : statics) {
+            s.resolve(this, snapshot);
         }
         snapshot.getJavaLangClass().addInstance(this);
         super.resolve(snapshot);
@@ -173,7 +174,7 @@ public class JavaClass extends JavaHeapObject {
      */
     public JavaField getField(int i) {
         if (i < 0 || i >= fields.length) {
-            throw new Error("No field " + i + " for " + name);
+            throw new IndexOutOfBoundsException("No field " + i + " for " + name);
         }
         return fields[i];
     }
@@ -229,16 +230,15 @@ public class JavaClass extends JavaHeapObject {
         return name.indexOf('[') != -1;
     }
 
-    public Enumeration<JavaHeapObject> getInstances(boolean includeSubclasses) {
+    public Iterable<JavaHeapObject> getInstances(boolean includeSubclasses) {
         if (includeSubclasses) {
-            Enumeration<JavaHeapObject> res = instances.elements();
-            for (int i = 0; i < subclasses.length; i++) {
-                res = new CompositeEnumeration<JavaHeapObject>(res,
-                              subclasses[i].getInstances(true));
+            Iterable<JavaHeapObject> res = instances;
+            for (JavaClass subclass : subclasses) {
+                res = Iterables.concat(res, subclass.getInstances(true));
             }
             return res;
         } else {
-            return instances.elements();
+            return instances;
         }
     }
 
@@ -248,15 +248,15 @@ public class JavaClass extends JavaHeapObject {
     public int getInstancesCount(boolean includeSubclasses) {
         int result = instances.size();
         if (includeSubclasses) {
-            for (int i = 0; i < subclasses.length; i++) {
-                result += subclasses[i].getInstancesCount(includeSubclasses);
+            for (JavaClass subclass : subclasses) {
+                result += subclass.getInstancesCount(includeSubclasses);
             }
         }
         return result;
     }
 
     public JavaClass[] getSubclasses() {
-        return subclasses;
+        return subclasses.toArray(new JavaClass[subclasses.size()]);
     }
 
     /**
@@ -302,13 +302,9 @@ public class JavaClass extends JavaHeapObject {
      * Includes superclass fields
      */
     public JavaField[] getFieldsForInstance() {
-        Vector<JavaField> v = new Vector<JavaField>();
+        List<JavaField> v = new ArrayList<JavaField>();
         addFields(v);
-        JavaField[] result = new JavaField[v.size()];
-        for (int i = 0; i < v.size(); i++) {
-            result[i] =  v.elementAt(i);
-        }
-        return result;
+        return v.toArray(new JavaField[v.size()]);
     }
 
 
@@ -318,8 +314,7 @@ public class JavaClass extends JavaHeapObject {
 
     // returns value of static field of given name
     public JavaThing getStaticField(String name) {
-        for (int i = 0; i < statics.length; i++) {
-            JavaStatic s = statics[i];
+        for (JavaStatic s : statics) {
             if (s.getField().getName().equals(name)) {
                 return s.getValue();
             }
@@ -359,10 +354,10 @@ public class JavaClass extends JavaHeapObject {
      * be called if target is in the array returned by getChildrenForRootset.
      */
      public String describeReferenceTo(JavaThing target, Snapshot ss) {
-        for (int i = 0; i < statics.length; i++) {
-            JavaField f = statics[i].getField();
+        for (JavaStatic s : statics) {
+            JavaField f = s.getField();
             if (f.hasId()) {
-                JavaThing other = statics[i].getValue();
+                JavaThing other = s.getValue();
                 if (other == target) {
                     return "static field " + f.getName();
                 }
@@ -393,8 +388,7 @@ public class JavaClass extends JavaHeapObject {
         // array class and non-zero count, we have to
         // get the size of each instance and sum it
         long result = 0;
-        for (int i = 0; i < count; i++) {
-            JavaThing t = instances.elementAt(i);
+        for (JavaThing t : instances) {
             result += t.getSize();
         }
         return result;
@@ -431,10 +425,10 @@ public class JavaClass extends JavaHeapObject {
             v.visit((JavaHeapObject)other);
         }
 
-        for (int i = 0; i < statics.length; i++) {
-            JavaField f = statics[i].getField();
+        for (JavaStatic s : statics) {
+            JavaField f = s.getField();
             if (!v.exclude(this, f) && f.hasId()) {
-                other = statics[i].getValue();
+                other = s.getValue();
                 if (other instanceof JavaHeapObject) {
                     v.visit((JavaHeapObject) other);
                 }
@@ -472,32 +466,18 @@ public class JavaClass extends JavaHeapObject {
     }
 
     void addInstance(JavaHeapObject inst) {
-        instances.addElement(inst);
+        instances.add(inst);
     }
 
     // Internals only below this point
-    private void addFields(Vector<JavaField> v) {
+    private void addFields(List<? super JavaField> v) {
         if (superclass != null) {
             ((JavaClass) superclass).addFields(v);
         }
-        for (int i = 0; i < fields.length; i++) {
-            v.addElement(fields[i]);
-        }
-    }
-
-    private void addSubclassInstances(Vector<JavaHeapObject> v) {
-        for (int i = 0; i < subclasses.length; i++) {
-            subclasses[i].addSubclassInstances(v);
-        }
-        for (int i = 0; i < instances.size(); i++) {
-            v.addElement(instances.elementAt(i));
-        }
+        Collections.addAll(v, fields);
     }
 
     private void addSubclass(JavaClass sub) {
-        JavaClass newValue[] = new JavaClass[subclasses.length + 1];
-        System.arraycopy(subclasses, 0, newValue, 0, subclasses.length);
-        newValue[subclasses.length] = sub;
-        subclasses = newValue;
+        subclasses.add(sub);
     }
 }

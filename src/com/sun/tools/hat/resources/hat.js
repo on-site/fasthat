@@ -43,53 +43,53 @@ var hatPkg = Packages.com.sun.tools.hat.internal;
  * with array[index] syntax.
  */
 
-// returns an enumeration that wraps elements of
-// the input enumeration elements.
-function wrapperEnumeration(e) {
-    return new java.util.Enumeration() {
-        hasMoreElements: function() {
-            return e.hasMoreElements();
+// returns an iterator that wraps elements of
+// the input iterator elements.
+function wrapperIterator(e, wrapFunc) {
+    if (wrapFunc == undefined) wrapFunc = wrapJavaValue;
+    return new java.util.Iterator() {
+        hasNext: function() {
+            return e.hasNext();
         },
-        nextElement: function() {
-            return wrapJavaValue(e.nextElement());
+        next: function() {
+            return wrapFunc(e.next());
         }
     };
 }
 
-// returns an enumeration that filters out elements
-// of input enumeration using the filter function.
-function filterEnumeration(e, func, wrap) {
+// returns an iterator that filters out elements
+// of input iterator using the filter function.
+function filterIterator(e, func, wrap) {
     var next = undefined;
     var index = 0;
 
     function findNext() {
         var tmp;
-        while (e.hasMoreElements()) {
-            tmp = e.nextElement();
+        while (next === undefined && e.hasNext()) {
+            tmp = e.next();
             index++;
             if (wrap) {
                 tmp = wrapJavaValue(tmp);
             }
             if (func(tmp, index, e)) {
                 next = tmp;
-                return;
             }
         }
     }
 
-    return new java.util.Enumeration() {
-        hasMoreElements: function() {
+    return new java.util.Iterator() {
+        hasNext: function() {
             findNext();
-            return next != undefined;
+            return next !== undefined;
         },
 
-        nextElement: function() {
-            if (next == undefined) {
-                // user may not have called hasMoreElements?
+        next: function() {
+            if (next === undefined) {
+                // user may not have called hasNext?
                 findNext();
             }
-            if (next == undefined) {
-                throw "NoSuchElementException";
+            if (next === undefined) {
+                throw new java.util.NoSuchElementException();
             }
             var res = next;
             next = undefined;
@@ -98,15 +98,8 @@ function filterEnumeration(e, func, wrap) {
     };
 }
 
-// enumeration that has no elements ..
-var emptyEnumeration = new java.util.Enumeration() {
-        hasMoreElements: function() {
-            return false;
-        },
-        nextElement: function() {
-            throw "NoSuchElementException";
-        }
-    };
+// iterator that has no elements ..
+var emptyIterator = java.util.Collections.emptySet().iterator();
 
 function wrapRoot(root) {
     if (root) {
@@ -146,10 +139,10 @@ function JavaClassProto() {
 
     // includes direct and indirect superclasses
     this.superclasses = function() {
-        var res = new Array();
+        var res = [];
         var tmp = this.superclass;
         while (tmp != null) {
-            res[res.length] = tmp;
+            res.push(tmp);
             tmp = tmp.superclass;
         }
         return res;
@@ -164,10 +157,10 @@ function JavaClassProto() {
     this.subclasses = function(indirect) {
         if (indirect == undefined) indirect = true;
         var classes = jclass(this).subclasses;
-        var res = new Array();
-        for (var i in classes) {
+        var res = [];
+        for (var i = 0; i < classes.length; ++i) {
             var subclass = wrapJavaValue(classes[i]);
-            res[res.length] = subclass;
+            res.push(subclass);
             if (indirect) {
                 res = res.concat(subclass.subclasses());
             }
@@ -213,7 +206,7 @@ function wrapJavaObject(thing) {
         if (jobject instanceof hatPkg.model.JavaObjectRef) {
             jobject = jobject.dereference();
             if (jobject instanceof hatPkg.model.HackJavaValue) {
-                print(jobject);
+                println(jobject);
                 return null;
             }
         }
@@ -227,7 +220,7 @@ function wrapJavaObject(thing) {
         } else if (jobject instanceof hatPkg.model.JavaValueArray) {
             return new JavaValueArrayWrapper(jobject);
         } else {
-            print("unknown heap object type: " + jobject.getClass());
+            println("unknown heap object type: " + jobject.getClass());
             return jobject;
         }
     }
@@ -236,32 +229,28 @@ function wrapJavaObject(thing) {
     function JavaObjectWrapper(instance) {
         var things = instance.fields;
         var fields = instance.clazz.fieldsForInstance;
+        var fieldsByName = {};
+        for (var i = 0; i < fields.length; ++i) {
+            fieldsByName[fields[i].name] = things[i];
+        }
 
         // instance fields can be accessed in natural syntax
         return new JSAdapter() {
             __getIds__ : function() {
-                    var res = new Array(fields.length);
-                    for (var i in fields) {
-                        res[i] = fields[i].name;
+                    var res = [];
+                    for (var i = 0; i < fields.length; ++i) {
+                        res.push(fields[i].name);
                     }
                     return res;
             },
             __has__ : function(name) {
-                    for (var i in fields) {
-                        if (name == fields[i].name) return true;
-                    }
-                    return name == 'class' || name == 'toString' ||
-                           name == 'wrapped-object';
+                    return name in fieldsByName || name == 'class' ||
+                           name == 'toString' || name == 'wrapped-object';
             },
             __get__ : function(name) {
-
-                    for (var i in fields) {
-                        if(fields[i].name == name) {
-                            return wrapJavaValue(things[i]);
-                        }
-                    }
-
-                    if (name == 'class') {
+                    if (name in fieldsByName) {
+                        return wrapJavaValue(fieldsByName[name]);
+                    } else if (name == 'class') {
                         return wrapJavaValue(instance.clazz);
                     } else if (name == 'toString') {
                         return function() {
@@ -280,30 +269,27 @@ function wrapJavaObject(thing) {
     // return wrapper for Java Class objects
     function JavaClassWrapper(jclass) {
         var fields = jclass.statics;
+        var fieldsByName = {};
+        for (var i = 0; i < fields.length; ++i) {
+            fieldsByName[fields[i].field.name] = fields[i].value;
+        }
 
         // to access static fields of given Class cl, use
         // cl.statics.<static-field-name> syntax
         this.statics = new JSAdapter() {
             __getIds__ : function() {
-                var res = new Array(fields.length);
-                for (var i in fields) {
-                    res[i] = fields[i].field.name;
+                var res = [];
+                for (var i = 0; i < fields.length; ++i) {
+                    res.push(fields[i].field.name);
                 }
                 return res;
             },
             __has__ : function(name) {
-                for (var i in fields) {
-                    if (name == fields[i].field.name) {
-                        return true;
-                    }
-                }
-                return theJavaClassProto[name] != undefined;
+                return name in fieldsByName || name in theJavaClassProto;
             },
             __get__ : function(name) {
-                for (var i in fields) {
-                    if (name == fields[i].field.name) {
-                        return wrapJavaValue(fields[i].value);
-                    }
+                if (name in fieldsByName) {
+                    return wrapJavaValue(fieldsByName[name]);
                 }
                 return theJavaClassProto[name];
             }
@@ -332,9 +318,9 @@ function wrapJavaObject(thing) {
         // also, 'length' property is supported.
         return new JSAdapter() {
             __getIds__ : function() {
-                var res = new Array(elements.length);
+                var res = [];
                 for (var i = 0; i < elements.length; i++) {
-                    res[i] = i;
+                    res.push(i);
                 }
                 return res;
             },
@@ -371,9 +357,9 @@ function wrapJavaObject(thing) {
         // also, 'length' property is supported.
         return new JSAdapter() {
             __getIds__ : function() {
-                var r = new Array(array.length);
+                var r = [];
                 for (var i = 0; i < array.length; i++) {
-                    r[i] = i;
+                    r.push(i);
                 }
                 return r;
             },
@@ -412,7 +398,7 @@ function unwrapJavaObject(jobject) {
         try {
             jobject = jobject["wrapped-object"];
         } catch (e) {
-            print("unwrapJavaObject: " + jobject + ", " + e);
+            println("unwrapJavaObject: " + jobject + ", " + e);
             jobject = undefined;
         }
     }
@@ -456,8 +442,8 @@ function readHeapDump(file, stack, refs, debug) {
  *  forEachObject -- calls a callback for each Java object
  *  findClass -- finds Java Class of given name
  *  findObject -- finds object from given object id
- *  objects -- returns all objects of given class as an enumeration
- *  classes -- returns all classes in the heap as an enumeration
+ *  objects -- returns all objects of given class as an iterator
+ *  classes -- returns all classes in the heap as an iterator
  *  reachables -- returns all objects reachable from a given object
  *  livepaths -- returns an array of live paths because of which an
  *               object alive.
@@ -473,7 +459,7 @@ function wrapHeapSnapshot(heap) {
         } else if (type == "object") {
             clazz = unwrapJavaObject(clazz);
         } else {
-            throw "class expected";;
+            throw new java.lang.IllegalArgumentException("class expected");
         }
         return clazz;
     }
@@ -492,39 +478,31 @@ function wrapHeapSnapshot(heap) {
          */
         forEachClass: function(callback) {
             if (callback == undefined) callback = print;
-            var classes = this.snapshot.classes;
-            while (classes.hasMoreElements()) {
-                if (callback(wrapJavaValue(classes.nextElement())))
+            var classes = this.snapshot.classes.iterator();
+            for (var cls in Iterator(classes)) {
+                if (callback(wrapJavaValue(cls)))
                     return;
             }
         },
 
         /**
-         * Returns an Enumeration of all roots.
+         * Returns an iterator of all roots.
          */
         roots: function() {
-            var e = this.snapshot.roots;
-            return new java.util.Enumeration() {
-                hasMoreElements: function() {
-                    return e.hasMoreElements();
-                },
-                nextElement: function() {
-                    return wrapRoot(e.nextElement());
-                }
-            };
+            return wrapperIterator(this.snapshot.roots.iterator(), wrapRoot);
         },
 
         /**
-         * Returns an Enumeration for all Java classes.
+         * Returns an iterator for all Java classes.
          */
         classes: function() {
-            return wrapIterator(this.snapshot.classes, true);
+            return wrapperIterator(this.snapshot.classes.iterator());
         },
 
         /**
          * Object iteration: Calls callback function for each
          * Java Object in the heap. Default callback function
-         * is 'print'.If callback returns true, the iteration
+         * is 'print'. If callback returns true, the iteration
          * is stopped.
          *
          * @param callback function to be called.
@@ -539,16 +517,16 @@ function wrapHeapSnapshot(heap) {
             clazz = getClazz(clazz);
 
             if (clazz) {
-                var instances = clazz.getInstances(includeSubtypes);
-                while (instances.hasNextElements()) {
-                    if (callback(wrapJavaValue(instances.nextElement())))
+                var instances = clazz.getInstances(includeSubtypes).iterator();
+                for (var instance in Iterator(instances)) {
+                    if (callback(wrapJavaValue(instance)))
                         return;
                 }
             }
         },
 
         /**
-         * Returns an enumeration of Java objects in the heap.
+         * Returns an iterator of Java objects in the heap.
          *
          * @param clazz Class whose objects are retrieved.
          *        Optional, default is 'java.lang.Object'
@@ -569,14 +547,14 @@ function wrapHeapSnapshot(heap) {
             }
             clazz = getClazz(clazz);
             if (clazz) {
-                var instances = clazz.getInstances(includeSubtypes);
+                var instances = clazz.getInstances(includeSubtypes).iterator();
                 if (where) {
-                    return filterEnumeration(instances, where, true);
+                    return filterIterator(instances, where, true);
                 } else {
-                    return wrapperEnumeration(instances);
+                    return wrapperIterator(instances);
                 }
             } else {
-                return emptyEnumeration;
+                return emptyIterator;
             }
         },
 
@@ -600,12 +578,12 @@ function wrapHeapSnapshot(heap) {
         },
 
         /**
-         * Returns an enumeration of objects in the finalizer
+         * Returns an iterator of objects in the finalizer
          * queue waiting to be finalized.
          */
         finalizables: function() {
-            var tmp = this.snapshot.getFinalizerObjects();
-            return wrapperEnumeration(tmp);
+            var tmp = this.snapshot.getFinalizerObjects().iterator();
+            return wrapperIterator(tmp);
         },
 
         /**
@@ -635,30 +613,31 @@ function wrapHeapSnapshot(heap) {
             }
 
             function wrapRefChain(refChain) {
-                var path = new Array();
+                var path = [];
 
                 // compute path array from refChain
                 var tmp = refChain;
                 while (tmp != null) {
                     var obj = tmp.obj;
-                    path[path.length] = wrapJavaValue(obj);
+                    path.push(wrapJavaValue(obj));
                     tmp = tmp.next;
                 }
 
                 function computeDescription(html) {
                     var root = refChain.obj.root;
                     var desc = root.description;
+                    var toString = html ? toHtml :
+                            function (x) {return x.toString();}
                     if (root.referer) {
                         var ref = root.referer;
-                        desc += " (from " +
-                            (html? toHtml(ref) : ref.toString()) + ')';
+                        desc += " (from " + toString(ref) + ')';
                     }
                     desc += '->';
                     var tmp = refChain;
                     while (tmp != null) {
                         var next = tmp.next;
                         var obj = tmp.obj;
-                        desc += html? toHtml(obj) : obj.toString();
+                        desc += toString(obj);
                         if (next != null) {
                             desc += " (" +
                                     obj.describeReferenceTo(next.obj, heap)  +
@@ -671,9 +650,9 @@ function wrapHeapSnapshot(heap) {
 
                 return new JSAdapter() {
                     __getIds__ : function() {
-                        var res = new Array(path.length);
+                        var res = [];
                         for (var i = 0; i < path.length; i++) {
-                            res[i] = i;
+                            res.push(i);
                         }
                         return res;
                     },
@@ -706,9 +685,9 @@ function wrapHeapSnapshot(heap) {
 
             jobject = unwrapJavaObject(jobject);
             var refChains = this.snapshot.rootsetReferencesTo(jobject, weak);
-            var paths = new Array(refChains.length);
-            for (var i in refChains) {
-                paths[i] = wrapRefChain(refChains[i]);
+            var paths = [];
+            for (var i = 0; i < refChains.length; ++i) {
+                paths.push(wrapRefChain(refChains[i]));
             }
             return paths;
         },
@@ -741,7 +720,7 @@ function allocTrace(jobject) {
         var trace = jobject.allocatedFrom;
         return (trace != null) ? trace.frames : null;
     } catch (e) {
-        print("allocTrace: " + jobject + ", " + e);
+        println("allocTrace: " + jobject + ", " + e);
         return null;
     }
 }
@@ -766,9 +745,8 @@ function classof(jobject) {
  */
 function forEachReferrer(callback, jobject) {
     jobject = unwrapJavaObject(jobject);
-    var refs = jobject.referers;
-    while (refs.hasMoreElements()) {
-        if (callback(wrapJavaValue(refs.nextElement()))) {
+    for (var ref in Iterator(jobject.referers.iterator())) {
+        if (callback(wrapJavaValue(ref))) {
             return;
         }
     }
@@ -793,7 +771,7 @@ function objectid(jobject) {
         jobject = unwrapJavaObject(jobject);
         return String(jobject.idString);
     } catch (e) {
-        print("objectid: " + jobject + ", " + e);
+        println("objectid: " + jobject + ", " + e);
         return null;
     }
 }
@@ -806,33 +784,33 @@ function objectid(jobject) {
 function printAllocTrace(jobject) {
     var frames = this.allocTrace(jobject);
     if (frames == null || frames.length == 0) {
-        print("allocation site trace unavailable for " +
+        println("allocation site trace unavailable for " +
               objectid(jobject));
         return;
     }
-    print(objectid(jobject) + " was allocated at ..");
-    for (var i in frames) {
+    println(objectid(jobject) + " was allocated at ..");
+    for (var i = 0; i < frames.length; ++i) {
         var frame = frames[i];
         var src = frame.sourceFileName;
         if (src == null) src = '<unknown source>';
-        print('\t' + frame.className + "." +
+        println('\t' + frame.className + "." +
              frame.methodName + '(' + frame.methodSignature + ') [' +
              src + ':' + frame.lineNumber + ']');
     }
 }
 
 /**
- * Returns an enumeration of referrers of the given Java object.
+ * Returns an iterator of referrers of the given Java object.
  *
  * @param jobject Java object whose referrers are returned.
  */
 function referrers(jobject) {
     try {
         jobject = unwrapJavaObject(jobject);
-        return wrapperEnumeration(jobject.referers);
+        return wrapperIterator(jobject.referers.iterator());
     } catch (e) {
-        print("referrers: " + jobject + ", " + e);
-        return emptyEnumeration;
+        println("referrers: " + jobject + ", " + e);
+        return emptyIterator;
     }
 }
 
@@ -843,14 +821,14 @@ function referrers(jobject) {
  * @param jobject Java object whose referees are returned.
  */
 function referees(jobject) {
-    var res = new Array();
+    var res = [];
     jobject = unwrapJavaObject(jobject);
     if (jobject != undefined) {
         try {
             jobject.visitReferencedObjects(
                 new hatPkg.model.JavaHeapObjectVisitor() {
                     visit: function(other) {
-                        res[res.length] = wrapJavaValue(other);
+                        res.push(wrapJavaValue(other));
                     },
                     exclude: function(clazz, field) {
                         return false;
@@ -860,7 +838,7 @@ function referees(jobject) {
                     }
                 });
         } catch (e) {
-            print("referees: " + jobject + ", " + e);
+            println("referees: " + jobject + ", " + e);
         }
     }
     return res;
@@ -880,20 +858,15 @@ function reachables(jobject, excludes) {
     if (excludes == undefined) {
         excludes = null;
     } else if (typeof(excludes) == 'string') {
-        var st = new java.util.StringTokenizer(excludes, ",");
-        var excludedFields = new Array();
-        while (st.hasMoreTokens()) {
-            excludedFields[excludedFields.length] = st.nextToken().trim();
-        }
+        var excludedFields = excludes.split(/\s*,\s*/);
         if (excludedFields.length > 0) {
+            var excludeSet = {};
+            for (var i = 0; i < excludedFields.length; ++i) {
+                excludeSet[excludedFields[i]] = 1;
+            }
             excludes = new hatPkg.model.ReachableExcludes() {
                         isExcluded: function (field) {
-                            for (var index in excludedFields) {
-                                if (field.equals(excludedFields[index])) {
-                                    return true;
-                                }
-                            }
-                            return false;
+                            return field in excludeSet;
                         }
                     };
         } else {
@@ -906,12 +879,7 @@ function reachables(jobject, excludes) {
 
     jobject = unwrapJavaObject(jobject);
     var ro = new hatPkg.model.ReachableObjects(jobject, excludes);
-    var tmp = ro.reachables;
-    var res = new Array(tmp.length);
-    for (var i in tmp) {
-        res[i] = wrapJavaValue(tmp[i]);
-    }
-    return res;
+    return ro.reachables.map(wrapJavaValue);
 }
 
 
@@ -935,7 +903,7 @@ function refers(from, to) {
             }
         }
     } catch (e) {
-        print("refers: " + from + ", " + e);
+        println("refers: " + from + ", " + e);
     }
     return false;
 }
@@ -965,7 +933,7 @@ function sizeof(jobject) {
         jobject = unwrapJavaObject(jobject);
         return jobject.size;
     } catch (e) {
-        print("sizeof: " + jobject + ", " + e);
+        println("sizeof: " + jobject + ", " + e);
         return null;
     }
 }
@@ -997,7 +965,7 @@ function toHtml(obj) {
     var tmp = unwrapJavaObject(obj);
     if (tmp != undefined) {
         var id = tmp.idString;
-        if (tmp instanceof Packages.com.sun.tools.hat.internal.model.JavaClass) {
+        if (tmp instanceof hatPkg.model.JavaClass) {
             var name = tmp.name;
             return "<a href='/class/" + id + "'>class " + name + "</a>";
         } else {
@@ -1008,12 +976,12 @@ function toHtml(obj) {
     } else if ((typeof(obj) == 'object') || (obj instanceof JSAdapter)) {
         if (obj instanceof java.lang.Object) {
             // script wrapped Java object
-            obj = wrapIterator(obj);
-            // special case for enumeration
-            if (obj instanceof java.util.Enumeration) {
+            obj = wrapIterable(obj);
+            // special case for iterator
+            if (obj instanceof java.util.Iterator) {
                 var res = "[ ";
-                while (obj.hasMoreElements()) {
-                    res += toHtml(obj.nextElement()) + ", ";
+                while (obj.hasNext()) {
+                    res += toHtml(obj.next()) + ", ";
                 }
                 res += "]";
                 return res;
@@ -1023,7 +991,7 @@ function toHtml(obj) {
         } else if (obj instanceof Array) {
             // script array
             var res = "[ ";
-            for (var i in obj) {
+            for (var i = 0; i < obj.length; ++i) {
                 res += toHtml(obj[i]);
                 if (i != obj.length - 1) {
                     res += ", ";
@@ -1053,59 +1021,52 @@ function toHtml(obj) {
 }
 
 /*
- * Generic array/iterator/enumeration [or even object!] manipulation
- * functions. These functions accept an array/iteration/enumeration
- * and expression String or function. These functions iterate each
- * element of array and apply the expression/function on each element.
+ * Generic array/iterator [or even object!] manipulation functions. These
+ * functions accept an array/iterator and expression String or function.
+ * These functions iterate each element of array and apply the expression/
+ * function on each element.
  */
 
-// private function to wrap an Iterator as an Enumeration
-function wrapIterator(itr, wrap) {
-    if (itr instanceof java.util.Iterator) {
-        return new java.util.Enumeration() {
-                   hasMoreElements: function() {
-                       return itr.hasNext();
-                   },
-                   nextElement: function() {
-                       return wrap? wrapJavaValue(itr.next()) : itr.next();
-                   }
-               };
+// private function to wrap an Iterable as an iterator
+function wrapIterable(itr, wrap) {
+    if (itr instanceof java.lang.Iterable) {
+        var iterator = itr.iterator();
+        return wrap ? wrapperIterator(iterator) : iterator;
     } else {
         return itr;
     }
 }
 
 /**
- * Converts an enumeration/iterator/object into an array
+ * Converts an iterator/object into an array
  *
- * @param obj enumeration/iterator/object
- * @return array that contains values of enumeration/iterator/object
+ * @param obj iterator/object
+ * @return array that contains values of iterator/object
  */
 function toArray(obj) {
-    obj = wrapIterator(obj);
-    if (obj instanceof java.util.Enumeration) {
-        var res = new Array();
-        while (obj.hasMoreElements()) {
-            res[res.length] = obj.nextElement();
+    obj = wrapIterable(obj);
+    if (obj instanceof java.util.Iterator) {
+        var res = [];
+        while (obj.hasNext()) {
+            res.push(obj.next());
         }
         return res;
     } else if (obj instanceof Array) {
         return obj;
     } else {
-        var res = new Array();
+        var res = [];
         for (var index in obj) {
-            res[res.length] = obj[index];
+            res.push(obj[index]);
         }
         return res;
     }
 }
 
 /**
- * Returns whether the given array/iterator/enumeration contains
- * an element that satisfies the given boolean expression specified
- * in code.
+ * Returns whether the given array/iterator contains an element that
+ * satisfies the given boolean expression specified in code.
  *
- * @param array input array/iterator/enumeration that is iterated
+ * @param array input array/iterator that is iterated
  * @param code  expression string or function
  * @return boolean result
  *
@@ -1116,23 +1077,23 @@ function toArray(obj) {
  * 'array' -> array that is being iterated
  */
 function contains(array, code) {
-    array = wrapIterator(array);
+    array = wrapIterable(array);
     var func = code;
     if (typeof(func) != 'function') {
         func = new Function("it", "index", "array",  "return " + code);
     }
 
-    if (array instanceof java.util.Enumeration) {
+    if (array instanceof java.util.Iterator) {
         var index = 0;
-        while (array.hasMoreElements()) {
-            var it = array.nextElement();
+        while (array.hasNext()) {
+            var it = array.next();
             if (func(it, index, array)) {
                 return true;
             }
             index++;
         }
     } else {
-        for (var index in array) {
+        for (var index = 0; index < array.length; ++index) {
             var it = array[index];
             if (func(it, index, array)) {
                 return true;
@@ -1143,32 +1104,32 @@ function contains(array, code) {
 }
 
 /**
- * concatenates two arrays/iterators/enumerators.
+ * concatenates two arrays/iterators.
  *
- * @param array1 array/iterator/enumeration
- * @param array2 array/iterator/enumeration
+ * @param array1 array/iterator
+ * @param array2 array/iterator
  *
- * @return concatenated array or composite enumeration
+ * @return concatenated array or composite iterator
  */
 function concat(array1, array2) {
-    array1 = wrapIterator(array1);
-    array2 = wrapIterator(array2);
+    array1 = wrapIterable(array1);
+    array2 = wrapIterable(array2);
     if (array1 instanceof Array && array2 instanceof Array) {
         return array1.concat(array2);
-    } else if (array1 instanceof java.util.Enumeration &&
-               array2 instanceof java.util.Enumeration) {
-        return new Packages.com.sun.tools.hat.internal.util.CompositeEnumeration(array1, array2);
+    } else if (array1 instanceof java.util.Iterator &&
+               array2 instanceof java.util.Iterator) {
+        return com.google.common.collect.Iterators.concat(array1, array2);
     } else {
         return undefined;
     }
 }
 
 /**
- * Returns the number of array/iterator/enumeration elements
- * that satisfy the given boolean expression specified in code.
- * The code evaluated can refer to the following built-in variables.
+ * Returns the number of array/iterator elements that satisfy the given
+ * boolean expression specified in code. The code evaluated can refer to
+ * the following built-in variables.
  *
- * @param array input array/iterator/enumeration that is iterated
+ * @param array input array/iterator that is iterated
  * @param code  expression string or function
  * @return number of elements
  *
@@ -1180,24 +1141,24 @@ function count(array, code) {
     if (code == undefined) {
         return length(array);
     }
-    array = wrapIterator(array);
+    array = wrapIterable(array);
     var func = code;
     if (typeof(func) != 'function') {
         func = new Function("it", "index", "array",  "return " + code);
     }
 
     var result = 0;
-    if (array instanceof java.util.Enumeration) {
+    if (array instanceof java.util.Iterator) {
         var index = 0;
-        while (array.hasMoreElements()) {
-            var it = array.nextElement();
+        while (array.hasNext()) {
+            var it = array.next();
             if (func(it, index, array)) {
                 result++;
             }
             index++;
         }
     } else {
-        for (var index in array) {
+        for (var index = 0; index < array.length; ++index) {
             var it = array[index];
             if (func(it, index, array)) {
                 result++;
@@ -1208,14 +1169,14 @@ function count(array, code) {
 }
 
 /**
- * filter function returns an array/enumeration that contains
- * elements of the input array/iterator/enumeration that satisfy
- * the given boolean expression. The boolean expression code can
- * refer to the following built-in variables.
+ * filter function returns an array/iterator that contains elements of
+ * the input array/iterator that satisfy the given boolean expression.
+ * The boolean expression code can refer to the following built-in
+ * variables.
  *
- * @param array input array/iterator/enumeration that is iterated
+ * @param array input array/iterator that is iterated
  * @param code  expression string or function
- * @return array/enumeration that contains the filtered elements
+ * @return array/iterator that contains the filtered elements
  *
  * 'it' -> currently visited element
  * 'index' -> index of the current element
@@ -1223,19 +1184,19 @@ function count(array, code) {
  * 'result' -> result array
  */
 function filter(array, code) {
-    array = wrapIterator(array);
+    array = wrapIterable(array);
     var func = code;
     if (typeof(code) != 'function') {
         func = new Function("it", "index", "array", "result", "return " + code);
     }
-    if (array instanceof java.util.Enumeration) {
-        return filterEnumeration(array, func, false);
+    if (array instanceof java.util.Iterator) {
+        return filterIterator(array, func, false);
     } else {
-        var result = new Array();
-        for (var index in array) {
+        var result = [];
+        for (var index = 0; index < array.length; ++index) {
             var it = array[index];
             if (func(it, index, array, result)) {
-                result[result.length] = it;
+                result.push(it);
             }
         }
         return result;
@@ -1243,18 +1204,21 @@ function filter(array, code) {
 }
 
 /**
- * Returns the number of elements of array/iterator/enumeration.
+ * Returns the number of elements of array/iterator.
  *
- * @param array input array/iterator/enumeration that is iterated
+ * @param array input array/iterator that is iterated
  */
 function length(array) {
-    array = wrapIterator(array);
+    if (array instanceof java.util.Collection) {
+        return array.size();
+    }
+    array = wrapIterable(array);
     if (array instanceof Array) {
         return array.length;
-    } else if (array instanceof java.util.Enumeration) {
+    } else if (array instanceof java.util.Iterator) {
         var cnt = 0;
-        while (array.hasMoreElements()) {
-            array.nextElement();
+        while (array.hasNext()) {
+            array.next();
             cnt++;
         }
         return cnt;
@@ -1272,42 +1236,41 @@ function length(array) {
  * on each element of the object or array. The code evaluated
  * can refer to the following built-in variables.
  *
- * @param array input array/iterator/enumeration that is iterated
+ * @param array input array/iterator that is iterated
  * @param code  expression string or function
- * @return array/enumeration that contains mapped values
+ * @return array/iterator that contains mapped values
  *
  * 'it' -> currently visited element
  * 'index' -> index of the current element
  * 'array' -> array that is being iterated
  * 'result' -> result array
  *
- * map function returns an array/enumeration of values created
- * by repeatedly calling code on each element of the input
- * array/iterator/enumeration.
+ * map function returns an array/iterator of values created by
+ * repeatedly calling code on each element of the input array/iterator.
  */
 function map(array, code) {
-    array = wrapIterator(array);
+    array = wrapIterable(array);
     var func = code;
     if(typeof(code) != 'function') {
         func = new Function("it", "index", "array", "result", "return " + code);
     }
 
-    if (array instanceof java.util.Enumeration) {
+    if (array instanceof java.util.Iterator) {
         var index = 0;
-        var result = new java.util.Enumeration() {
-            hasMoreElements: function() {
-                return array.hasMoreElements();
+        var result = new java.util.Iterator() {
+            hasNext: function() {
+                return array.hasNext();
             },
-            nextElement: function() {
-                return func(array.nextElement(), index++, array, result);
+            next: function() {
+                return func(array.next(), index++, array, result);
             }
         };
         return result;
     } else {
-        var result = new Array();
-        for (var index in array) {
+        var result = [];
+        for (var index = 0; index < array.length; ++index) {
             var it = array[index];
-            result[result.length] = func(it, index, array, result);
+            result.push(func(it, index, array, result));
         }
         return result;
     }
@@ -1318,14 +1281,14 @@ function minmax(array, code) {
     if (typeof(code) == 'string') {
         code = new Function("lhs", "rhs", "return " + code);
     }
-    array = wrapIterator(array);
-    if (array instanceof java.util.Enumeration) {
-        if (! array.hasMoreElements()) {
+    array = wrapIterable(array);
+    if (array instanceof java.util.Iterator) {
+        if (!array.hasNext()) {
             return undefined;
         }
-        var res = array.nextElement();
-        while (array.hasMoreElements()) {
-            var next = array.nextElement();
+        var res = array.next();
+        while (array.hasNext()) {
+            var next = array.next();
             if (code(next, res)) {
                 res = next;
             }
@@ -1346,9 +1309,9 @@ function minmax(array, code) {
 }
 
 /**
- * Returns the maximum element of the array/iterator/enumeration
+ * Returns the maximum element of the array/iterator.
  *
- * @param array input array/iterator/enumeration that is iterated
+ * @param array input array/iterator that is iterated
  * @param code (optional) comparision expression or function
  *        by default numerical maximum is computed.
  */
@@ -1360,9 +1323,9 @@ function max(array, code) {
 }
 
 /**
- * Returns the minimum element of the array/iterator/enumeration
+ * Returns the minimum element of the array/iterator.
  *
- * @param array input array/iterator/enumeration that is iterated
+ * @param array input array/iterator that is iterated
  * @param code (optional) comparision expression or function
  *        by default numerical minimum is computed.
  */
@@ -1378,7 +1341,7 @@ function min(array, code) {
  * code to compare the elements. If code is not supplied,
  * numerical sort is done.
  *
- * @param array input array/iterator/enumeration that is sorted
+ * @param array input array/iterator that is sorted
  * @param code  expression string or function
  * @return sorted array
  *
@@ -1410,17 +1373,17 @@ function sort(array, code) {
  *        input elements before sum.
  */
 function sum(array, code) {
-    array = wrapIterator(array);
+    array = wrapIterable(array);
     if (code != undefined) {
         array = map(array, code);
     }
     var result = 0;
-    if (array instanceof java.util.Enumeration) {
-        while (array.hasMoreElements()) {
-            result += Number(array.nextElement());
+    if (array instanceof java.util.Iterator) {
+        while (array.hasNext()) {
+            result += Number(array.next());
         }
     } else {
-        for (var index in array) {
+        for (var index = 0; index < array.length; ++index) {
             result += Number(array[index]);
         }
     }
@@ -1429,7 +1392,7 @@ function sum(array, code) {
 
 /**
  * Returns array of unique elements from the given input
- * array/iterator/enumeration.
+ * array/iterator.
  *
  * @param array from which unique elements are returned.
  * @param code optional expression (or function) giving unique
@@ -1437,27 +1400,27 @@ function sum(array, code) {
  *             by default, objectid is used for uniqueness.
  */
 function unique(array, code) {
-    array = wrapIterator(array);
+    array = wrapIterable(array);
     if (code == undefined) {
-        code = new Function("it", "return objectid(it);");
+        code = objectid;
     } else if (typeof(code) == 'string') {
         code = new Function("it", "return " + code);
     }
-    var tmp = new Object();
-    if (array instanceof java.util.Enumeration) {
-        while (array.hasMoreElements()) {
-            var it = array.nextElement();
+    var tmp = {};
+    if (array instanceof java.util.Iterator) {
+        while (array.hasNext()) {
+            var it = array.next();
             tmp[code(it)] = it;
         }
     } else {
-        for (var index in array) {
+        for (var index = 0; index < array.length; ++index) {
             var it = array[index];
             tmp[code(it)] = it;
         }
     }
-    var res = new Array();
-    for (var index in tmp) {
-        res[res.length] = tmp[index];
+    var res = [];
+    for each (var value in tmp) {
+        res.push(value);
     }
     return res;
 }

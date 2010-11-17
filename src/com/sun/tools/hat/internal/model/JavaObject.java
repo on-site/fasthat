@@ -322,7 +322,7 @@ public class JavaObject extends JavaLazyReadObject {
                     break;
                 }
                 default:
-                    throw new RuntimeException("invalid signature: " + sig);
+                    throw new IllegalArgumentException("invalid signature: " + sig);
             }
         }
         return fieldValues;

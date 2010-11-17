@@ -203,10 +203,8 @@ public class Main {
 
         QueryListener listener = new QueryListener(portNumber);
         listener.setModel(model);
-        Thread t = new Thread(listener, "Query Listener");
-        t.setPriority(Thread.NORM_PRIORITY+1);
-        t.start();
         System.out.println("Started HTTP server on port " + portNumber);
         System.out.println("Server is ready.");
+        listener.run();
     }
 }

@@ -46,8 +46,8 @@ package com.sun.tools.hat.internal.model;
 
 public class HackJavaValue extends JavaValue {
 
-    private String value;
-    private int size;
+    private final String value;
+    private final int size;
 
     public HackJavaValue(String value, int size) {
         this.value = value;

@@ -62,8 +62,8 @@ class ReachableQuery extends QueryHandler {
         printThing(root);
         out.println("</strong><br>");
         out.println("<br>");
-        for (int i = 0; i < things.length; i++) {
-            printThing(things[i]);
+        for (JavaThing thing : things) {
+            printThing(thing);
             out.println("<br>");
         }
 
@@ -82,8 +82,8 @@ class ReachableQuery extends QueryHandler {
         print(title);
         out.println("</h3>");
 
-        for (int i = 0; i < fields.length; i++) {
-            print(fields[i]);
+        for (String field : fields) {
+            print(field);
             out.println("<br>");
         }
     }

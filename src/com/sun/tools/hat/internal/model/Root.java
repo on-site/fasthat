@@ -47,11 +47,11 @@ import com.sun.tools.hat.internal.util.Misc;
 
 public class Root {
 
-    private long id;            // ID of the JavaThing we refer to
-    private long refererId;     // Thread or Class responsible for this, or 0
+    private final long id;            // ID of the JavaThing we refer to
+    private final long refererId;     // Thread or Class responsible for this, or 0
     private int index = -1;             // Index in Snapshot.roots
-    private int type;
-    private String description;
+    private final int type;
+    private final String description;
     private JavaHeapObject referer = null;
     private StackTrace stackTrace = null;
 

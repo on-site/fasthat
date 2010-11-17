@@ -32,9 +32,12 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import com.sun.tools.hat.internal.model.JavaClass;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
@@ -50,12 +53,11 @@ import java.io.IOException;
 
 public class PlatformClasses  {
 
-    static String[] names = null;
+    static volatile List<String> names = null;
 
-
-    public static synchronized String[] getNames() {
+    public static List<String> getNames() {
         if (names == null) {
-            LinkedList<String> list = new LinkedList<String>();
+            List<String> list = new ArrayList<String>();
             InputStream str
                 = PlatformClasses.class
                     .getResourceAsStream("/com/sun/tools/hat/resources/platform_names.txt");
@@ -79,7 +81,7 @@ public class PlatformClasses  {
                     // is the right thing to do anyway.
                 }
             }
-            names = list.toArray(new String[list.size()]);
+            names = list;
         }
         return names;
     }
@@ -106,12 +108,12 @@ public class PlatformClasses  {
                 name = name.substring(index + 2);
             }
         }
-        String[] nms = getNames();
-        for (int i = 0; i < nms.length; i++) {
-            if (name.startsWith(nms[i])) {
-                return true;
+        final String haystack = name;
+        return Iterables.any(getNames(), new Predicate<String>() {
+            @Override
+            public boolean apply(String needle) {
+                return haystack.startsWith(needle);
             }
-        }
-        return false;
+        });
     }
 }

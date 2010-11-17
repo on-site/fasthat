@@ -43,7 +43,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaStatic {
 
-    private JavaField field;
+    private final JavaField field;
     private JavaThing value;
 
     public JavaStatic(JavaField field, JavaThing value) {

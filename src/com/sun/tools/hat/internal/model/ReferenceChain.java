@@ -40,8 +40,8 @@ package com.sun.tools.hat.internal.model;
 
 public class ReferenceChain {
 
-    JavaHeapObject      obj;    // Object referred to
-    ReferenceChain      next;   // Next in chain
+    private final JavaHeapObject      obj;    // Object referred to
+    private final ReferenceChain      next;   // Next in chain
 
     public ReferenceChain(JavaHeapObject obj, ReferenceChain next) {
         this.obj = obj;

@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaFloat extends JavaValue {
 
-    float value;
+    private final float value;
 
     public JavaFloat(float value) {
         this.value = value;

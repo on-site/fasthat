@@ -80,8 +80,7 @@ public class HistogramQuery extends QueryHandler {
         out.println("<tr><th><a href='/histo/class'>Class</a></th>");
         out.println("<th><a href='/histo/count'>Instance Count</a></th>");
         out.println("<th><a href='/histo/size'>Total Size</a></th></tr>");
-        for (int i = 0; i < classes.length; i++) {
-            JavaClass clazz = classes[i];
+        for (JavaClass clazz : classes) {
             out.println("<tr><td>");
             printClass(clazz);
             out.println("</td>");

@@ -40,8 +40,8 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaField {
 
-    private String name;
-    private String signature;
+    private final String name;
+    private final String signature;
 
     public JavaField(String name, String signature) {
         this.name = name;

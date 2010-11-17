@@ -36,7 +36,7 @@ package com.sun.tools.hat.internal.model;
  * Primitive array type codes as defined by VM specification.
  *
  */
-public interface ArrayTypeCodes {
+public class ArrayTypeCodes {
     // Typecodes for array elements.
     // Refer to newarray instruction in VM Spec.
     public static final int T_BOOLEAN = 4;

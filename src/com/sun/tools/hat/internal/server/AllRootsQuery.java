@@ -54,9 +54,10 @@ class AllRootsQuery extends QueryHandler {
         Root[] roots = snapshot.getRootsArray();
         Arrays.sort(roots, new Comparator<Root>() {
             public int compare(Root left, Root right) {
-                int d = left.getType() - right.getType();
+                // More interesting values are *higher*
+                int d = right.getType() - left.getType();
                 if (d != 0) {
-                    return -d;  // More interesting values are *higher*
+                    return d;
                 }
                 return left.getDescription().compareTo(right.getDescription());
             }
@@ -64,9 +65,7 @@ class AllRootsQuery extends QueryHandler {
 
         int lastType = Root.INVALID_TYPE;
 
-        for (int i= 0; i < roots.length; i++) {
-            Root root = roots[i];
-
+        for (Root root : roots) {
             if (root.getType() != lastType) {
                 lastType = root.getType();
                 out.print("<h2>");

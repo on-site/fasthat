@@ -33,7 +33,6 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.*;
-import java.util.Enumeration;
 
 /**
  *
@@ -43,11 +42,11 @@ import java.util.Enumeration;
 
 class InstancesQuery extends QueryHandler {
 
-    private boolean includeSubclasses;
-    private boolean newObjects;
+    private final boolean includeSubclasses;
+    private final boolean newObjects;
 
     public InstancesQuery(boolean includeSubclasses) {
-        this.includeSubclasses = includeSubclasses;
+        this(includeSubclasses, false);
     }
 
     public InstancesQuery(boolean includeSubclasses, boolean newObjects) {
@@ -73,11 +72,9 @@ class InstancesQuery extends QueryHandler {
             out.print("<strong>");
             printClass(clazz);
             out.print("</strong><br><br>");
-            Enumeration<JavaHeapObject> objects = clazz.getInstances(includeSubclasses);
             long totalSize = 0;
             long instances = 0;
-            while (objects.hasMoreElements()) {
-                JavaHeapObject obj = objects.nextElement();
+            for (JavaHeapObject obj : clazz.getInstances(includeSubclasses)) {
                 if (newObjects && !obj.isNew())
                     continue;
                 printThing(obj);

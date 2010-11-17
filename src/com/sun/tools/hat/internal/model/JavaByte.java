@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaByte extends JavaValue {
 
-    byte value;
+    private final byte value;
 
     public JavaByte(byte value) {
         this.value = value;

@@ -45,7 +45,7 @@ import com.sun.tools.hat.internal.model.*;
 
 class RootsQuery extends QueryHandler {
 
-    private boolean includeWeak;
+    private final boolean includeWeak;
 
     public RootsQuery(boolean includeWeak) {
         this.includeWeak = includeWeak;
@@ -75,9 +75,10 @@ class RootsQuery extends QueryHandler {
             public int compare(ReferenceChain left, ReferenceChain right) {
                 Root leftR = left.getObj().getRoot();
                 Root rightR = right.getObj().getRoot();
-                int d = leftR.getType() - rightR.getType();
+                // More interesting values are *higher*
+                int d = rightR.getType() - leftR.getType();
                 if (d != 0) {
-                    return -d;  // More interesting values are *higher*
+                    return d;
                 }
                 return left.getDepth() - right.getDepth();
             }
@@ -87,8 +88,7 @@ class RootsQuery extends QueryHandler {
         printThing(target);
         out.println("</h1>");
         int lastType = Root.INVALID_TYPE;
-        for (int i= 0; i < refs.length; i++) {
-            ReferenceChain ref = refs[i];
+        for (ReferenceChain ref : refs) {
             Root root = ref.getObj().getRoot();
             if (root.getType() != lastType) {
                 lastType = root.getType();

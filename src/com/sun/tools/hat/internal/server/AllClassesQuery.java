@@ -33,7 +33,6 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.*;
-import java.util.Iterator;
 
 /**
  *
@@ -43,8 +42,8 @@ import java.util.Iterator;
 
 class AllClassesQuery extends QueryHandler {
 
-    boolean excludePlatform;
-    boolean oqlSupported;
+    private final boolean excludePlatform;
+    private final boolean oqlSupported;
 
     public AllClassesQuery(boolean excludePlatform, boolean oqlSupported) {
         this.excludePlatform = excludePlatform;
@@ -58,10 +57,8 @@ class AllClassesQuery extends QueryHandler {
             startHtml("All Classes (including platform)");
         }
 
-        Iterator<JavaClass> classes = snapshot.getClasses();
         String lastPackage = null;
-        while (classes.hasNext()) {
-            JavaClass clazz = classes.next();
+        for (JavaClass clazz : snapshot.getClasses()) {
             if (excludePlatform && PlatformClasses.isPlatformClass(clazz)) {
                 // skip this..
                 continue;
