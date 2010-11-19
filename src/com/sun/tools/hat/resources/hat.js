@@ -244,11 +244,11 @@ function wrapJavaObject(thing) {
                     return res;
             },
             __has__ : function(name) {
-                    return name in fieldsByName || name == 'class' ||
+                    return fieldsByName.hasOwnProperty(name) || name == 'class' ||
                            name == 'toString' || name == 'wrapped-object';
             },
             __get__ : function(name) {
-                    if (name in fieldsByName) {
+                    if (fieldsByName.hasOwnProperty(name)) {
                         return wrapJavaValue(fieldsByName[name]);
                     } else if (name == 'class') {
                         return wrapJavaValue(instance.clazz);
@@ -285,10 +285,11 @@ function wrapJavaObject(thing) {
                 return res;
             },
             __has__ : function(name) {
-                return name in fieldsByName || name in theJavaClassProto;
+                return fieldsByName.hasOwnProperty(name) ||
+                       theJavaClassProto.hasOwnProperty(name);
             },
             __get__ : function(name) {
-                if (name in fieldsByName) {
+                if (fieldsByName.hasOwnProperty(name)) {
                     return wrapJavaValue(fieldsByName[name]);
                 }
                 return theJavaClassProto[name];
