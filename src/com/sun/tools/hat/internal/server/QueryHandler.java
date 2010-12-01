@@ -34,6 +34,7 @@ package com.sun.tools.hat.internal.server;
 
 import java.io.PrintWriter;
 
+import com.google.common.collect.ImmutableMultimap;
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -52,6 +53,7 @@ abstract class QueryHandler implements Runnable {
     protected String query;
     protected PrintWriter out;
     protected Snapshot snapshot;
+    protected ImmutableMultimap<String, String> params;
 
     void setUrlStart(String s) {
         urlStart = s;
@@ -69,12 +71,16 @@ abstract class QueryHandler implements Runnable {
         this.snapshot = ss;
     }
 
+    void setParams(ImmutableMultimap<String, String> params) {
+        this.params = params;
+    }
+
     protected String encodeForURL(String s) {
         try {
             s = URLEncoder.encode(s, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             // Should never happen
-            ex.printStackTrace();
+            throw new AssertionError(ex);
         }
         return s;
     }

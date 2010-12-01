@@ -34,6 +34,7 @@ package com.sun.tools.hat.internal.server;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Closeables;
 import com.sun.tools.hat.internal.model.JavaClass;
 
 import java.util.ArrayList;
@@ -62,23 +63,22 @@ public class PlatformClasses  {
                 = PlatformClasses.class
                     .getResourceAsStream("/com/sun/tools/hat/resources/platform_names.txt");
             if (str != null) {
+                BufferedReader rdr = null;
                 try {
-                    BufferedReader rdr
-                        = new BufferedReader(new InputStreamReader(str));
-                    for (;;) {
-                        String s = rdr.readLine();
-                        if (s == null) {
-                            break;
-                        } else if (s.length() > 0) {
+                    rdr = new BufferedReader(new InputStreamReader(str));
+                    String s;
+                    while ((s = rdr.readLine()) != null) {
+                        if (!s.isEmpty()) {
                             list.add(s);
                         }
                     }
-                    rdr.close();
-                    str.close();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                     // Shouldn't happen, and if it does, continuing
                     // is the right thing to do anyway.
+                } finally {
+                    Closeables.closeQuietly(rdr);
+                    Closeables.closeQuietly(str);
                 }
             }
             names = list;

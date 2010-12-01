@@ -41,6 +41,8 @@ package com.sun.tools.hat.internal.server;
 
 
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.util.regex.Pattern;
 
 import java.io.InputStream;
 import java.io.BufferedInputStream;
@@ -48,7 +50,12 @@ import java.io.IOException;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.io.Closeables;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 
@@ -60,10 +67,132 @@ public class HttpReader implements Runnable {
         }
     }
 
+    private static class HandlerRoute {
+        private static final Pattern SLASH = Pattern.compile("/");
+        private static final Pattern AMPER = Pattern.compile("[&;]");
+
+        private final String name;
+        private final String[] parts;
+        private final Supplier<QueryHandler> handlerFactory;
+
+        public HandlerRoute(String name, Supplier<QueryHandler> handlerFactory) {
+            this.name = name;
+            this.parts = SLASH.split(name, -1);
+            this.handlerFactory = handlerFactory;
+        }
+
+        private static String decode(String str) {
+            try {
+                return URLDecoder.decode(str, "UTF-8");
+            } catch (UnsupportedEncodingException exc) {
+                // UTF-8 is always supported
+                throw new AssertionError(exc);
+            }
+        }
+
+        public QueryHandler parse(String queryString) {
+            int qpos = queryString.indexOf('?');
+            String query = qpos == -1 ? queryString : queryString.substring(0, qpos);
+            String[] qparts = SLASH.split(query, -1);
+            if (qparts.length != parts.length) {
+                return null;
+            }
+            String pathInfo = null;
+            StringBuilder urlStart = new StringBuilder();
+            for (int i = 0; i < parts.length; ++i) {
+                if (parts[i].equals("*")) {
+                    pathInfo = decode(qparts[i]);
+                } else if (!parts[i].equals(qparts[i])) {
+                    return null;
+                }
+                if (i > 1) {
+                    urlStart.append("../");
+                }
+            }
+
+            ImmutableMultimap.Builder<String, String> params = ImmutableMultimap.builder();
+            if (qpos != -1) {
+                for (String item : AMPER.split(queryString.substring(qpos + 1))) {
+                    int epos = item.indexOf('=');
+                    if (epos != -1) {
+                        params.put(decode(item.substring(0, epos)),
+                                   decode(item.substring(epos + 1)));
+                    }
+                }
+            }
+
+            QueryHandler handler = handlerFactory.get();
+            handler.setUrlStart(urlStart.toString());
+            handler.setQuery(pathInfo);
+            handler.setParams(params.build());
+            return handler;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
     private final Socket socket;
     private PrintWriter out;
     private final Snapshot snapshot;
     private final EngineThreadLocal engine = new EngineThreadLocal();
+    private final ImmutableList<HandlerRoute> routes = makeHandlerRoutes();
+
+    private ImmutableList<HandlerRoute> makeHandlerRoutes() {
+        final boolean isOQLSupported = OQLEngine.isOQLSupported();
+        ImmutableList.Builder<HandlerRoute> builder = ImmutableList.builder();
+
+        if (isOQLSupported) {
+            builder.add(new HandlerRoute("/oql/", new Supplier<QueryHandler>() {
+                public QueryHandler get() {return new OQLQuery(engine);}
+            }), new HandlerRoute("/oqlhelp/", new Supplier<QueryHandler>() {
+                public QueryHandler get() {return new OQLHelp();}
+            }));
+        }
+        builder.add(new HandlerRoute("/", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new AllClassesQuery(true, isOQLSupported);}
+        }), new HandlerRoute("/allClassesWithPlatform/", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new AllClassesQuery(false, isOQLSupported);}
+        }), new HandlerRoute("/showRoots/", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new AllRootsQuery();}
+        }), new HandlerRoute("/showInstanceCounts/", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new InstancesCountQuery(true);}
+        }), new HandlerRoute("/showInstanceCounts/includePlatform/", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new InstancesCountQuery(false);}
+        }), new HandlerRoute("/instances/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new InstancesQuery(false, false);}
+        }), new HandlerRoute("/newInstances/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new InstancesQuery(false, true);}
+        }), new HandlerRoute("/allInstances/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new InstancesQuery(true, false);}
+        }), new HandlerRoute("/allNewInstances/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new InstancesQuery(true, true);}
+        }), new HandlerRoute("/object/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new ObjectQuery();}
+        }), new HandlerRoute("/class/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new ClassQuery();}
+        }), new HandlerRoute("/roots/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new RootsQuery(false);}
+        }), new HandlerRoute("/allRoots/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new RootsQuery(true);}
+        }), new HandlerRoute("/reachableFrom/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new ReachableQuery();}
+        }), new HandlerRoute("/rootStack/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new RootStackQuery();}
+        }), new HandlerRoute("/histo/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new HistogramQuery();}
+        }), new HandlerRoute("/refsByType/*", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new RefsByTypeQuery();}
+        }), new HandlerRoute("/finalizerSummary/", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new FinalizerSummaryQuery();}
+        }), new HandlerRoute("/finalizerObjects/", new Supplier<QueryHandler>() {
+            public QueryHandler get() {return new FinalizerObjectsQuery();}
+        }));
+
+        return builder.build();
+    }
 
     public HttpReader (Socket s, Snapshot snapshot) {
         this.socket = s;
@@ -78,6 +207,7 @@ public class HttpReader implements Runnable {
                             new OutputStreamWriter(
                                 socket.getOutputStream())));
             out.println("HTTP/1.0 200 OK");
+            out.println("Content-Type: text/html; charset=UTF-8");
             out.println("Cache-Control: no-cache");
             out.println("Pragma: no-cache");
             out.println();
@@ -92,99 +222,16 @@ public class HttpReader implements Runnable {
                 queryBuf.append(ch);
             }
             String query = queryBuf.toString();
-            query = java.net.URLDecoder.decode(query, "UTF-8");
-            QueryHandler handler = null;
             if (snapshot == null) {
                 outputError("The heap snapshot is still being read.");
                 return;
-            } else if (query.equals("/")) {
-                handler = new AllClassesQuery(true, OQLEngine.isOQLSupported());
-                handler.setUrlStart("");
-                handler.setQuery("");
-            } else if (query.startsWith("/oql/")) {
-                if (OQLEngine.isOQLSupported()) {
-                    handler = new OQLQuery(engine.get());
-                    handler.setUrlStart("");
-                    handler.setQuery(query.substring(5));
+            }
+            QueryHandler handler = null;
+            for (HandlerRoute route : routes) {
+                handler = route.parse(query);
+                if (handler != null) {
+                    break;
                 }
-            } else if (query.startsWith("/oqlhelp/")) {
-                if (OQLEngine.isOQLSupported()) {
-                    handler = new OQLHelp();
-                    handler.setUrlStart("");
-                    handler.setQuery("");
-                }
-            } else if (query.equals("/allClassesWithPlatform/")) {
-                handler = new AllClassesQuery(false, OQLEngine.isOQLSupported());
-                handler.setUrlStart("../");
-                handler.setQuery("");
-            } else if (query.equals("/showRoots/")) {
-                handler = new AllRootsQuery();
-                handler.setUrlStart("../");
-                handler.setQuery("");
-            } else if (query.equals("/showInstanceCounts/includePlatform/")) {
-                handler = new InstancesCountQuery(false);
-                handler.setUrlStart("../../");
-                handler.setQuery("");
-            } else if (query.equals("/showInstanceCounts/")) {
-                handler = new InstancesCountQuery(true);
-                handler.setUrlStart("../");
-                handler.setQuery("");
-            } else if (query.startsWith("/instances/")) {
-                handler = new InstancesQuery(false);
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(11));
-            }  else if (query.startsWith("/newInstances/")) {
-                handler = new InstancesQuery(false, true);
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(14));
-            }  else if (query.startsWith("/allInstances/")) {
-                handler = new InstancesQuery(true);
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(14));
-            }  else if (query.startsWith("/allNewInstances/")) {
-                handler = new InstancesQuery(true, true);
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(17));
-            } else if (query.startsWith("/object/")) {
-                handler = new ObjectQuery();
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(8));
-            } else if (query.startsWith("/class/")) {
-                handler = new ClassQuery();
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(7));
-            } else if (query.startsWith("/roots/")) {
-                handler = new RootsQuery(false);
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(7));
-            } else if (query.startsWith("/allRoots/")) {
-                handler = new RootsQuery(true);
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(10));
-            } else if (query.startsWith("/reachableFrom/")) {
-                handler = new ReachableQuery();
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(15));
-            } else if (query.startsWith("/rootStack/")) {
-                handler = new RootStackQuery();
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(11));
-            } else if (query.startsWith("/histo/")) {
-                handler = new HistogramQuery();
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(7));
-            } else if (query.startsWith("/refsByType/")) {
-                handler = new RefsByTypeQuery();
-                handler.setUrlStart("../");
-                handler.setQuery(query.substring(12));
-            } else if (query.startsWith("/finalizerSummary/")) {
-                handler = new FinalizerSummaryQuery();
-                handler.setUrlStart("../");
-                handler.setQuery("");
-            } else if (query.startsWith("/finalizerObjects/")) {
-                handler = new FinalizerObjectsQuery();
-                handler.setUrlStart("../");
-                handler.setQuery("");
             }
 
             if (handler != null) {
@@ -197,15 +244,8 @@ public class HttpReader implements Runnable {
         } catch (IOException ex) {
             ex.printStackTrace();
         } finally {
-            if (out != null) {
-                out.close();
-            }
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException ignored) {
-            }
+            Closeables.closeQuietly(out);
+            Closeables.closeQuietly(in);
             try {
                 socket.close();
             } catch (IOException ignored) {

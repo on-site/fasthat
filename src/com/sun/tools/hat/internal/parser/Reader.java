@@ -33,6 +33,8 @@
 package com.sun.tools.hat.internal.parser;
 
 import java.io.*;
+
+import com.google.common.io.Closeables;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -94,7 +96,7 @@ public abstract class Reader {
                 throw new IOException("Unrecognized magic number: " + i);
             }
         } finally {
-            in.close();
+            Closeables.closeQuietly(in);
         }
     }
 }

@@ -32,6 +32,8 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.JavaClass;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -41,32 +43,50 @@ import java.util.Comparator;
  *
  */
 public class HistogramQuery extends QueryHandler {
+    public enum Order implements Comparator<JavaClass>, Function<JavaClass, Comparable<?>> {
+        CLASS {
+            @Override
+            public String apply(JavaClass clazz) {
+                return clazz.getName();
+            }
+        },
+
+        COUNT {
+            @Override
+            public Integer apply(JavaClass clazz) {
+                return -clazz.getInstancesCount(false);
+            }
+        },
+
+        SIZE {
+            @Override
+            public Long apply(JavaClass clazz) {
+                return -clazz.getTotalInstanceSize();
+            }
+        };
+
+        private final Ordering<JavaClass> ordering;
+
+        private Order() {
+            ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(JavaClass lhs, JavaClass rhs) {
+            return ordering.compare(lhs, rhs);
+        }
+    }
+
     public void run() {
         JavaClass[] classes = snapshot.getClassesArray();
         Comparator<JavaClass> comparator;
         if (query.equals("count")) {
-            comparator = new Comparator<JavaClass>() {
-                public int compare(JavaClass first, JavaClass second) {
-                    long diff = (second.getInstancesCount(false) -
-                             first.getInstancesCount(false));
-                    return (diff == 0)? 0: ((diff < 0)? -1 : + 1);
-                }
-            };
+            comparator = Order.COUNT;
         } else if (query.equals("class")) {
-            comparator = new Comparator<JavaClass>() {
-                public int compare(JavaClass first, JavaClass second) {
-                    return first.getName().compareTo(second.getName());
-                }
-            };
+            comparator = Order.CLASS;
         } else {
             // default sort is by total size
-            comparator = new Comparator<JavaClass>() {
-                public int compare(JavaClass first, JavaClass second) {
-                    long diff = (second.getTotalInstanceSize() -
-                             first.getTotalInstanceSize());
-                    return (diff == 0)? 0: ((diff < 0)? -1 : + 1);
-                }
-            };
+            comparator = Order.SIZE;
         }
         Arrays.sort(classes, comparator);
 

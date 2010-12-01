@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.collect.Iterables;
 import com.sun.tools.hat.internal.oql.*;
 
 /**
@@ -42,19 +43,13 @@ import com.sun.tools.hat.internal.oql.*;
 
 class OQLQuery extends QueryHandler {
 
-    public OQLQuery(OQLEngine engine) {
+    public OQLQuery(ThreadLocal<OQLEngine> engine) {
         this.engine = engine;
     }
 
     public void run() {
         startHtml("Object Query Language (OQL) query");
-        String oql = null;
-        if (query != null && !query.equals("")) {
-            int index = query.indexOf("?query=");
-            if (index != -1 && query.length() > 7) {
-                oql = query.substring(index + 7);
-            }
-        }
+        String oql = Iterables.getOnlyElement(params.get("query"), null);
         out.println("<p align='center'><table>");
         out.println("<tr><td><b>");
         out.println("<a href='/'>All Classes (excluding platform)</a>");
@@ -65,7 +60,7 @@ class OQLQuery extends QueryHandler {
         out.println("<p align='center'>");
         out.println("<textarea name='query' cols=80 rows=10>");
         if (oql != null) {
-            out.println(oql);
+            out.print(oql);
         }
         out.println("</textarea>");
         out.println("</p>");
@@ -82,11 +77,11 @@ class OQLQuery extends QueryHandler {
     private void executeQuery(String q) {
         try {
             out.println("<table border='1'>");
-            engine.executeQuery(q, new ObjectVisitor() {
+            engine.get().executeQuery(q, new ObjectVisitor() {
                      public boolean visit(Object o) {
                          out.println("<tr><td>");
                          try {
-                             out.println(engine.toHtml(o));
+                             out.println(engine.get().toHtml(o));
                          } catch (Exception e) {
                              out.println(e.getMessage());
                              out.println("<pre>");
@@ -106,5 +101,5 @@ class OQLQuery extends QueryHandler {
         }
     }
 
-    private final OQLEngine engine;
+    private final ThreadLocal<OQLEngine> engine;
 }
