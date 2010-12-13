@@ -32,6 +32,8 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
 import java.util.Arrays;
@@ -44,7 +46,26 @@ import java.util.Comparator;
 
 
 class ClassQuery extends QueryHandler {
+    private enum Sorters implements Function<JavaField, Comparable<?>>,
+            Comparator<JavaField> {
+        BY_NAME {
+            @Override
+            public String apply(JavaField cls) {
+                return cls.getName();
+            }
+        };
 
+        private final Ordering<JavaField> ordering;
+
+        private Sorters() {
+            this.ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(JavaField lhs, JavaField rhs) {
+            return ordering.compare(lhs, rhs);
+        }
+    }
 
     public ClassQuery() {
     }
@@ -87,11 +108,7 @@ class ClassQuery extends QueryHandler {
 
         out.println("<h2>Instance Data Members:</h2>");
         JavaField[] ff = clazz.getFields().clone();
-        Arrays.sort(ff, new Comparator<JavaField>() {
-            public int compare(JavaField left, JavaField right) {
-                return left.getName().compareTo(right.getName());
-            }
-        });
+        Arrays.sort(ff, Sorters.BY_NAME);
         for (JavaField f : ff) {
             out.print("    ");
             printField(f);

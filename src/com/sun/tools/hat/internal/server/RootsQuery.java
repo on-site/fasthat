@@ -35,6 +35,9 @@ package com.sun.tools.hat.internal.server;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -44,6 +47,33 @@ import com.sun.tools.hat.internal.model.*;
 
 
 class RootsQuery extends QueryHandler {
+    private enum Sorters implements Function<ReferenceChain, Comparable<?>>,
+            Comparator<ReferenceChain> {
+        BY_ROOT_TYPE {
+            @Override
+            public Integer apply(ReferenceChain chain) {
+                return chain.getObj().getRoot().getType();
+            }
+        },
+
+        BY_DEPTH {
+            @Override
+            public Integer apply(ReferenceChain chain) {
+                return chain.getDepth();
+            }
+        };
+
+        private final Ordering<ReferenceChain> ordering;
+
+        private Sorters() {
+            this.ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(ReferenceChain lhs, ReferenceChain rhs) {
+            return ordering.compare(lhs, rhs);
+        }
+    }
 
     private final boolean includeWeak;
 
@@ -73,14 +103,11 @@ class RootsQuery extends QueryHandler {
             = snapshot.rootsetReferencesTo(target, includeWeak);
         Arrays.sort(refs, new Comparator<ReferenceChain>() {
             public int compare(ReferenceChain left, ReferenceChain right) {
-                Root leftR = left.getObj().getRoot();
-                Root rightR = right.getObj().getRoot();
-                // More interesting values are *higher*
-                int d = rightR.getType() - leftR.getType();
-                if (d != 0) {
-                    return d;
-                }
-                return left.getDepth() - right.getDepth();
+                return ComparisonChain.start()
+                        // More interesting values are *higher*
+                        .compare(right, left, Sorters.BY_ROOT_TYPE)
+                        .compare(left, right, Sorters.BY_DEPTH)
+                        .result();
             }
         });
 

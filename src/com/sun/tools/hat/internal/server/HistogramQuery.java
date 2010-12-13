@@ -43,22 +43,23 @@ import java.util.Comparator;
  *
  */
 public class HistogramQuery extends QueryHandler {
-    public enum Order implements Comparator<JavaClass>, Function<JavaClass, Comparable<?>> {
-        CLASS {
+    private enum Sorters implements Function<JavaClass, Comparable<?>>,
+            Comparator<JavaClass> {
+        BY_NAME {
             @Override
             public String apply(JavaClass clazz) {
                 return clazz.getName();
             }
         },
 
-        COUNT {
+        BY_INSTANCES_COUNT {
             @Override
             public Integer apply(JavaClass clazz) {
                 return -clazz.getInstancesCount(false);
             }
         },
 
-        SIZE {
+        BY_TOTAL_INSTANCE_SIZE {
             @Override
             public Long apply(JavaClass clazz) {
                 return -clazz.getTotalInstanceSize();
@@ -67,7 +68,7 @@ public class HistogramQuery extends QueryHandler {
 
         private final Ordering<JavaClass> ordering;
 
-        private Order() {
+        private Sorters() {
             ordering = Ordering.natural().onResultOf(this);
         }
 
@@ -81,12 +82,12 @@ public class HistogramQuery extends QueryHandler {
         JavaClass[] classes = snapshot.getClassesArray();
         Comparator<JavaClass> comparator;
         if (query.equals("count")) {
-            comparator = Order.COUNT;
+            comparator = Sorters.BY_INSTANCES_COUNT;
         } else if (query.equals("class")) {
-            comparator = Order.CLASS;
+            comparator = Sorters.BY_NAME;
         } else {
             // default sort is by total size
-            comparator = Order.SIZE;
+            comparator = Sorters.BY_TOTAL_INSTANCE_SIZE;
         }
         Arrays.sort(classes, comparator);
 

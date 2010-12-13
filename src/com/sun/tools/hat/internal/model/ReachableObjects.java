@@ -37,11 +37,36 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+
 /**
  * @author      A. Sundararajan
  */
 
 public class ReachableObjects {
+    private enum Sorters implements Function<JavaThing, Comparable<?>>,
+            Comparator<JavaThing> {
+        BY_SIZE {
+            @Override
+            public Integer apply(JavaThing thing) {
+                return thing.getSize();
+            }
+        };
+
+        private final Ordering<JavaThing> ordering;
+
+        private Sorters() {
+            this.ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(JavaThing lhs, JavaThing rhs) {
+            return ordering.compare(lhs, rhs);
+        }
+    }
+
     public ReachableObjects(JavaHeapObject root,
                             final ReachableExcludes excludes) {
         this.root = root;
@@ -89,11 +114,10 @@ public class ReachableObjects {
         }
         Arrays.sort(things, new Comparator<JavaThing>() {
             public int compare(JavaThing left, JavaThing right) {
-                int diff = right.getSize() - left.getSize();
-                if (diff != 0) {
-                    return diff;
-                }
-                return left.compareTo(right);
+                return ComparisonChain.start()
+                        .compare(right, left, Sorters.BY_SIZE)
+                        .compare(left, right)
+                        .result();
             }
         });
         this.reachables = things;

@@ -32,6 +32,8 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 import java.util.*;
 
@@ -103,16 +105,10 @@ public class RefsByTypeQuery extends QueryHandler {
         }  // clazz != null
     } // run
 
-    private void print(final Map<JavaClass, Long> map) {
+    private void print(Map<JavaClass, Long> map) {
         out.println("<table border='1' align='center'>");
         JavaClass[] classes = map.keySet().toArray(new JavaClass[map.size()]);
-        Arrays.sort(classes, new Comparator<JavaClass>() {
-            public int compare(JavaClass first, JavaClass second) {
-                Long count1 = map.get(first);
-                Long count2 = map.get(second);
-                return count2.compareTo(count1);
-            }
-        });
+        Arrays.sort(classes, Ordering.natural().onResultOf(Functions.forMap(map)).reverse());
 
         out.println("<tr><th>Class</th><th>Count</th></tr>");
         for (JavaClass clazz : classes) {

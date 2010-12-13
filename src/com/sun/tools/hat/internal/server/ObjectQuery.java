@@ -35,6 +35,8 @@ package com.sun.tools.hat.internal.server;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.sun.tools.hat.internal.model.*;
 
@@ -46,6 +48,27 @@ import com.sun.tools.hat.internal.model.*;
 
 class ObjectQuery extends ClassQuery {
         // We inherit printFullClass from ClassQuery
+
+    private enum Sorters implements Function<FieldThing, Comparable<?>>,
+            Comparator<FieldThing> {
+        BY_FIELD_NAME {
+            @Override
+            public String apply(FieldThing ft) {
+                return ft.field.getName();
+            }
+        };
+
+        private final Ordering<FieldThing> ordering;
+
+        private Sorters() {
+            this.ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(FieldThing lhs, FieldThing rhs) {
+            return ordering.compare(lhs, rhs);
+        }
+    }
 
     private static class FieldThing {
         public final JavaField field;
@@ -116,11 +139,7 @@ class ObjectQuery extends ClassQuery {
         out.println("<h2>Instance data members:</h2>");
         FieldThing[] fieldThings = FieldThing.make(
                 obj.getClazz().getFieldsForInstance(), obj.getFields());
-        Arrays.sort(fieldThings, new Comparator<FieldThing>() {
-            public int compare(FieldThing lhs, FieldThing rhs) {
-                return lhs.field.getName().compareTo(rhs.field.getName());
-            }
-        });
+        Arrays.sort(fieldThings, Sorters.BY_FIELD_NAME);
         for (FieldThing fieldThing : fieldThings) {
             printField(fieldThing.field);
             out.print(" : ");

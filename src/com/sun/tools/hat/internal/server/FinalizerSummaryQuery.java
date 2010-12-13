@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.primitives.Longs;
 import com.sun.tools.hat.internal.model.*;
 import java.util.*;
 
@@ -58,8 +59,7 @@ public class FinalizerSummaryQuery extends QueryHandler {
 
         @Override
         public int compareTo(HistogramElement other) {
-            long diff = other.count - count;
-            return (diff == 0L)? 0 : ((diff > 0L)? +1 : -1);
+            return Longs.compare(other.count, count);
         }
 
         public JavaClass getClazz() {

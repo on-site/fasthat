@@ -32,8 +32,11 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
 import java.util.Arrays;
@@ -52,6 +55,41 @@ class InstancesCountQuery extends QueryHandler {
         @Override
         public boolean apply(JavaClass clazz) {
             return !PlatformClasses.isPlatformClass(clazz);
+        }
+    }
+
+    private enum Sorters implements Function<JavaClass, Comparable<?>>,
+            Comparator<JavaClass> {
+        BY_INSTANCE_COUNT {
+            @Override
+            public Integer apply(JavaClass cls) {
+                return cls.getInstancesCount(false);
+            }
+        },
+
+        BY_ARRAY_TYPE {
+            @Override
+            public Boolean apply(JavaClass cls) {
+                return cls.getName().startsWith("[");
+            }
+        },
+
+        BY_NAME {
+            @Override
+            public String apply(JavaClass cls) {
+                return cls.getName();
+            }
+        };
+
+        private final Ordering<JavaClass> ordering;
+
+        private Sorters() {
+            this.ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(JavaClass lhs, JavaClass rhs) {
+            return ordering.compare(lhs, rhs);
         }
     }
 
@@ -75,23 +113,12 @@ class InstancesCountQuery extends QueryHandler {
         }
         Arrays.sort(classes, new Comparator<JavaClass>() {
             public int compare(JavaClass lhs, JavaClass rhs) {
-                // Sort from biggest to smallest
-                int diff = rhs.getInstancesCount(false)
-                                - lhs.getInstancesCount(false);
-                if (diff != 0) {
-                    return -diff;
-                }
-                String left = lhs.getName();
-                String right = rhs.getName();
-                if (left.startsWith("[") != right.startsWith("[")) {
-                    // Arrays at the end
-                    if (left.startsWith("[")) {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
-                }
-                return left.compareTo(right);
+                return ComparisonChain.start()
+                        // Sort from biggest to smallest
+                        .compare(rhs, lhs, Sorters.BY_INSTANCE_COUNT)
+                        .compare(lhs, rhs, Sorters.BY_ARRAY_TYPE)
+                        .compare(lhs, rhs, Sorters.BY_NAME)
+                        .result();
             }
         });
 

@@ -35,6 +35,9 @@ package com.sun.tools.hat.internal.server;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -44,6 +47,33 @@ import com.sun.tools.hat.internal.model.*;
 
 
 class AllRootsQuery extends QueryHandler {
+    private enum Sorters implements Function<Root, Comparable<?>>,
+            Comparator<Root> {
+        BY_TYPE {
+            @Override
+            public Integer apply(Root root) {
+                return root.getType();
+            }
+        },
+
+        BY_DESCRIPTION {
+            @Override
+            public String apply(Root root) {
+                return root.getDescription();
+            }
+        };
+
+        private final Ordering<Root> ordering;
+
+        private Sorters() {
+            this.ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(Root lhs, Root rhs) {
+            return ordering.compare(lhs, rhs);
+        }
+    }
 
     public AllRootsQuery() {
     }
@@ -54,12 +84,11 @@ class AllRootsQuery extends QueryHandler {
         Root[] roots = snapshot.getRootsArray();
         Arrays.sort(roots, new Comparator<Root>() {
             public int compare(Root left, Root right) {
-                // More interesting values are *higher*
-                int d = right.getType() - left.getType();
-                if (d != 0) {
-                    return d;
-                }
-                return left.getDescription().compareTo(right.getDescription());
+                return ComparisonChain.start()
+                        // More interesting values are *higher*
+                        .compare(right, left, Sorters.BY_TYPE)
+                        .compare(left, right, Sorters.BY_DESCRIPTION)
+                        .result();
             }
         });
 
