@@ -205,7 +205,7 @@ public class HttpReader implements Runnable {
             in = new BufferedInputStream(socket.getInputStream());
             out = new PrintWriter(new BufferedWriter(
                             new OutputStreamWriter(
-                                socket.getOutputStream())));
+                                socket.getOutputStream(), "UTF-8")));
             out.println("HTTP/1.0 200 OK");
             out.println("Content-Type: text/html; charset=UTF-8");
             out.println("Cache-Control: no-cache");
