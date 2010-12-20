@@ -32,9 +32,13 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.base.Functions;
+import com.google.common.base.Function;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
+
 import java.util.*;
 
 /**
@@ -42,13 +46,34 @@ import java.util.*;
  *
  */
 public class RefsByTypeQuery extends QueryHandler {
+    private enum Sorters implements Function<Multiset.Entry<JavaClass>, Integer>,
+            Comparator<Multiset.Entry<JavaClass>> {
+        BY_COUNT {
+            @Override
+            public Integer apply(Multiset.Entry<JavaClass> entry) {
+                return -entry.getCount();
+            }
+        };
+
+        private final Ordering<Multiset.Entry<JavaClass>> ordering;
+
+        private Sorters() {
+            ordering = Ordering.natural().onResultOf(this);
+        }
+
+        @Override
+        public int compare(Multiset.Entry<JavaClass> lhs, Multiset.Entry<JavaClass> rhs) {
+            return ordering.compare(lhs, rhs);
+        }
+    }
+
     public void run() {
         JavaClass clazz = snapshot.findClass(query);
         if (clazz == null) {
             error("class not found: " + query);
         } else {
-            Map<JavaClass, Long> referrersStat = new HashMap<JavaClass, Long>();
-            final Map<JavaClass, Long> refereesStat = new HashMap<JavaClass, Long>();
+            Multiset<JavaClass> referrersStat = HashMultiset.create();
+            final Multiset<JavaClass> refereesStat = HashMultiset.create();
             for (JavaHeapObject instance : clazz.getInstances(false)) {
                 if (instance.getId() == -1) {
                     continue;
@@ -59,25 +84,12 @@ public class RefsByTypeQuery extends QueryHandler {
                          System.out.println("null class for " + ref);
                          continue;
                     }
-                    Long count = referrersStat.get(cl);
-                    if (count == null) {
-                        count = 1L;
-                    } else {
-                        ++count;
-                    }
-                    referrersStat.put(cl, count);
+                    referrersStat.add(cl);
                 }
                 instance.visitReferencedObjects(
                     new AbstractJavaHeapObjectVisitor() {
                         public void visit(JavaHeapObject obj) {
-                            JavaClass cl = obj.getClazz();
-                            Long count = refereesStat.get(cl);
-                            if (count == null) {
-                                count = 1L;
-                            } else {
-                                ++count;
-                            }
-                            refereesStat.put(cl, count);
+                            refereesStat.add(obj.getClazz());
                         }
                     }
                 );
@@ -105,21 +117,21 @@ public class RefsByTypeQuery extends QueryHandler {
         }  // clazz != null
     } // run
 
-    private void print(Map<JavaClass, Long> map) {
+    private void print(Multiset<JavaClass> multiset) {
         out.println("<table border='1' align='center'>");
-        JavaClass[] classes = map.keySet().toArray(new JavaClass[map.size()]);
-        Arrays.sort(classes, Ordering.natural().onResultOf(Functions.forMap(map)).reverse());
+        List<Multiset.Entry<JavaClass>> entries = Lists.newArrayList(multiset.entrySet());
+        Collections.sort(entries, Sorters.BY_COUNT);
 
         out.println("<tr><th>Class</th><th>Count</th></tr>");
-        for (JavaClass clazz : classes) {
+        for (Multiset.Entry<JavaClass> entry : entries) {
             out.println("<tr><td>");
             out.print("<a href='/refsByType/");
-            out.print(clazz.getIdString());
+            out.print(entry.getElement().getIdString());
             out.print("'>");
-            out.print(clazz.getName());
+            out.print(entry.getElement().getName());
             out.println("</a>");
             out.println("</td><td>");
-            out.println(map.get(clazz));
+            out.println(entry.getCount());
             out.println("</td></tr>");
         }
         out.println("</table>");
