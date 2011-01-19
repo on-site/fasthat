@@ -55,14 +55,14 @@ public class HistogramQuery extends QueryHandler {
         BY_INSTANCES_COUNT {
             @Override
             public Integer apply(JavaClass clazz) {
-                return -clazz.getInstancesCount(false);
+                return ~clazz.getInstancesCount(false);
             }
         },
 
         BY_TOTAL_INSTANCE_SIZE {
             @Override
             public Long apply(JavaClass clazz) {
-                return -clazz.getTotalInstanceSize();
+                return ~clazz.getTotalInstanceSize();
             }
         };
 

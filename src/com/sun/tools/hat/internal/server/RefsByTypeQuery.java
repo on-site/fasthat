@@ -51,7 +51,7 @@ public class RefsByTypeQuery extends QueryHandler {
         BY_COUNT {
             @Override
             public Integer apply(Multiset.Entry<JavaClass> entry) {
-                return -entry.getCount();
+                return ~entry.getCount();
             }
         };
 
