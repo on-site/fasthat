@@ -32,11 +32,7 @@
 
 package com.sun.tools.hat.internal.model;
 
-import java.util.AbstractList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableSet;
 import com.sun.tools.hat.internal.util.Misc;
 
 
@@ -53,17 +49,8 @@ import com.sun.tools.hat.internal.util.Misc;
  */
 
 public abstract class JavaHeapObject extends JavaThing {
-
-    //
-    // Who we refer to.  This is heavily optimized for space, because it's
-    // well worth trading a bit of speed for less swapping.
-    // referers and referersLen go through two phases:  Building and
-    // resolved.  When building, referers might have duplicates, but can
-    // be appended to.  When resolved, referers has no duplicates or
-    // empty slots.
-    //
-    private JavaHeapObject[] referers = null;
-    private int referersLen = 0;        // -1 when resolved
+    private ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
+    private ImmutableSet<JavaHeapObject> referers;
 
     public abstract JavaClass getClazz();
     public abstract int getSize();
@@ -80,23 +67,11 @@ public abstract class JavaHeapObject extends JavaThing {
         }
     }
 
-    //
-    //  Eliminate duplicates from referers, and size the array exactly.
-    // This sets us up to answer queries.  See the comments around the
-    // referers data member for details.
-    //
     void setupReferers() {
-        if (referersLen > 1) {
-            // Copy referers to set, screening out duplicates
-            Set<JavaThing> set = new HashSet<JavaThing>();
-            for (int i = 0; i < referersLen; i++) {
-                set.add(referers[i]);
-            }
-
-            // Now copy into the array
-            referers = set.toArray(new JavaHeapObject[set.size()]);
+        if (referers == null) {
+            referers = builder.build();
+            builder = null;
         }
-        referersLen = -1;
     }
 
 
@@ -135,17 +110,7 @@ public abstract class JavaHeapObject extends JavaThing {
     }
 
     void addReferenceFrom(JavaHeapObject other) {
-        if (referersLen == 0) {
-            referers = new JavaHeapObject[1];        // It was null
-        } else if (referersLen == referers.length) {
-            JavaHeapObject[] copy = new JavaHeapObject[(3 * (referersLen + 1)) / 2];
-            System.arraycopy(referers, 0, copy, 0, referersLen);
-            referers = copy;
-        }
-        referers[referersLen++] = other;
-        // We just append to referers here.  Measurements have shown that
-        // around 10% to 30% are duplicates, so it's better to just append
-        // blindly and screen out all the duplicates at once.
+        builder.add(other);
     }
 
     void addReferenceFromRoot(Root r) {
@@ -165,21 +130,11 @@ public abstract class JavaHeapObject extends JavaThing {
      *
      * @return a list of JavaHeapObject instances
      */
-    public List<JavaHeapObject> getReferers() {
-        if (referersLen != -1) {
+    public ImmutableSet<JavaHeapObject> getReferers() {
+        if (referers == null) {
             throw new IllegalStateException("not resolved: " + getIdString());
         }
-        return new AbstractList<JavaHeapObject>() {
-            @Override
-            public int size() {
-                return referers != null ? referers.length : 0;
-            }
-
-            @Override
-            public JavaHeapObject get(int index) {
-                return referers[index];
-            }
-        };
+        return referers;
     }
 
     /**
