@@ -54,10 +54,11 @@ import java.io.UnsupportedEncodingException;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.io.Closeables;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
+import com.sun.tools.hat.internal.util.Misc;
 
 public class HttpReader implements Runnable {
     private class EngineThreadLocal extends ThreadLocal<OQLEngine> {
@@ -110,7 +111,7 @@ public class HttpReader implements Runnable {
                 }
             }
 
-            ImmutableMultimap.Builder<String, String> params = ImmutableMultimap.builder();
+            ImmutableListMultimap.Builder<String, String> params = ImmutableListMultimap.builder();
             if (qpos != -1) {
                 for (String item : AMPER.split(queryString.substring(qpos + 1))) {
                     int epos = item.indexOf('=');
@@ -237,7 +238,11 @@ public class HttpReader implements Runnable {
             if (handler != null) {
                 handler.setOutput(out);
                 handler.setSnapshot(snapshot);
-                handler.run();
+                try {
+                    handler.run();
+                } catch (RuntimeException ex) {
+                    outputError(ex.getMessage());
+                }
             } else {
                 outputError("Query '" + query + "' not implemented");
             }
@@ -256,7 +261,7 @@ public class HttpReader implements Runnable {
     private void outputError(String msg) {
         out.println();
         out.println("<html><body bgcolor=\"#ffffff\">");
-        out.println(msg);
+        out.println(Misc.encodeHtml(msg));
         out.println("</body></html>");
     }
 
