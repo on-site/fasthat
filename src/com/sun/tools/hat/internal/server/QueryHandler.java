@@ -283,7 +283,8 @@ abstract class QueryHandler implements Runnable {
             String label, Multimap<String, String> params) {
         StringBuilder sb = new StringBuilder();
         Formatter fmt = new Formatter(sb);
-        fmt.format("<a href='/%s/%s?", path, encodeForURL(pathInfo));
+        fmt.format("<a href='/%s/%s?", path,
+                pathInfo == null ? "" : encodeForURL(pathInfo));
         if (params != null) {
             for (Map.Entry<String, String> entry : params.entries()) {
                 fmt.format("%s=%s&", encodeForURL(entry.getKey()),

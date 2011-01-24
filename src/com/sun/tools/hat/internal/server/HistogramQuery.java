@@ -253,9 +253,15 @@ public class HistogramQuery extends QueryHandler {
             if (metrics.hasRefCount()) {
                 out.printf("<td>%s</td>%n", metrics.getRefCount(clazz));
             }
-            out.printf("<td>%s</td>%n", formatLink("instances", null,
-                    String.valueOf(metrics.getCount(clazz)), null, referee,
-                    referrers, clazz));
+            if (referee == null) {
+                out.printf("<td>%s</td>%n", formatLink("instances", null,
+                        String.valueOf(metrics.getCount(clazz)), null, clazz,
+                        null, null));
+            } else {
+                out.printf("<td>%s</td>%n", formatLink("instances", null,
+                        String.valueOf(metrics.getCount(clazz)), null, referee,
+                        referrers, clazz));
+            }
             out.printf("<td>%s</td></tr>%n", metrics.getSize(clazz));
         }
         out.println("</table>");
