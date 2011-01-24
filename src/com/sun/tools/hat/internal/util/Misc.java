@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2011 On-Site.com.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -32,6 +33,14 @@
 
 package com.sun.tools.hat.internal.util;
 
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+
 /**
  * Miscellaneous functions I couldn't think of a good place to put.
  *
@@ -40,6 +49,14 @@ package com.sun.tools.hat.internal.util;
 
 
 public class Misc {
+    private enum GetClass implements Function<JavaHeapObject, JavaClass> {
+        INSTANCE;
+
+        @Override
+        public JavaClass apply(JavaHeapObject obj) {
+            return obj.getClazz();
+        }
+    }
 
     private static final String digits = "0123456789abcdef";
 
@@ -117,5 +134,35 @@ public class Misc {
             }
         }
         return buf.toString();
+    }
+
+    public static ImmutableSet<JavaHeapObject> getReferrers(
+            Iterable<JavaHeapObject> instances) {
+        ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
+        for (JavaHeapObject instance : instances) {
+            builder.addAll(instance.getReferers());
+        }
+        return builder.build();
+    }
+
+    public static ImmutableSet<JavaHeapObject> getReferrers(
+            Iterable<JavaHeapObject> instances, Predicate<JavaHeapObject> filter) {
+        ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
+        for (JavaHeapObject instance : instances) {
+            builder.addAll(Sets.filter(instance.getReferers(), filter));
+        }
+        return builder.build();
+    }
+
+    public static ImmutableSet<JavaHeapObject> getInstances(JavaClass clazz,
+            boolean includeSubclasses, Iterable<JavaClass> referrers) {
+        Iterable<JavaHeapObject> instances = clazz.getInstances(includeSubclasses);
+        if (referrers != null) {
+            for (JavaClass referrer : referrers) {
+                instances = getReferrers(instances, Predicates.compose(
+                        Predicates.equalTo(referrer), GetClass.INSTANCE));
+            }
+        }
+        return ImmutableSet.copyOf(instances);
     }
 }

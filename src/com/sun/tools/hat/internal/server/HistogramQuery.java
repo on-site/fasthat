@@ -34,17 +34,14 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Snapshot;
@@ -53,9 +50,6 @@ import com.sun.tools.hat.internal.util.Misc;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Formatter;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Prints histogram sortable by class name, count and size.
@@ -154,16 +148,12 @@ public class HistogramQuery extends QueryHandler {
             this.references = references;
         }
 
-        public static RefereeMetricsProvider make(Collection<JavaClass> referees) {
-            Iterator<JavaClass> iter = referees.iterator();
-            Preconditions.checkArgument(iter.hasNext());
-            Iterable<JavaHeapObject> instances = iter.next().getInstances(false);
-            while (iter.hasNext()) {
-                instances = getReferrers(instances, Predicates.compose(
-                        Predicates.equalTo(iter.next()), GetClass.INSTANCE));
-            }
+        public static RefereeMetricsProvider make(JavaClass referee,
+                Collection<JavaClass> referrers) {
+            ImmutableSet<JavaHeapObject> instances = Misc.getInstances(referee,
+                    false, referrers);
             return new RefereeMetricsProvider(
-                    Multimaps.index(getReferrers(instances), GetClass.INSTANCE),
+                    Multimaps.index(Misc.getReferrers(instances), GetClass.INSTANCE),
                     getReferences(instances).keys());
         }
 
@@ -195,24 +185,6 @@ public class HistogramQuery extends QueryHandler {
             return true;
         }
 
-        private static ImmutableSet<JavaHeapObject> getReferrers(
-                Iterable<JavaHeapObject> instances) {
-            ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
-            for (JavaHeapObject instance : instances) {
-                builder.addAll(instance.getReferers());
-            }
-            return builder.build();
-        }
-
-        private static ImmutableSet<JavaHeapObject> getReferrers(
-                Iterable<JavaHeapObject> instances, Predicate<JavaHeapObject> filter) {
-            ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
-            for (JavaHeapObject instance : instances) {
-                builder.addAll(Sets.filter(instance.getReferers(), filter));
-            }
-            return builder.build();
-        }
-
         private static ImmutableMultimap<JavaClass, JavaHeapObject> getReferences(
                 Iterable<JavaHeapObject> instances) {
             ImmutableSetMultimap.Builder<JavaClass, JavaHeapObject> builder = ImmutableSetMultimap.builder();
@@ -226,20 +198,16 @@ public class HistogramQuery extends QueryHandler {
     }
 
     public void run() {
-        List<JavaClass> referees = Lists.transform(params.get("referee"),
-                new Function<String, JavaClass>() {
-            @Override
-            public JavaClass apply(String name) {
-                JavaClass result = snapshot.findClass(name);
-                Preconditions.checkNotNull(result, "class not found: %s", name);
-                return result;
-            }
-        });
+        ClassResolver resolver = new ClassResolver(snapshot, true);
+        JavaClass referee = resolver.apply(Iterables.getOnlyElement(
+                params.get("referee"), null));
+        Collection<JavaClass> referrers = Collections2.transform(
+                params.get("referrer"), resolver);
         MetricsProvider metrics;
-        if (referees.isEmpty()) {
+        if (referee == null) {
             metrics = new GlobalMetricsProvider(snapshot);
         } else {
-            metrics = RefereeMetricsProvider.make(referees);
+            metrics = RefereeMetricsProvider.make(referee, referrers);
         }
 
         Comparator<JavaClass> comparator;
@@ -257,35 +225,37 @@ public class HistogramQuery extends QueryHandler {
 
         startHtml("Heap Histogram");
 
-        printBreadcrumbs(query, referees);
+        printBreadcrumbs(query, referee, referrers);
         out.println("<p align='center'>");
         out.println("<b><a href='/'>All Classes (excluding platform)</a></b>");
         out.println("</p>");
 
         out.println("<table align=center border=1>");
         out.println("<tr>");
-        printHeader("class", "Class", referees, null);
+        printHeader("class", "Class", referee, referrers);
         if (metrics.hasRefCount()) {
-            printHeader("refCount", "Reference Count", referees, null);
+            printHeader("refCount", "Reference Count", referee, referrers);
         }
-        printHeader("count", "Instance Count", referees, null);
-        printHeader("size", "Total Size", referees, null);
+        printHeader("count", "Instance Count", referee, referrers);
+        printHeader("size", "Total Size", referee, referrers);
         out.println("</tr>");
         for (JavaClass clazz : classes) {
             out.print("<tr><td>");
             printClass(clazz);
-            if (referees.isEmpty()) {
-                out.printf(" (%s)", formatLink(query, "refs", null, clazz));
+            if (referee == null) {
+                out.printf(" (%s)", formatLink(query, "refs", clazz, null, null));
             } else {
                 out.printf(" (%s, %s)",
-                        formatLink(query, "top", null, clazz),
-                        formatLink(query, "chain", referees, clazz));
+                        formatLink(query, "top", referee, null, clazz),
+                        formatLink(query, "chain", referee, referrers, clazz));
             }
             out.println("</td>");
             if (metrics.hasRefCount()) {
                 out.printf("<td>%s</td>%n", metrics.getRefCount(clazz));
             }
-            out.printf("<td>%s</td>%n", metrics.getCount(clazz));
+            out.printf("<td>%s</td>%n", formatLink("instances", null,
+                    String.valueOf(metrics.getCount(clazz)), null, referee,
+                    referrers, clazz));
             out.printf("<td>%s</td></tr>%n", metrics.getSize(clazz));
         }
         out.println("</table>");
@@ -293,40 +263,21 @@ public class HistogramQuery extends QueryHandler {
         endHtml();
     }
 
-    private void printBreadcrumbs(String pathInfo, List<JavaClass> referees) {
-        if (!referees.isEmpty()) {
-            out.print("<p align='center'>");
-            out.print(formatLink(pathInfo, referees.get(0).getName(), null,
-                    referees.get(0)));
-            int size = referees.size();
-            for (int i = 1; i < size; ++i) {
-                out.printf(" &rarr; %s", formatLink(pathInfo, referees.get(i).getName(),
-                        referees.subList(0, i + 1), null));
-            }
-            out.println("</p>");
-        }
+    private void printBreadcrumbs(String pathInfo, JavaClass referee,
+            Collection<JavaClass> referrers) {
+        super.printBreadcrumbs(path, pathInfo, "referee", referee,
+                referrers, null);
     }
 
-    private void printHeader(String pathInfo, String label, Collection<JavaClass> referees,
-            JavaClass tail) {
-        out.printf("<th>%s</th>", formatLink(pathInfo, label, referees, tail));
+    private void printHeader(String pathInfo, String label, JavaClass referee,
+            Collection<JavaClass> referrers) {
+        out.printf("<th>%s</th>", formatLink(pathInfo, label, referee,
+                referrers, null));
     }
 
-    private static String formatLink(String pathInfo, String label,
-            Collection<JavaClass> referees, JavaClass tail) {
-        StringBuilder sb = new StringBuilder();
-        Formatter fmt = new Formatter(sb);
-        fmt.format("<a href='/histo/%s?", encodeForURL(pathInfo));
-        if (referees != null) {
-            for (JavaClass referee : referees) {
-                fmt.format("referee=%s&", encodeForURL(referee.getIdString()));
-            }
-        }
-        if (tail != null) {
-            fmt.format("referee=%s&", encodeForURL(tail.getIdString()));
-        }
-        sb.setLength(sb.length() - 1);
-        fmt.format("'>%s</a>", Misc.encodeHtml(label));
-        return sb.toString();
+    private String formatLink(String pathInfo, String label, JavaClass referee,
+            Collection<JavaClass> referrers, JavaClass tail) {
+        return formatLink(path, pathInfo, label, "referee", referee,
+                referrers, tail);
     }
 }

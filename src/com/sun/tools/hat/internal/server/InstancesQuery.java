@@ -32,7 +32,11 @@
 
 package com.sun.tools.hat.internal.server;
 
+import java.util.Collection;
+
+import com.google.common.collect.Collections2;
 import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.util.Misc;
 
 /**
  *
@@ -55,7 +59,10 @@ class InstancesQuery extends QueryHandler {
     }
 
     public void run() {
-        JavaClass clazz = snapshot.findClass(query);
+        ClassResolver resolver = new ClassResolver(snapshot, false);
+        JavaClass clazz = resolver.apply(query);
+        Collection<JavaClass> referrers = Collections2.transform(
+                params.get("referrer"), resolver);
         String instancesOf;
         if (newObjects)
             instancesOf = "New instances of ";
@@ -69,12 +76,17 @@ class InstancesQuery extends QueryHandler {
         if (clazz == null) {
             error("Class not found");
         } else {
-            out.print("<strong>");
-            printClass(clazz);
-            out.print("</strong><br><br>");
+            if (referrers.isEmpty()) {
+                out.print("<strong>");
+                printClass(clazz);
+                out.print("</strong><br><br>");
+            } else {
+                printBreadcrumbs(path, null, null, clazz, referrers, null);
+            }
             long totalSize = 0;
             long instances = 0;
-            for (JavaHeapObject obj : clazz.getInstances(includeSubclasses)) {
+            for (JavaHeapObject obj : Misc.getInstances(clazz, includeSubclasses,
+                    referrers)) {
                 if (newObjects && !obj.isNew())
                     continue;
                 printThing(obj);

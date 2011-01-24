@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2011 On-Site.com.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,11 +35,19 @@ package com.sun.tools.hat.internal.server;
 
 import java.io.PrintWriter;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
 
 import java.net.URLEncoder;
+import java.util.Collection;
+import java.util.Formatter;
+import java.util.Map;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -48,12 +57,45 @@ import java.io.UnsupportedEncodingException;
 
 
 abstract class QueryHandler implements Runnable {
+    protected enum GetIdString implements Function<JavaClass, String> {
+        INSTANCE;
 
+        @Override
+        public String apply(JavaClass clazz) {
+            return clazz.getIdString();
+        }
+    }
+
+    protected static class ClassResolver implements Function<String, JavaClass> {
+        private final Snapshot snapshot;
+        private final boolean allowNull;
+
+        public ClassResolver(Snapshot snapshot, boolean allowNull) {
+            this.snapshot = snapshot;
+            this.allowNull = allowNull;
+        }
+
+        @Override
+        public JavaClass apply(String name) {
+            if (name == null && allowNull) {
+                return null;
+            }
+            JavaClass result = snapshot.findClass(name);
+            Preconditions.checkNotNull(result, "class not found: %s", name);
+            return result;
+        }
+    }
+
+    protected String path;
     protected String urlStart;
     protected String query;
     protected PrintWriter out;
     protected Snapshot snapshot;
     protected ImmutableListMultimap<String, String> params;
+
+    void setPath(String s) {
+        path = s;
+    }
 
     void setUrlStart(String s) {
         urlStart = s;
@@ -223,5 +265,129 @@ abstract class QueryHandler implements Runnable {
 
     protected void print(String str) {
         out.print(Misc.encodeHtml(str));
+    }
+
+    /**
+     * Returns a link to <code>/<var>path</var>/<var>pathInfo</var></code>
+     * with the given label and parameters.
+     *
+     * @param path the static portion of the link target (should only
+     *             contain trusted text)
+     * @param pathInfo the non-static portion of the link target (will be
+     *                 URL-encoded)
+     * @param label the link text to use
+     * @param params any {@code GET} parameters to append to the link target
+     * @return an HTML {@code <a>} tag formatted as described
+     */
+    protected static String formatLink(String path, String pathInfo,
+            String label, Multimap<String, String> params) {
+        StringBuilder sb = new StringBuilder();
+        Formatter fmt = new Formatter(sb);
+        fmt.format("<a href='/%s/%s?", path, encodeForURL(pathInfo));
+        if (params != null) {
+            for (Map.Entry<String, String> entry : params.entries()) {
+                fmt.format("%s=%s&", encodeForURL(entry.getKey()),
+                        encodeForURL(entry.getValue()));
+            }
+        }
+        sb.setLength(sb.length() - 1);
+        fmt.format("'>%s</a>", Misc.encodeHtml(label));
+        return sb.toString();
+    }
+
+    /**
+     * Returns a link to <code>/<var>path</var>/<var>pathInfo</var></code>
+     * that can be used to construct a referrer chain. See also the related
+     * {@link #printBreadcrumbs} function.
+     *
+     * <p>For queries that support referrer chains, there is a primary
+     * class that the query works on, followed by a referrer chain that
+     * further filters instances. The primary class is specified as
+     * {@code clazz}.
+     *
+     * <p>The referrer chain is always written with parameter name
+     * {@code referrer}, so the query handler should use that name to get
+     * the referrer chain. Additionally, if the primary class is omitted,
+     * then the referrer chain is irrelevant and will not be printed.
+     *
+     * @param path the static portion of the link target (should only
+     *             contain trusted text)
+     * @param pathInfo the non-static portion of the link target (will be
+     *                 URL-encoded); ignored if {@code name} is omitted
+     * @param label the link text to use
+     * @param name the parameter name for referring to the primary class;
+     *             if omitted, place the class reference in {@code pathInfo}
+     * @param clazz the primary class in use
+     * @param referrers the referrer chain in use
+     * @param tail an optional element to append to the referrer chain
+     * @return an HTML {@code <a>} tag formatted as described
+     */
+    protected static String formatLink(String path, String pathInfo,
+            String label, String name, JavaClass clazz,
+            Collection<JavaClass> referrers, JavaClass tail) {
+        ImmutableListMultimap.Builder<String, String> builder = ImmutableListMultimap.builder();
+        if (clazz != null) {
+            if (name != null) {
+                builder.put(name, clazz.getIdString());
+            } else {
+                pathInfo = clazz.getIdString();
+            }
+            if (referrers != null) {
+                builder.putAll("referrer", Collections2.transform(referrers,
+                        GetIdString.INSTANCE));
+            }
+            if (tail != null) {
+                builder.put("referrer", tail.getIdString());
+            }
+        }
+        return formatLink(path, pathInfo, label, builder.build());
+    }
+
+    /**
+     * Prints out breadcrumbs for accessing previous elements in the
+     * referrer chain.
+     *
+     * <p>For queries that support referrer chains, there is a primary
+     * class that the query works on, followed by a referrer chain that
+     * further filters instances. The primary class is specified as
+     * {@code clazz}.
+     *
+     * <p>The referrer chain is always written with parameter name
+     * {@code referrer}, so the query handler should use that name to get
+     * the referrer chain. Additionally, if the primary class is omitted,
+     * then the referrer chain is irrelevant and will not be printed.
+     *
+     * @param path the static portion of the link target (see {@link #formatLink})
+     * @param pathInfo the non-static portion of the link target
+     *                 (see {@link #formatLink}); ignored if {@code name}
+     *                 is omitted
+     * @param name the parameter name for referring to the primary class;
+     *             if omitted, place the class reference in {@code pathInfo}
+     * @param clazz the primary class in use
+     * @param referrers the referrer chain in use
+     * @param params any further parameters to be prepended
+     */
+    protected void printBreadcrumbs(String path, String pathInfo,
+            String name, JavaClass clazz, Iterable<JavaClass> referrers,
+            Multimap<String, String> params) {
+        ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
+        if (params != null) {
+            builder.putAll(params);
+        }
+        if (clazz != null) {
+            out.print("<p align='center'>");
+            if (name != null) {
+                builder.put(name, clazz.getIdString());
+            } else {
+                pathInfo = clazz.getIdString();
+            }
+            out.print(formatLink(path, pathInfo, clazz.getName(), builder.build()));
+            for (JavaClass referrer : referrers) {
+                out.print(" &rarr; ");
+                builder.put("referrer", referrer.getIdString());
+                out.print(formatLink(path, pathInfo, referrer.getName(), builder.build()));
+            }
+            out.println("</p>");
+        }
     }
 }

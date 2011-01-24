@@ -98,12 +98,15 @@ public class HttpReader implements Runnable {
             if (qparts.length != parts.length) {
                 return null;
             }
+            StringBuilder path = new StringBuilder();
             String pathInfo = null;
             StringBuilder urlStart = new StringBuilder();
             for (int i = 0; i < parts.length; ++i) {
                 if (parts[i].equals("*")) {
                     pathInfo = decode(qparts[i]);
-                } else if (!parts[i].equals(qparts[i])) {
+                } else if (parts[i].equals(qparts[i])) {
+                    path.append('/').append(parts[i]);
+                } else {
                     return null;
                 }
                 if (i > 1) {
@@ -123,6 +126,7 @@ public class HttpReader implements Runnable {
             }
 
             QueryHandler handler = handlerFactory.get();
+            handler.setPath(path.substring(2));
             handler.setUrlStart(urlStart.toString());
             handler.setQuery(pathInfo);
             handler.setParams(params.build());
