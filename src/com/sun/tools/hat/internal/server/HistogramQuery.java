@@ -246,7 +246,7 @@ public class HistogramQuery extends QueryHandler {
                 out.printf(" (%s)", formatLink(query, "refs", clazz, null, null));
             } else {
                 out.printf(" (%s, %s)",
-                        formatLink(query, "top", referee, null, clazz),
+                        formatLink(query, "top", clazz, null, null),
                         formatLink(query, "chain", referee, referrers, clazz));
             }
             out.println("</td>");
