@@ -37,6 +37,7 @@ import java.io.PrintWriter;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
@@ -68,16 +69,16 @@ abstract class QueryHandler implements Runnable {
 
     protected static class ClassResolver implements Function<String, JavaClass> {
         private final Snapshot snapshot;
-        private final boolean allowNull;
+        private final boolean valueRequired;
 
-        public ClassResolver(Snapshot snapshot, boolean allowNull) {
+        public ClassResolver(Snapshot snapshot, boolean valueRequired) {
             this.snapshot = snapshot;
-            this.allowNull = allowNull;
+            this.valueRequired = valueRequired;
         }
 
         @Override
         public JavaClass apply(String name) {
-            if (name == null && allowNull) {
+            if (name == null && !valueRequired) {
                 return null;
             }
             JavaClass result = snapshot.findClass(name);
@@ -141,7 +142,7 @@ abstract class QueryHandler implements Runnable {
     }
 
     protected void error(String msg) {
-        out.println(msg);
+        out.println(Misc.encodeHtml(msg));
     }
 
     protected void printAnchorStart() {
@@ -284,7 +285,7 @@ abstract class QueryHandler implements Runnable {
         StringBuilder sb = new StringBuilder();
         Formatter fmt = new Formatter(sb);
         fmt.format("<a href='/%s/%s?", path,
-                pathInfo == null ? "" : encodeForURL(pathInfo));
+                encodeForURL(Strings.nullToEmpty(pathInfo)));
         if (params != null) {
             for (Map.Entry<String, String> entry : params.entries()) {
                 fmt.format("%s=%s&", encodeForURL(entry.getKey()),
@@ -321,12 +322,17 @@ abstract class QueryHandler implements Runnable {
      * @param clazz the primary class in use
      * @param referrers the referrer chain in use
      * @param tail an optional element to append to the referrer chain
+     * @param params any further parameters to be prepended
      * @return an HTML {@code <a>} tag formatted as described
      */
     protected static String formatLink(String path, String pathInfo,
             String label, String name, JavaClass clazz,
-            Collection<JavaClass> referrers, JavaClass tail) {
+            Collection<JavaClass> referrers, JavaClass tail,
+            Multimap<String, String> params) {
         ImmutableListMultimap.Builder<String, String> builder = ImmutableListMultimap.builder();
+        if (params != null) {
+            builder.putAll(params);
+        }
         if (clazz != null) {
             if (name != null) {
                 builder.put(name, clazz.getIdString());

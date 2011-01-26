@@ -198,7 +198,7 @@ public class HistogramQuery extends QueryHandler {
     }
 
     public void run() {
-        ClassResolver resolver = new ClassResolver(snapshot, true);
+        ClassResolver resolver = new ClassResolver(snapshot, false);
         JavaClass referee = resolver.apply(Iterables.getOnlyElement(
                 params.get("referee"), null));
         Collection<JavaClass> referrers = Collections2.transform(
@@ -250,17 +250,27 @@ public class HistogramQuery extends QueryHandler {
                         formatLink(query, "chain", referee, referrers, clazz));
             }
             out.println("</td>");
+
             if (metrics.hasRefCount()) {
-                out.printf("<td>%s</td>%n", metrics.getRefCount(clazz));
+                String refCount = String.valueOf(metrics.getRefCount(clazz));
+                ImmutableMultimap<String, String> params
+                        = ImmutableMultimap.of("referee", "true");
+                if (referee == null) {
+                    out.printf("<td>%s</td>%n", formatLink("instances", null,
+                            refCount, null, clazz, null, null, params));
+                } else {
+                    out.printf("<td>%s</td>%n", formatLink("instances", null,
+                            refCount, null, referee, referrers, clazz, params));
+                }
             }
+
+            String count = String.valueOf(metrics.getCount(clazz));
             if (referee == null) {
                 out.printf("<td>%s</td>%n", formatLink("instances", null,
-                        String.valueOf(metrics.getCount(clazz)), null, clazz,
-                        null, null));
+                        count, null, clazz, null, null, null));
             } else {
                 out.printf("<td>%s</td>%n", formatLink("instances", null,
-                        String.valueOf(metrics.getCount(clazz)), null, referee,
-                        referrers, clazz));
+                        count, null, referee, referrers, clazz, null));
             }
             out.printf("<td>%s</td></tr>%n", metrics.getSize(clazz));
         }
@@ -284,6 +294,6 @@ public class HistogramQuery extends QueryHandler {
     private String formatLink(String pathInfo, String label, JavaClass referee,
             Collection<JavaClass> referrers, JavaClass tail) {
         return formatLink(path, pathInfo, label, "referee", referee,
-                referrers, tail);
+                referrers, tail, null);
     }
 }

@@ -38,6 +38,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.sun.tools.hat.internal.model.AbstractJavaHeapObjectVisitor;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
@@ -154,13 +155,40 @@ public class Misc {
         return builder.build();
     }
 
+    public static ImmutableSet<JavaHeapObject> getReferrersByClass(
+            Iterable<JavaHeapObject> instances, JavaClass clazz) {
+        return getReferrers(instances, Predicates.compose(
+                Predicates.equalTo(clazz), GetClass.INSTANCE));
+    }
+
+    public static ImmutableSet<JavaHeapObject> getReferees(
+            Iterable<JavaHeapObject> instances, final Predicate<JavaHeapObject> filter) {
+        final ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
+        for (JavaHeapObject instance : instances) {
+            instance.visitReferencedObjects(new AbstractJavaHeapObjectVisitor() {
+                @Override
+                public void visit(JavaHeapObject obj) {
+                    if (filter.apply(obj)) {
+                        builder.add(obj);
+                    }
+                }
+            });
+        }
+        return builder.build();
+    }
+
+    public static ImmutableSet<JavaHeapObject> getRefereesByClass(
+            Iterable<JavaHeapObject> instances, JavaClass clazz) {
+        return getReferees(instances, Predicates.compose(
+                Predicates.equalTo(clazz), GetClass.INSTANCE));
+    }
+
     public static ImmutableSet<JavaHeapObject> getInstances(JavaClass clazz,
             boolean includeSubclasses, Iterable<JavaClass> referrers) {
         Iterable<JavaHeapObject> instances = clazz.getInstances(includeSubclasses);
         if (referrers != null) {
             for (JavaClass referrer : referrers) {
-                instances = getReferrers(instances, Predicates.compose(
-                        Predicates.equalTo(referrer), GetClass.INSTANCE));
+                instances = getReferrersByClass(instances, referrer);
             }
         }
         return ImmutableSet.copyOf(instances);
