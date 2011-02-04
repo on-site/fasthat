@@ -94,8 +94,7 @@ class ObjectQuery extends ClassQuery {
 
     public void run() {
         startHtml("Object at " + query);
-        long id = parseHex(query);
-        JavaHeapObject thing = snapshot.findThing(id);
+        JavaHeapObject thing = snapshot.findThing(query);
         //
         // In the following, I suppose we really should use a visitor
         // pattern.  I'm not that strongly motivated to do this, however:

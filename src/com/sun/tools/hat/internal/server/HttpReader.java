@@ -52,6 +52,7 @@ import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 
+import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -245,6 +246,7 @@ public class HttpReader implements Runnable {
                 try {
                     handler.run();
                 } catch (RuntimeException ex) {
+                    ex.printStackTrace();
                     outputError(ex.getMessage());
                 }
             } else {
@@ -265,7 +267,7 @@ public class HttpReader implements Runnable {
     private void outputError(String msg) {
         out.println();
         out.println("<html><body bgcolor=\"#ffffff\">");
-        out.println(Misc.encodeHtml(msg));
+        out.println(Misc.encodeHtml(Strings.nullToEmpty(msg)));
         out.println("</body></html>");
     }
 

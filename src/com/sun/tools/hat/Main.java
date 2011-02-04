@@ -94,7 +94,7 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             usage("No arguments supplied");
         }
@@ -143,7 +143,6 @@ public class Main {
             }
         }
         String fileName = args[args.length - 1];
-        Snapshot model = null;
         File excludeFile = null;
         if (excludeFileName != null) {
             excludeFile = new File(excludeFileName);
@@ -155,15 +154,8 @@ public class Main {
         }
 
         System.out.println("Reading from " + fileName + "...");
-        try {
-            model = com.sun.tools.hat.internal.parser.Reader.readFile(fileName, callStack, debugLevel);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
+        Snapshot model = com.sun.tools.hat.internal.parser.Reader.readFile(
+                fileName, callStack, debugLevel);
         System.out.println("Snapshot read, resolving...");
         model.resolve(calculateRefs);
         System.out.println("Snapshot resolved.");
@@ -174,17 +166,8 @@ public class Main {
 
         if (baselineDump != null) {
             System.out.println("Reading baseline snapshot...");
-            Snapshot baseline = null;
-            try {
-                baseline = com.sun.tools.hat.internal.parser.Reader.readFile(baselineDump, false,
-                                                      debugLevel);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                System.exit(1);
-            } catch (RuntimeException ex) {
-                ex.printStackTrace();
-                System.exit(1);
-            }
+            Snapshot baseline = com.sun.tools.hat.internal.parser.Reader.readFile(
+                    baselineDump, false, debugLevel);
             baseline.resolve(false);
             System.out.println("Discovering new objects...");
             model.markNewRelativeTo(baseline);
