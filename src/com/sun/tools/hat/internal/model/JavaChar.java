@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaChar extends JavaValue {
 
-    private final char value;
+    public final char value;
 
     public JavaChar(char value) {
         this.value = value;

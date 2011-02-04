@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaInt extends JavaValue {
 
-    private final int value;
+    public final int value;
 
     public JavaInt(int value) {
         this.value = value;

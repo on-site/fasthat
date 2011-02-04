@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaBoolean extends JavaValue {
 
-    private final boolean value;
+    public final boolean value;
 
     public JavaBoolean(boolean value) {
         this.value = value;

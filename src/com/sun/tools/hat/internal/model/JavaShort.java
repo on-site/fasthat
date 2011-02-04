@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaShort extends JavaValue {
 
-    private final short value;
+    public final short value;
 
     public JavaShort(short value) {
         this.value = value;

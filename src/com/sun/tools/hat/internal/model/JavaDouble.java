@@ -41,7 +41,7 @@ package com.sun.tools.hat.internal.model;
 
 public class JavaDouble extends JavaValue {
 
-    private final double value;
+    public final double value;
 
     public JavaDouble(double value) {
         this.value = value;
