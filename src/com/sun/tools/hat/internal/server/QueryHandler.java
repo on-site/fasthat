@@ -41,7 +41,15 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.MapModel;
+import com.sun.tools.hat.internal.lang.Model;
+import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.lang.ModelVisitor;
+import com.sun.tools.hat.internal.lang.ObjectModel;
+import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -162,24 +170,30 @@ abstract class QueryHandler implements Runnable {
     }
 
     protected void printThing(JavaThing thing) {
+        printThing(thing, false);
+    }
+
+    protected void printThing(JavaThing thing, boolean simple) {
         if (thing == null) {
             out.print("null");
             return;
         }
+
         if (thing instanceof JavaHeapObject) {
             JavaHeapObject ho = (JavaHeapObject) thing;
             long id = ho.getId();
             if (id != -1L) {
-                if (ho.isNew())
-                out.println("<strong>");
                 printThingAnchorTag(id);
+                if (ho.isNew())
+                    out.println("<strong>");
             }
-            print(thing.toString());
+            Model model = simple ? null : getModelFor(thing);
+            printSummary(model, thing);
             if (id != -1) {
                 if (ho.isNew())
                     out.println("[new]</strong>");
-                out.print(" (" + ho.getSize() + " bytes)");
                 out.println("</a>");
+                printDetail(model, ho.getSize());
             }
         } else {
             print(thing.toString());
@@ -266,6 +280,115 @@ abstract class QueryHandler implements Runnable {
 
     protected void print(String str) {
         out.print(Misc.encodeHtml(str));
+    }
+
+    protected Model getModelFor(JavaThing thing) {
+        for (ModelFactory factory : snapshot.getModelFactories()) {
+            Model model = factory.newModel(thing);
+            if (model != null) {
+                return model;
+            }
+        }
+        return null;
+    }
+
+    protected void printSummary(Model model, final JavaThing thing) {
+        if (model != null) {
+            model.visit(new ModelVisitor() {
+                @Override
+                public void visit(ScalarModel model) {
+                    print(model.toString());
+                }
+
+                @Override
+                public void visit(CollectionModel model) {
+                    print(thing.toString());
+                }
+
+                @Override
+                public void visit(MapModel model) {
+                    print(thing.toString());
+                }
+
+                @Override
+                public void visit(ObjectModel model) {
+                    print(model.getClassName());
+                }
+            });
+        } else {
+            print(thing.toString());
+        }
+    }
+
+    private void printDetail(Model model, int size) {
+        if (model != null) {
+            model.visit(new ModelVisitor() {
+                @Override
+                public void visit(ScalarModel model) {
+                }
+
+                @Override
+                public void visit(CollectionModel model) {
+                    out.print(" [");
+                    Collection<JavaThing> collection = model.getCollection();
+                    boolean first = true;
+                    for (JavaThing thing : Iterables.limit(collection, 10)) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            out.print(", ");
+                        }
+                        printThing(thing, true);
+                    }
+                    if (collection.size() > 10) {
+                        out.print(", &hellip;");
+                    }
+                    out.print("]");
+                }
+
+                @Override
+                public void visit(MapModel model) {
+                    out.print(" {");
+                    Map<JavaThing, JavaThing> map = model.getMap();
+                    boolean first = true;
+                    for (Map.Entry<JavaThing, JavaThing> entry
+                            : Iterables.limit(map.entrySet(), 10)) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            out.print(", ");
+                        }
+                        printThing(entry.getKey(), true);
+                        out.print(": ");
+                        printThing(entry.getValue(), true);
+                    }
+                    if (map.size() > 10) {
+                        out.print(", &hellip;");
+                    }
+                    out.print("}");
+                }
+
+                @Override
+                public void visit(ObjectModel model) {
+                    out.print(" {");
+                    Map<String, JavaThing> map = model.getProperties();
+                    boolean first = true;
+                    for (Map.Entry<String, JavaThing> entry : map.entrySet()) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            out.print(", ");
+                        }
+                        out.print(entry.getKey());
+                        out.print(": ");
+                        printThing(entry.getValue(), true);
+                    }
+                    out.print("}");
+                }
+            });
+        } else {
+            out.print(" (" + size + " bytes)");
+        }
     }
 
     /**

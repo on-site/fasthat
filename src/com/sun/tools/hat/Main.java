@@ -34,6 +34,8 @@ package com.sun.tools.hat;
 import java.io.IOException;
 import java.io.File;
 
+import com.sun.tools.hat.internal.lang.jruby12.JRuby12;
+import com.sun.tools.hat.internal.lang.openjdk6.OpenJDK6;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.model.ReachableExcludesImpl;
 import com.sun.tools.hat.internal.server.QueryListener;
@@ -173,6 +175,7 @@ public class Main {
             model.markNewRelativeTo(baseline);
             baseline = null;    // Guard against conservative GC
         }
+        model.setUpModelFactories(OpenJDK6.Factory.INSTANCE, JRuby12.Factory.INSTANCE);
         if ( debugLevel == 2 ) {
             System.out.println("No server, -debug 2 was used.");
             System.exit(0);

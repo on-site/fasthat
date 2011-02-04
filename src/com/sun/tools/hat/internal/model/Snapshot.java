@@ -34,6 +34,10 @@ package com.sun.tools.hat.internal.model;
 
 import java.lang.ref.SoftReference;
 import java.util.*;
+
+import com.google.common.collect.ImmutableList;
+import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -120,6 +124,8 @@ public class Snapshot {
     // most Java virtual machines - we assume 2 identifierSize
     // (which is true for Sun's hotspot JVM).
     private int minimumObjectSize;
+
+    private volatile ImmutableList<ModelFactory> modelFactories;
 
     public Snapshot(ReadBuffer buf) {
         nullThing = new HackJavaValue("<null>", 0);
@@ -611,5 +617,19 @@ public class Snapshot {
                 }
             }
         }
+    }
+
+    public ImmutableList<ModelFactory> getModelFactories() {
+        return modelFactories;
+    }
+
+    public void setUpModelFactories(ModelFactoryFactory... factoryFactories) {
+        ImmutableList.Builder<ModelFactory> builder = ImmutableList.builder();
+        for (ModelFactoryFactory factoryFactory : factoryFactories) {
+            if (factoryFactory.isSupported(this)) {
+                builder.add(factoryFactory.newFactory(this));
+            }
+        }
+        modelFactories = builder.build();
     }
 }
