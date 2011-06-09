@@ -67,7 +67,7 @@
     <jar jarfile="${jar}" basedir="${build}">
       <manifest>
         <attribute name="Main-Class" value="com.sun.tools.hat.Main"/>
-        <attribute name="Class-Path" value="${lib}/guava-r09.jar ${lib}/js.jar"/>
+        <attribute name="Class-Path" value="../${lib}/guava-r09.jar ../${lib}/js.jar"/>
       </manifest>
     </jar>
   </target>
