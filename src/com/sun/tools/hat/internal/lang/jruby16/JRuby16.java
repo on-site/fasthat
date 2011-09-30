@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby12;
+package com.sun.tools.hat.internal.lang.jruby16;
 
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
@@ -45,11 +45,11 @@ import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
- * Model factory for JRuby 1.2.
+ * Model factory for JRuby 1.6.
  *
  * @author Chris K. Jester-Young
  */
-public class JRuby12 implements ModelFactory {
+public class JRuby16 implements ModelFactory {
     public enum Factory implements ModelFactoryFactory {
         INSTANCE;
 
@@ -61,12 +61,12 @@ public class JRuby12 implements ModelFactory {
              * them too.
              */
             JavaClass constants = snapshot.findClass("org.jruby.runtime.Constants");
-            return Models.checkStaticString(constants, "VERSION", "1.2.");
+            return Models.checkStaticString(constants, "VERSION", "1.6.");
         }
 
         @Override
         public ModelFactory newFactory(Snapshot snapshot) {
-            return isSupported(snapshot) ? new JRuby12(snapshot) : null;
+            return isSupported(snapshot) ? new JRuby16(snapshot) : null;
         }
     }
 
@@ -76,7 +76,7 @@ public class JRuby12 implements ModelFactory {
     private final JavaClass arrayClass;
     private final JavaClass hashClass;
 
-    private JRuby12(Snapshot snapshot) {
+    private JRuby16(Snapshot snapshot) {
         constantsClass = Models.grabClass(snapshot, "org.jruby.runtime.Constants");
         stringClass = Models.grabClass(snapshot, "org.jruby.RubyString");
         objectClass = Models.grabClass(snapshot, "org.jruby.RubyObject");

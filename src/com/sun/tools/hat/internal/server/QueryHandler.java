@@ -341,7 +341,7 @@ abstract class QueryHandler implements Runnable {
                         printThing(thing, true);
                     }
                     if (collection.size() > 10) {
-                        out.print(", &hellip;");
+                        out.printf(", &hellip;%d more", collection.size() - 10);
                     }
                     out.print("]");
                 }
@@ -349,9 +349,9 @@ abstract class QueryHandler implements Runnable {
                 @Override
                 public void visit(MapModel model) {
                     out.print(" {");
-                    Map<JavaThing, JavaThing> map = model.getMap();
+                    Map<JavaObject, JavaObject> map = model.getMap();
                     boolean first = true;
-                    for (Map.Entry<JavaThing, JavaThing> entry
+                    for (Map.Entry<JavaObject, JavaObject> entry
                             : Iterables.limit(map.entrySet(), 10)) {
                         if (first) {
                             first = false;
@@ -359,11 +359,11 @@ abstract class QueryHandler implements Runnable {
                             out.print(", ");
                         }
                         printThing(entry.getKey(), true);
-                        out.print(": ");
+                        out.print(" &rArr; ");
                         printThing(entry.getValue(), true);
                     }
                     if (map.size() > 10) {
-                        out.print(", &hellip;");
+                        out.printf(", &hellip;%d more", map.size() - 10);
                     }
                     out.print("}");
                 }

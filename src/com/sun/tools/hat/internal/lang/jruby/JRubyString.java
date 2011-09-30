@@ -30,23 +30,44 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Map;
-
+import com.google.common.base.Charsets;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaValueArray;
 
-/**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
- *
- * @author Chris K. Jester-Young
- */
-public abstract class MapModel implements Model {
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+public class JRubyString extends ScalarModel {
+    private final String value;
+
+    private JRubyString(String value) {
+        this.value = value;
     }
 
-    public abstract Map<JavaObject, JavaObject> getMap();
+    public static JRubyString make(JavaObject obj) {
+        String value = getRubyStringValue(obj);
+        return value != null ? new JRubyString(value) : null;
+    }
+
+    private static String getRubyStringValue(JavaObject obj) {
+        JavaObject value = Models.getFieldObject(obj, "value");
+        if (value != null) {
+            JavaValueArray bytes = Models.safeCast(value.getField("bytes"), JavaValueArray.class);
+            JavaInt begin = Models.safeCast(value.getField("begin"), JavaInt.class);
+            JavaInt realSize = Models.safeCast(value.getField("realSize"), JavaInt.class);
+            if (bytes != null && begin != null && realSize != null) {
+                // All the world's a UTF-8....
+                return new String((byte[]) bytes.getElements(), begin.value,
+                        realSize.value, Charsets.UTF_8);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }

@@ -30,23 +30,54 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.jruby;
 
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+import com.sun.tools.hat.internal.lang.MapModel;
+import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaObject;
 
-/**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
- *
- * @author Chris K. Jester-Young
- */
-public abstract class MapModel implements Model {
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+public class JRubyHash extends MapModel {
+    private final ImmutableMap<JavaObject, JavaObject> map;
+
+    private JRubyHash(ImmutableMap<JavaObject, JavaObject> map) {
+        this.map = map;
     }
 
-    public abstract Map<JavaObject, JavaObject> getMap();
+    public static JRubyHash make(JavaObject hash) {
+        List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
+        if (table == null)
+            return null;
+        final ImmutableMap.Builder<JavaObject, JavaObject> builder = ImmutableMap.builder();
+        iterateTable(table, "key", "value", "next", new KeyValueVisitor() {
+            @Override
+            public void visit(JavaObject key, JavaObject value) {
+                builder.put(key, value);
+            }
+        });
+        return new JRubyHash(builder.build());
+    }
+
+    @Override
+    public Map<JavaObject, JavaObject> getMap() {
+        return map;
+    }
+
+    public interface KeyValueVisitor {
+        void visit(JavaObject key, JavaObject value);
+    }
+
+    public static void iterateTable(List<JavaObject> table, String keyField,
+            String valueField, String nextField, KeyValueVisitor visitor) {
+        for (JavaObject element : table) {
+            for (JavaObject bucket = element; bucket != null;
+                    bucket = Models.getFieldObject(bucket, nextField)) {
+                visitor.visit(Models.getFieldObject(bucket, keyField),
+                        Models.getFieldObject(bucket, valueField));
+            }
+        }
+    }
 }

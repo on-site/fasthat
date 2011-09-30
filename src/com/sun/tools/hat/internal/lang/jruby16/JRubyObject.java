@@ -30,76 +30,60 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby12;
+package com.sun.tools.hat.internal.lang.jruby16;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.ObjectModel;
-import com.sun.tools.hat.internal.lang.jruby.JRubyHash;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 class JRubyObject extends ObjectModel {
+    private enum GetVariableNames implements Function<JavaObject, ImmutableList<String>> {
+        INSTANCE;
+
+        @Override
+        public ImmutableList<String> apply(JavaObject rubyClass) {
+            ImmutableList<JavaObject> names = Models.getFieldObjectArray(rubyClass,
+                    "variableNames", JavaObject.class);
+            return ImmutableList.copyOf(Lists.transform(names,
+                    Models.GetStringValue.INSTANCE));
+        }
+    }
+
+    private static final Map<JavaObject, ImmutableList<String>> VARIABLE_NAME_CACHE
+            = new MapMaker().softKeys().makeComputingMap(GetVariableNames.INSTANCE);
+
     private final JavaObject obj;
     private final ImmutableMap<String, JavaThing> properties;
 
     public JRubyObject(JavaObject obj) {
         this.obj = obj;
-        this.properties = makeProperties(obj);
+        this.properties = makeProperties(obj, getClassObject());
     }
 
-    private static ImmutableMap<String, JavaThing> makeProperties(JavaObject obj) {
-        final ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
-        JavaObject variables = Models.getFieldObject(obj, "variables");
-        if (variables != null) {
-            JavaObject packedVFields = Models.getFieldObject(variables, "packedVFields");
-            if (packedVFields != null) {
-                getPropertiesFromPackedFields(packedVFields, builder);
-            }
-            List<JavaObject> packedVTable = Models.getFieldObjectArray(variables,
-                    "packedVTable", JavaObject.class);
-            if (packedVTable != null) {
-                getPropertiesFromPackedTable(packedVTable, builder);
-            }
-            List<JavaObject> vTable = Models.getFieldObjectArray(variables,
-                    "vTable", JavaObject.class);
-            if (vTable != null) {
-                JRubyHash.iterateTable(vTable, "name", "value", "next",
-                        new JRubyHash.KeyValueVisitor() {
-                    @Override
-                    public void visit(JavaObject key, JavaObject value) {
-                        builder.put(Models.getStringValue(key), value);
-                    }
-                });
-            }
+    private static ImmutableMap<String, JavaThing> makeProperties(JavaObject obj,
+            JavaObject rubyClass) {
+        List<String> names = VARIABLE_NAME_CACHE.get(rubyClass);
+        if (names.isEmpty())
+            return ImmutableMap.of();
+        List<JavaThing> values = Models.getFieldObjectArray(obj, "varTable", JavaThing.class);
+        ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
+        Iterator<JavaThing> iter = values.iterator();
+        for (String name : names) {
+            if (!iter.hasNext())
+                break;
+            builder.put(name, iter.next());
         }
         return builder.build();
-    }
-
-    private static void getPropertiesFromPackedFields(JavaObject packedVFields,
-            ImmutableMap.Builder<String, JavaThing> builder) {
-        for (int i = 1; ; ++i) {
-            String name = Models.getFieldString(packedVFields, "name" + i);
-            if (name == null) {
-                return;
-            }
-            builder.put(name, packedVFields.getField("value" + i));
-        }
-    }
-
-    private static void getPropertiesFromPackedTable(List<JavaObject> packedVTable,
-            ImmutableMap.Builder<String, JavaThing> builder) {
-        int midway = packedVTable.size() / 2;
-        for (int i = 0; i < midway; ++i) {
-            String name = Models.getStringValue(packedVTable.get(i));
-            if (name == null) {
-                return;
-            }
-            builder.put(name, packedVTable.get(i + midway));
-        }
     }
 
     @Override

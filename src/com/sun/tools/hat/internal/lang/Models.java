@@ -32,10 +32,14 @@
 
 package com.sun.tools.hat.internal.lang;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaObjectArray;
+import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 import com.sun.tools.hat.internal.model.Snapshot;
 
@@ -83,6 +87,23 @@ public final class Models {
         return Preconditions.checkNotNull(snapshot.findClass(className));
     }
 
+    public enum GetStringValue implements Function<JavaObject, String> {
+        INSTANCE;
+
+        @Override
+        public String apply(JavaObject obj) {
+            if (obj != null && obj.getClazz().isString()) {
+                JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
+                JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
+                JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
+                if (value != null && offset != null && count != null) {
+                    return new String((char[]) value.getElements(), offset.value, count.value);
+                }
+            }
+            return null;
+        }
+    }
+
     /**
      * Returns the value of string object {@code obj}, or null if
      * {@code obj} is not a string object.
@@ -91,13 +112,31 @@ public final class Models {
      * @return the string value of {@code obj}, or null
      */
     public static String getStringValue(JavaObject obj) {
-        if (obj != null && obj.getClazz().isString()) {
-            JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
-            JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
-            JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
-            if (value != null && offset != null && count != null) {
-                return new String((char[]) value.getElements(), offset.value, count.value);
+        return GetStringValue.INSTANCE.apply(obj);
+    }
+
+    /**
+     * Returns the value of array object {@code arr}, which contains
+     * objects of type {@code T}, or null if at least one element of
+     * {@code arr} is not of type {@code T}.
+     *
+     * @param arr the array to get {@code T} objects from
+     * @param typeKey the type key for type {@code T}
+     * @return the elements of {@code arr} if they're all of type {@code T}, or null
+     */
+    public static <T extends JavaThing> ImmutableList<T> getObjectArrayValue(
+            JavaObjectArray arr, Class<T> typeKey) {
+        if (arr != null) {
+            ImmutableList.Builder<T> builder = ImmutableList.builder();
+            for (JavaThing t : arr.getElements()) {
+                if (t != null) {
+                    if (!typeKey.isInstance(t))
+                        return null;
+                    builder.add(typeKey.cast(t));
+                }
             }
+            ImmutableList<T> result = builder.build();
+            return result;
         }
         return null;
     }
@@ -150,6 +189,20 @@ public final class Models {
     }
 
     /**
+     * Convenience method for getting the given field from the given
+     * object as a {@code T}.
+     *
+     * @param obj the object to use
+     * @param field the field to get
+     * @param typeKey the type key for {@code T}
+     * @return the value of the field if it's a {@code T}, else null
+     */
+    public static <T extends JavaThing> T getFieldThing(JavaObject obj, String field,
+            Class<T> typeKey) {
+        return safeCast(obj.getField(field), typeKey);
+    }
+
+    /**
      * Convenience method for getting the string value of the given field
      * from the given object.
      *
@@ -159,5 +212,21 @@ public final class Models {
      */
     public static String getFieldString(JavaObject obj, String field) {
         return getStringValue(getFieldObject(obj, field));
+    }
+
+    /**
+     * Convenience method for getting the elements of the object array
+     * value of the given field from the given object.
+     *
+     * @param obj the object to use
+     * @param field the field to get
+     * @param typeKey the type key for {@code T}
+     * @return the elements of the field if it's an object array with all
+     *         elements of type {@code T}, else null
+     */
+    public static <T extends JavaThing> ImmutableList<T> getFieldObjectArray(
+            JavaObject obj, String field, Class<T> typeKey) {
+        return getObjectArrayValue(getFieldThing(obj, field, JavaObjectArray.class),
+                typeKey);
     }
 }

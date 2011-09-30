@@ -30,44 +30,54 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby12;
+package com.sun.tools.hat.internal.lang.jruby;
 
-import com.google.common.base.Charsets;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.MapMaker;
+import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaValueArray;
+import com.sun.tools.hat.internal.model.JavaObjectArray;
+import com.sun.tools.hat.internal.model.JavaThing;
 
-class JRubyString extends ScalarModel {
-    private final String value;
+public class JRubyArray extends CollectionModel {
+    private enum GetObjectArrayElements implements Function<JavaObjectArray,
+            ImmutableList<JavaThing>> {
+        INSTANCE;
 
-    private JRubyString(String value) {
+        @Override
+        public ImmutableList<JavaThing> apply(JavaObjectArray arr) {
+            return ImmutableList.copyOf(arr.getElements());
+        }
+    }
+
+    private static final Map<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
+            = new MapMaker().softKeys().makeComputingMap(GetObjectArrayElements.INSTANCE);
+
+    private final Collection<JavaThing> value;
+
+    private JRubyArray(Collection<JavaThing> value) {
         this.value = value;
     }
 
-    public static JRubyString make(JavaObject obj) {
-        String value = getRubyStringValue(obj);
-        return value != null ? new JRubyString(value) : null;
-    }
-
-    private static String getRubyStringValue(JavaObject obj) {
-        JavaObject value = Models.getFieldObject(obj, "value");
-        if (value != null) {
-            JavaValueArray bytes = Models.safeCast(value.getField("bytes"), JavaValueArray.class);
-            JavaInt begin = Models.safeCast(value.getField("begin"), JavaInt.class);
-            JavaInt realSize = Models.safeCast(value.getField("realSize"), JavaInt.class);
-            if (bytes != null && begin != null && realSize != null) {
-                // All the world's a UTF-8....
-                return new String((byte[]) bytes.getElements(), begin.value,
-                        realSize.value, Charsets.UTF_8);
-            }
-        }
-        return null;
+    public static JRubyArray make(JavaObject obj) {
+        JavaObjectArray arr = Models.getFieldThing(obj, "values", JavaObjectArray.class);
+        JavaInt begin = Models.getFieldThing(obj, "begin", JavaInt.class);
+        JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
+        if (arr == null || begin == null || length == null)
+            return null;
+        List<JavaThing> elements = ELEMENT_CACHE.get(arr);
+        return new JRubyArray(elements.subList(begin.value, begin.value + length.value));
     }
 
     @Override
-    public String toString() {
+    public Collection<JavaThing> getCollection() {
         return value;
     }
 }
