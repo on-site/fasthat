@@ -76,6 +76,7 @@ public class OpenJDK6 implements ModelFactory {
     private final JavaClass hashtableClass;
     private final JavaClass arrayListClass;
     private final JavaClass vectorClass;
+    private final JavaClass linkedListClass;
 
     private OpenJDK6(Snapshot snapshot) {
         versionClass = Models.grabClass(snapshot, "sun.misc.Version");
@@ -84,6 +85,7 @@ public class OpenJDK6 implements ModelFactory {
         hashtableClass = Models.grabClass(snapshot, "java.util.Hashtable");
         arrayListClass = Models.grabClass(snapshot, "java.util.ArrayList");
         vectorClass = Models.grabClass(snapshot, "java.util.Vector");
+        linkedListClass = Models.grabClass(snapshot, "java.util.LinkedList");
     }
 
     @Override
@@ -102,6 +104,8 @@ public class OpenJDK6 implements ModelFactory {
                 return JavaVector.make(obj, "size");
             else if (clazz == vectorClass)
                 return JavaVector.make(obj, "elementCount");
+            else if (clazz == linkedListClass)
+                return JavaLinkedList.make(obj);
             // TODO Implement all the standard collection classes.
         }
         if (thing instanceof JavaObjectArray)
