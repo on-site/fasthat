@@ -37,8 +37,8 @@ import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
-import com.sun.tools.hat.internal.lang.jruby.JRubyHash;
 import com.sun.tools.hat.internal.lang.jruby.JRubyString;
+import com.sun.tools.hat.internal.lang.openjdk6.JavaHash;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
@@ -90,15 +90,14 @@ public class JRuby16 implements ModelFactory {
         if (obj != null) {
             // XXX The factory dispatch mechanism needs real improvement.
             JavaClass clazz = obj.getClazz();
-            if (clazz == stringClass) {
+            if (clazz == stringClass)
                 return JRubyString.make(obj);
-            } else if (clazz == objectClass) {
+            else if (clazz == objectClass)
                 return new JRubyObject(obj);
-            } else if (clazz == arrayClass) {
+            else if (clazz == arrayClass)
                 return JRubyArray.make(obj);
-            } else if (clazz == hashClass) {
-                return JRubyHash.make(obj);
-            }
+            else if (clazz == hashClass)
+                return JavaHash.make(obj);
             // TODO Implement other JRuby types.
         }
         return null;

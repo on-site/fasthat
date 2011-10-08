@@ -38,7 +38,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.ObjectModel;
-import com.sun.tools.hat.internal.lang.jruby.JRubyHash;
+import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
@@ -67,11 +67,11 @@ class JRubyObject extends ObjectModel {
             List<JavaObject> vTable = Models.getFieldObjectArray(variables,
                     "vTable", JavaObject.class);
             if (vTable != null) {
-                JRubyHash.iterateTable(vTable, "name", "value", "next",
-                        new JRubyHash.KeyValueVisitor() {
+                HashCommon.walkHashTable(vTable, "name", "value", "next",
+                        new HashCommon.KeyValueVisitor() {
                     @Override
-                    public void visit(JavaObject key, JavaObject value) {
-                        builder.put(Models.getStringValue(key), value);
+                    public void visit(JavaThing key, JavaThing value) {
+                        builder.put(Models.getStringValue((JavaObject) key), value);
                     }
                 });
             }

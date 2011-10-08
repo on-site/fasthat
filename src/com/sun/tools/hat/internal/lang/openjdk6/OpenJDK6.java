@@ -59,7 +59,8 @@ public class OpenJDK6 implements ModelFactory {
              * too.
              */
             JavaClass version = snapshot.findClass("sun.misc.Version");
-            return Models.checkStaticString(version, "java_runtime_name", "OpenJDK")
+            return (Models.checkStaticString(version, "java_runtime_name", "Java(TM) SE")
+                    || Models.checkStaticString(version, "java_runtime_name", "OpenJDK"))
                     && Models.checkStaticString(version, "java_version", "1.6.0_");
         }
 
@@ -70,23 +71,41 @@ public class OpenJDK6 implements ModelFactory {
     }
 
     private final JavaClass versionClass;
+    private final JavaClass concHashMapClass;
+    private final JavaClass hashMapClass;
+    private final JavaClass hashtableClass;
+    private final JavaClass arrayListClass;
+    private final JavaClass vectorClass;
 
     private OpenJDK6(Snapshot snapshot) {
         versionClass = Models.grabClass(snapshot, "sun.misc.Version");
+        concHashMapClass = Models.grabClass(snapshot, "java.util.concurrent.ConcurrentHashMap");
+        hashMapClass = Models.grabClass(snapshot, "java.util.HashMap");
+        hashtableClass = Models.grabClass(snapshot, "java.util.Hashtable");
+        arrayListClass = Models.grabClass(snapshot, "java.util.ArrayList");
+        vectorClass = Models.grabClass(snapshot, "java.util.Vector");
     }
 
     @Override
     public Model newModel(JavaThing thing) {
         if (thing instanceof JavaObject) {
             JavaObject obj = (JavaObject) thing;
-            if (obj.getClazz().isString()) {
+            // XXX The factory dispatch mechanism needs real improvement.
+            JavaClass clazz = obj.getClazz();
+            if (clazz.isString())
                 return JavaString.make(obj);
-            }
+            else if (clazz == concHashMapClass)
+                return JavaConcHash.make(obj);
+            else if (clazz == hashMapClass || clazz == hashtableClass)
+                return JavaHash.make(obj);
+            else if (clazz == arrayListClass)
+                return JavaVector.make(obj, "size");
+            else if (clazz == vectorClass)
+                return JavaVector.make(obj, "elementCount");
             // TODO Implement all the standard collection classes.
         }
-        if (thing instanceof JavaObjectArray) {
+        if (thing instanceof JavaObjectArray)
             return new JavaArray((JavaObjectArray) thing);
-        }
         return null;
     }
 

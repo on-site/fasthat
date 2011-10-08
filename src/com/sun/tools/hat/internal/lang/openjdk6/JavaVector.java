@@ -30,23 +30,37 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.openjdk6;
 
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.model.JavaInt;
+import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-/**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
- *
- * @author Chris K. Jester-Young
- */
-public abstract class MapModel implements Model {
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+class JavaVector extends CollectionModel {
+    private final ImmutableList<JavaThing> items;
+
+    private JavaVector(List<JavaThing> items) {
+        this.items = ImmutableList.copyOf(items);
     }
 
-    public abstract Map<JavaThing, JavaThing> getMap();
+    public static JavaVector make(JavaObject vec, String sizeField) {
+        JavaThing[] data = Models.getFieldThing(vec, "elementData",
+                JavaObjectArray.class).getElements();
+        JavaInt size = Models.getFieldThing(vec, sizeField, JavaInt.class);
+        return data == null || size == null ? null
+                : new JavaVector(Arrays.asList(data).subList(0, size.value));
+    }
+
+    @Override
+    public Collection<JavaThing> getCollection() {
+        return items;
+    }
 }

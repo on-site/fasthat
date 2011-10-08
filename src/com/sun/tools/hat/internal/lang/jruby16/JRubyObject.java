@@ -60,7 +60,7 @@ class JRubyObject extends ObjectModel {
     }
 
     private static final Map<JavaObject, ImmutableList<String>> VARIABLE_NAME_CACHE
-            = new MapMaker().softKeys().makeComputingMap(GetVariableNames.INSTANCE);
+            = new MapMaker().softValues().makeComputingMap(GetVariableNames.INSTANCE);
 
     private final JavaObject obj;
     private final ImmutableMap<String, JavaThing> properties;

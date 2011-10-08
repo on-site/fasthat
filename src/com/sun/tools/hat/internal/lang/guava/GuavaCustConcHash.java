@@ -30,54 +30,55 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby;
+package com.sun.tools.hat.internal.lang.guava;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.MapMaker;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.google.common.collect.ImmutableMap;
+import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JRubyArray extends CollectionModel {
-    private enum GetObjectArrayElements implements Function<JavaObjectArray,
-            ImmutableList<JavaThing>> {
-        INSTANCE;
+class GuavaCustConcHash extends MapModel {
+    private final ImmutableMap<JavaThing, JavaThing> map;
 
-        @Override
-        public ImmutableList<JavaThing> apply(JavaObjectArray arr) {
-            return ImmutableList.copyOf(arr.getElements());
-        }
+    private GuavaCustConcHash(ImmutableMap<JavaThing, JavaThing> map) {
+        this.map = map;
     }
 
-    private static final Map<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
-            = new MapMaker().softValues().makeComputingMap(GetObjectArrayElements.INSTANCE);
-
-    private final Collection<JavaThing> value;
-
-    private JRubyArray(Collection<JavaThing> value) {
-        this.value = value;
-    }
-
-    public static JRubyArray make(JavaObject obj) {
-        JavaObjectArray arr = Models.getFieldThing(obj, "values", JavaObjectArray.class);
-        JavaInt begin = Models.getFieldThing(obj, "begin", JavaInt.class);
-        JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
-        if (arr == null || begin == null || length == null)
+    public static GuavaCustConcHash make(JavaObject chm) {
+        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
+                JavaObject.class);
+        if (segments == null)
             return null;
-        List<JavaThing> elements = ELEMENT_CACHE.get(arr);
-        return new JRubyArray(elements.subList(begin.value, begin.value + length.value));
+
+        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+        for (JavaObject segment : segments) {
+            JavaObject table = Models.getFieldObject(segment, "table");
+            List<JavaObject> array = Models.getFieldObjectArray(table, "array",
+                    JavaObject.class);
+            if (array != null) {
+                for (JavaObject entry : array) {
+                    // Strong keys use the "key" field
+                    // Soft/weak keys use the "referent" field
+                    JavaThing key = entry.getField("key");
+                    if (key == null)
+                        key = entry.getField("referent");
+                    JavaObject valueReference = Models.getFieldObject(entry,
+                            "valueReference");
+                    JavaThing value = valueReference.getField("referent");
+                    if (key != null && value != null)
+                        builder.put(key, value);
+                }
+            }
+        }
+        return new GuavaCustConcHash(builder.build());
     }
 
     @Override
-    public Collection<JavaThing> getCollection() {
-        return value;
+    public Map<JavaThing, JavaThing> getMap() {
+        return map;
     }
 }

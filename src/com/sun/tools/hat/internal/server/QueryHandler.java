@@ -349,9 +349,9 @@ abstract class QueryHandler implements Runnable {
                 @Override
                 public void visit(MapModel model) {
                     out.print(" {");
-                    Map<JavaObject, JavaObject> map = model.getMap();
+                    Map<JavaThing, JavaThing> map = model.getMap();
                     boolean first = true;
-                    for (Map.Entry<JavaObject, JavaObject> entry
+                    for (Map.Entry<JavaThing, JavaThing> entry
                             : Iterables.limit(map.entrySet(), 10)) {
                         if (first) {
                             first = false;

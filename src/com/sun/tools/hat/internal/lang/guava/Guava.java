@@ -30,58 +30,38 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby12;
+package com.sun.tools.hat.internal.lang.guava;
 
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
-import com.sun.tools.hat.internal.lang.jruby.JRubyString;
-import com.sun.tools.hat.internal.lang.openjdk6.JavaHash;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
-/**
- * Model factory for JRuby 1.2.
- *
- * @author Chris K. Jester-Young
- */
-public class JRuby12 implements ModelFactory {
+public class Guava implements ModelFactory {
     public enum Factory implements ModelFactoryFactory {
         INSTANCE;
 
         @Override
         public boolean isSupported(Snapshot snapshot) {
-            /*
-             * BTW, feel free to relax this to enable other versions of
-             * JRuby to work, if you are sure the models here work for
-             * them too.
-             */
-            JavaClass constants = snapshot.findClass("org.jruby.runtime.Constants");
-            return Models.checkStaticString(constants, "VERSION", "1.2.");
+            // Not sure how to test for Guava version
+            return true;
         }
 
         @Override
         public ModelFactory newFactory(Snapshot snapshot) {
-            return isSupported(snapshot) ? new JRuby12(snapshot) : null;
+            return new Guava(snapshot);
         }
     }
 
-    private final JavaClass constantsClass;
-    private final JavaClass stringClass;
-    private final JavaClass objectClass;
-    private final JavaClass arrayClass;
-    private final JavaClass hashClass;
+    private final JavaClass custConcHashClass;
 
-    private JRuby12(Snapshot snapshot) {
-        constantsClass = Models.grabClass(snapshot, "org.jruby.runtime.Constants");
-        stringClass = Models.grabClass(snapshot, "org.jruby.RubyString");
-        objectClass = Models.grabClass(snapshot, "org.jruby.RubyObject");
-        arrayClass = Models.grabClass(snapshot, "org.jruby.RubyArray");
-        hashClass = Models.grabClass(snapshot, "org.jruby.RubyHash");
+    public Guava(Snapshot snapshot) {
+        custConcHashClass = Models.grabClass(snapshot,
+                "com.google.common.collect.CustomConcurrentHashMap");
     }
 
     @Override
@@ -90,23 +70,9 @@ public class JRuby12 implements ModelFactory {
         if (obj != null) {
             // XXX The factory dispatch mechanism needs real improvement.
             JavaClass clazz = obj.getClazz();
-            if (clazz == stringClass)
-                return JRubyString.make(obj);
-            else if (clazz == objectClass)
-                return new JRubyObject(obj);
-            else if (clazz == arrayClass)
-                return JRubyArray.make(obj);
-            else if (clazz == hashClass)
-                return JavaHash.make(obj);
-            // TODO Implement other JRuby types.
+            if (clazz == custConcHashClass)
+                return GuavaCustConcHash.make(obj);
         }
         return null;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("JRuby %s (%s)",
-                Models.getStaticString(constantsClass, "VERSION"),
-                Models.getStaticString(constantsClass, "REVISION"));
     }
 }

@@ -30,23 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
-
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
-
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
- *
- * @author Chris K. Jester-Young
+ * Models for Guava collections.
  */
-public abstract class MapModel implements Model {
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    public abstract Map<JavaThing, JavaThing> getMap();
-}
+package com.sun.tools.hat.internal.lang.guava;

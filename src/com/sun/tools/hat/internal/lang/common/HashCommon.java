@@ -30,54 +30,59 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby;
+package com.sun.tools.hat.internal.lang.common;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.MapMaker;
-import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JRubyArray extends CollectionModel {
-    private enum GetObjectArrayElements implements Function<JavaObjectArray,
-            ImmutableList<JavaThing>> {
-        INSTANCE;
+/**
+ * Common functions for dealing with hashes.
+ *
+ * @author Chris K. Jester-Young
+ */
+public final class HashCommon {
+    /**
+     * An interface for objects that receive key-value pairs during a
+     * hash-walking operation.
+     */
+    public interface KeyValueVisitor {
+        /**
+         * Called once for each hash entry during a hash-walking operation.
+         *
+         * @param key the key in the hash entry
+         * @param value the value in the hash entry
+         */
+        void visit(JavaThing key, JavaThing value);
+    }
 
-        @Override
-        public ImmutableList<JavaThing> apply(JavaObjectArray arr) {
-            return ImmutableList.copyOf(arr.getElements());
+    /**
+     * Disable instantiation for static class.
+     */
+    private HashCommon() {}
+
+    /**
+     * Walks through the given hash table, invoking the given visitor for
+     * each entry found. The hash table is specified as a list of objects
+     * that conform to the {@code HashMap.Entry} layout; in other words,
+     * has at least the {@code key}, {@code value}, and {@code next} fields.
+     * (The {@code hash} field is not used by this function.)
+     *
+     * @param table the hash table to walk
+     * @param keyField the name of the {@code key} field
+     * @param valueField the name of the {@code value} field
+     * @param nextField the name of the {@code next} field
+     * @param visitor the visitor to call for each hash entry found
+     */
+    public static void walkHashTable(List<JavaObject> table, String keyField,
+            String valueField, String nextField, KeyValueVisitor visitor) {
+        for (JavaObject element : table) {
+            for (JavaObject bucket = element; bucket != null;
+                    bucket = Models.getFieldObject(bucket, nextField)) {
+                visitor.visit(bucket.getField(keyField), bucket.getField(valueField));
+            }
         }
-    }
-
-    private static final Map<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
-            = new MapMaker().softValues().makeComputingMap(GetObjectArrayElements.INSTANCE);
-
-    private final Collection<JavaThing> value;
-
-    private JRubyArray(Collection<JavaThing> value) {
-        this.value = value;
-    }
-
-    public static JRubyArray make(JavaObject obj) {
-        JavaObjectArray arr = Models.getFieldThing(obj, "values", JavaObjectArray.class);
-        JavaInt begin = Models.getFieldThing(obj, "begin", JavaInt.class);
-        JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
-        if (arr == null || begin == null || length == null)
-            return null;
-        List<JavaThing> elements = ELEMENT_CACHE.get(arr);
-        return new JRubyArray(elements.subList(begin.value, begin.value + length.value));
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return value;
     }
 }

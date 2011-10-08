@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby;
+package com.sun.tools.hat.internal.lang.openjdk6;
 
 import java.util.List;
 import java.util.Map;
@@ -38,46 +38,34 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JRubyHash extends MapModel {
-    private final ImmutableMap<JavaObject, JavaObject> map;
+public class JavaHash extends MapModel {
+    private final ImmutableMap<JavaThing, JavaThing> map;
 
-    private JRubyHash(ImmutableMap<JavaObject, JavaObject> map) {
+    private JavaHash(ImmutableMap<JavaThing, JavaThing> map) {
         this.map = map;
     }
 
-    public static JRubyHash make(JavaObject hash) {
+    public static JavaHash make(JavaObject hash) {
         List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
         if (table == null)
             return null;
-        final ImmutableMap.Builder<JavaObject, JavaObject> builder = ImmutableMap.builder();
-        iterateTable(table, "key", "value", "next", new KeyValueVisitor() {
+        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+        HashCommon.walkHashTable(table, "key", "value", "next",
+                new HashCommon.KeyValueVisitor() {
             @Override
-            public void visit(JavaObject key, JavaObject value) {
+            public void visit(JavaThing key, JavaThing value) {
                 builder.put(key, value);
             }
         });
-        return new JRubyHash(builder.build());
+        return new JavaHash(builder.build());
     }
 
     @Override
-    public Map<JavaObject, JavaObject> getMap() {
+    public Map<JavaThing, JavaThing> getMap() {
         return map;
-    }
-
-    public interface KeyValueVisitor {
-        void visit(JavaObject key, JavaObject value);
-    }
-
-    public static void iterateTable(List<JavaObject> table, String keyField,
-            String valueField, String nextField, KeyValueVisitor visitor) {
-        for (JavaObject element : table) {
-            for (JavaObject bucket = element; bucket != null;
-                    bucket = Models.getFieldObject(bucket, nextField)) {
-                visitor.visit(Models.getFieldObject(bucket, keyField),
-                        Models.getFieldObject(bucket, valueField));
-            }
-        }
     }
 }

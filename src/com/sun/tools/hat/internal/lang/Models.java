@@ -185,7 +185,7 @@ public final class Models {
      * @return the value of the field if it's a Java object, else null
      */
     public static JavaObject getFieldObject(JavaObject obj, String field) {
-        return safeCast(obj.getField(field), JavaObject.class);
+        return getFieldThing(obj, field, JavaObject.class);
     }
 
     /**
@@ -199,7 +199,7 @@ public final class Models {
      */
     public static <T extends JavaThing> T getFieldThing(JavaObject obj, String field,
             Class<T> typeKey) {
-        return safeCast(obj.getField(field), typeKey);
+        return obj == null ? null : safeCast(obj.getField(field), typeKey);
     }
 
     /**
