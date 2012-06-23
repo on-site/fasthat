@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -31,6 +31,8 @@
  */
 
 package com.sun.tools.hat.internal.lang;
+
+import java.util.Arrays;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -74,17 +76,39 @@ public final class Models {
         return cls.isInstance(obj) ? cls.cast(obj) : null;
     }
 
+    private static JavaClass getClass(Snapshot snapshot, String... classNames) {
+        for (String className : classNames) {
+            JavaClass result = snapshot.findClass(className);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
     /**
-     * Resolves the class object corresponding to the given class name
-     * using the given snapshot. If the class object fails to be found,
-     * throw an exception.
+     * Resolves the class object corresponding to the first found among
+     * the given class names using the given snapshot. If none of the
+     * class names can be found, throw an exception.
      *
-     * @param snapshot the snapshot to use to look up the class
-     * @param className the name of the class to look up.
-     * @return the class object corresponding to {@code className}
+     * @param snapshot the snapshot to use to look up the classes
+     * @param classNames the names of the classes to look up
+     * @return the class object corresponding to the first found class
      */
-    public static JavaClass grabClass(Snapshot snapshot, String className) {
-        return Preconditions.checkNotNull(snapshot.findClass(className));
+    public static JavaClass grabClass(Snapshot snapshot, String... classNames) {
+        return Preconditions.checkNotNull(getClass(snapshot, classNames),
+                "Cannot find class(es) " + Arrays.toString(classNames));
+    }
+
+    /**
+     * Returns whether any of the given class names can be found in the
+     * given snapshot.
+     *
+     * @param snapshot the snapshot to use to look up the classes
+     * @param classNames the names of the classes to look up
+     * @return true iff any of the given names can be found
+     */
+    public static boolean hasClass(Snapshot snapshot, String... classNames) {
+        return getClass(snapshot, classNames) != null;
     }
 
     public enum GetStringValue implements Function<JavaObject, String> {

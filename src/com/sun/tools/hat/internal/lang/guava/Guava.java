@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -47,8 +47,7 @@ public class Guava implements ModelFactory {
 
         @Override
         public boolean isSupported(Snapshot snapshot) {
-            // Not sure how to test for Guava version
-            return true;
+            return Models.hasClass(snapshot, CLASSES);
         }
 
         @Override
@@ -57,11 +56,15 @@ public class Guava implements ModelFactory {
         }
     }
 
+    private static final String[] CLASSES = {
+        "com.google.common.collect.MapMakerInternalMap",
+        "com.google.common.collect.CustomConcurrentHashMap"
+    };
+
     private final JavaClass custConcHashClass;
 
     public Guava(Snapshot snapshot) {
-        custConcHashClass = Models.grabClass(snapshot,
-                "com.google.common.collect.CustomConcurrentHashMap");
+        custConcHashClass = Models.grabClass(snapshot, CLASSES);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -34,11 +34,12 @@ package com.sun.tools.hat.internal.lang.jruby;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Function;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.MapMaker;
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaInt;
@@ -57,8 +58,9 @@ public class JRubyArray extends CollectionModel {
         }
     }
 
-    private static final Map<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
-            = new MapMaker().softValues().makeComputingMap(GetObjectArrayElements.INSTANCE);
+    private static final LoadingCache<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
+            = CacheBuilder.newBuilder().softValues().build(
+                    CacheLoader.from(GetObjectArrayElements.INSTANCE));
 
     private final Collection<JavaThing> value;
 
@@ -72,7 +74,7 @@ public class JRubyArray extends CollectionModel {
         JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
         if (arr == null || begin == null || length == null)
             return null;
-        List<JavaThing> elements = ELEMENT_CACHE.get(arr);
+        List<JavaThing> elements = ELEMENT_CACHE.getUnchecked(arr);
         return new JRubyArray(elements.subList(begin.value, begin.value + length.value));
     }
 

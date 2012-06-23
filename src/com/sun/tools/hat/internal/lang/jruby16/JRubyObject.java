@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -37,10 +37,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Function;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.model.JavaObject;
@@ -59,8 +61,9 @@ class JRubyObject extends ObjectModel {
         }
     }
 
-    private static final Map<JavaObject, ImmutableList<String>> VARIABLE_NAME_CACHE
-            = new MapMaker().softValues().makeComputingMap(GetVariableNames.INSTANCE);
+    private static final LoadingCache<JavaObject, ImmutableList<String>> VARIABLE_NAME_CACHE
+            = CacheBuilder.newBuilder().softValues().build(
+                    CacheLoader.from(GetVariableNames.INSTANCE));
 
     private final JavaObject obj;
     private final ImmutableMap<String, JavaThing> properties;
@@ -72,7 +75,7 @@ class JRubyObject extends ObjectModel {
 
     private static ImmutableMap<String, JavaThing> makeProperties(JavaObject obj,
             JavaObject rubyClass) {
-        List<String> names = VARIABLE_NAME_CACHE.get(rubyClass);
+        List<String> names = VARIABLE_NAME_CACHE.getUnchecked(rubyClass);
         if (names.isEmpty())
             return ImmutableMap.of();
         List<JavaThing> values = Models.getFieldObjectArray(obj, "varTable", JavaThing.class);
