@@ -59,13 +59,15 @@ to improve on that I haven't yet got around to:
       now, on our 16-core machine, sometimes the CPU usage is 1300%
       and sometimes it's 100%. The more of those 100% we can turn into
       1300%, the better.
+    + Audit the code to find and fix any weird concurrency bugs.
     + Make all the model and script operations interruptible, so that
       they can stop running as soon as the user hits the Stop button.
       Right now, the interruption only happens when the page is being
       written out (after all the computation has already been done and
       squandered).
 + Language-specific models:
-    + Allow real tracing through JRuby classes, etc.
+    + Allow real tracing through JRuby classes, etc. In particular,
+      this means having JRuby classes be selectable via the histogram.
     + Allow inspection of JRuby stack traces.
     + Make the object views use language-specific models much more
       pervasively.
