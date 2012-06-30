@@ -586,7 +586,7 @@ public class Snapshot {
             // - and id string to it.
             name += "-" + c.getIdString();
         }
-        classes.put(c.getName(), c);
+        classes.put(name, c);
     }
 
     private void addFakeClass(JavaClass c) {
