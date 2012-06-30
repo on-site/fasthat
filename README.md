@@ -82,9 +82,8 @@ to improve on that I haven't yet got around to:
       given that [Guava doesn't have a version signature][guava-ver]
       in the heap dump.
 + Miscellaneous:
-    + Merge in changes from OpenJDK 7's jhat.
     + Merge in changes to the Rhino [JSR-223][jsr-223] engine from
-      [scripting.java.net][scripting] and OpenJDK 7, if any.
+      OpenJDK 7.
 
 Contact and licensing
 ---------------------
@@ -101,5 +100,4 @@ licensed under GPLv2 or later, with Classpath Exception.
 [mjvs]: http://github.com/mikestone
 [guava-ver]: http://stackoverflow.com/q/7694468/13
 [jsr-223]: http://www.jcp.org/en/jsr/detail?id=223
-[scripting]: http://java.net/projects/scripting/
 [cky]: http://github.com/cky
