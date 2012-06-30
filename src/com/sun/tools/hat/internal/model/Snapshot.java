@@ -74,11 +74,12 @@ public class Snapshot {
     private final Map<String, JavaClass> classes =
                  new TreeMap<String, JavaClass>();
 
-    // new objects relative to a baseline - lazily initialized
-    private volatile Map<JavaHeapObject, Boolean> newObjects;
+    // new objects relative to a baseline
+    private final Set<JavaHeapObject> newObjects = new HashSet<JavaHeapObject>();
 
-    // allocation site traces for all objects - lazily initialized
-    private volatile Map<JavaHeapObject, StackTrace> siteTraces;
+    // allocation site traces for all objects
+    private final Map<JavaHeapObject, StackTrace> siteTraces =
+                 new HashMap<JavaHeapObject, StackTrace>();
 
     // object-to-Root map for all objects
     private final Map<JavaHeapObject, Root> rootsMap =
@@ -134,17 +135,12 @@ public class Snapshot {
 
     public void setSiteTrace(JavaHeapObject obj, StackTrace trace) {
         if (trace != null && trace.getFrames().length != 0) {
-            initSiteTraces();
             siteTraces.put(obj, trace);
         }
     }
 
     public StackTrace getSiteTrace(JavaHeapObject obj) {
-        if (siteTraces != null) {
-            return siteTraces.get(obj);
-        } else {
-            return null;
-        }
+        return siteTraces.get(obj);
     }
 
     public void setNewStyleArrayClass(boolean value) {
@@ -214,7 +210,7 @@ public class Snapshot {
      * @return true iff it's possible that some JavaThing instances might
      *          isNew set
      *
-     * @see JavaThing.isNew()
+     * @see JavaHeapObject#isNew()
      */
     public boolean getHasNewSet() {
         return hasNewSet;
@@ -224,7 +220,13 @@ public class Snapshot {
     // Used in the body of resolve()
     //
     private static class MyVisitor extends AbstractJavaHeapObjectVisitor {
-        JavaHeapObject t;
+        private final JavaHeapObject t;
+
+        public MyVisitor(JavaHeapObject t) {
+            this.t = t;
+        }
+
+        @Override
         public void visit(JavaHeapObject other) {
             other.addReferenceFrom(t);
         }
@@ -319,11 +321,9 @@ public class Snapshot {
                          + (heapObjects.size() / DOT_LIMIT) + " dots");
         System.out.flush();
         int count = 0;
-        MyVisitor visitor = new MyVisitor();
         for (JavaHeapObject t : heapObjects.values()) {
-            visitor.t = t;
             // call addReferenceFrom(t) on all objects t references:
-            t.visitReferencedObjects(visitor);
+            t.visitReferencedObjects(new MyVisitor(t));
             ++count;
             if (count % DOT_LIMIT == 0) {
                 System.out.print(".");
@@ -555,18 +555,13 @@ public class Snapshot {
     }
 
     void setNew(JavaHeapObject obj, boolean isNew) {
-        initNewObjects();
         if (isNew) {
-            newObjects.put(obj, Boolean.TRUE);
+            newObjects.add(obj);
         }
     }
 
     boolean isNew(JavaHeapObject obj) {
-        if (newObjects != null) {
-            return newObjects.get(obj) != null;
-        } else {
-            return false;
-        }
+        return newObjects.contains(obj);
     }
 
     // Internals only below this point
@@ -597,26 +592,6 @@ public class Snapshot {
     private void addFakeClass(Number id, JavaClass c) {
         fakeClasses.put(id, c);
         addFakeClass(c);
-    }
-
-    private synchronized void initNewObjects() {
-        if (newObjects == null) {
-            synchronized (this) {
-                if (newObjects == null) {
-                    newObjects = new HashMap<JavaHeapObject, Boolean>();
-                }
-            }
-        }
-    }
-
-    private synchronized void initSiteTraces() {
-        if (siteTraces == null) {
-            synchronized (this) {
-                if (siteTraces == null) {
-                    siteTraces = new HashMap<JavaHeapObject, StackTrace>();
-                }
-            }
-        }
     }
 
     public ImmutableList<ModelFactory> getModelFactories() {
