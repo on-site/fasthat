@@ -60,6 +60,10 @@ to improve on that I haven't yet got around to:
       and sometimes it's 100%. The more of those 100% we can turn into
       1300%, the better.
     + Audit the code to find and fix any weird concurrency bugs.
+    + Figure out what is shareable per-thread in Rhino, and what must
+      be distinct. Currently I've taken the very conservative approach
+      of creating a new Rhino instance for each OQL query, but that is
+      probably way over the top.
     + Make all the model and script operations interruptible, so that
       they can stop running as soon as the user hits the Stop button.
       Right now, the interruption only happens when the page is being
