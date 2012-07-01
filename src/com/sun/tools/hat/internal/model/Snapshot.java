@@ -216,22 +216,6 @@ public class Snapshot {
         return hasNewSet;
     }
 
-    //
-    // Used in the body of resolve()
-    //
-    private static class MyVisitor extends AbstractJavaHeapObjectVisitor {
-        private final JavaHeapObject t;
-
-        public MyVisitor(JavaHeapObject t) {
-            this.t = t;
-        }
-
-        @Override
-        public void visit(JavaHeapObject other) {
-            other.addReferenceFrom(t);
-        }
-    }
-
     // To show heap parsing progress, we print a '.' after this limit
     private static final int DOT_LIMIT = 5000;
 
@@ -321,9 +305,14 @@ public class Snapshot {
                          + (heapObjects.size() / DOT_LIMIT) + " dots");
         System.out.flush();
         int count = 0;
-        for (JavaHeapObject t : heapObjects.values()) {
+        for (final JavaHeapObject t : heapObjects.values()) {
             // call addReferenceFrom(t) on all objects t references:
-            t.visitReferencedObjects(new MyVisitor(t));
+            t.visitReferencedObjects(new AbstractJavaHeapObjectVisitor() {
+                @Override
+                public void visit(JavaHeapObject other) {
+                    other.addReferenceFrom(t);
+                }
+            });
             ++count;
             if (count % DOT_LIMIT == 0) {
                 System.out.print(".");
