@@ -36,7 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -49,11 +50,9 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 class JRubyObject extends ObjectModel {
-    private enum GetVariableNames implements Function<JavaObject, ImmutableList<String>> {
-        INSTANCE;
-
+    private static class GetVariableNames extends CacheLoader<JavaObject, ImmutableList<String>> {
         @Override
-        public ImmutableList<String> apply(JavaObject rubyClass) {
+        public ImmutableList<String> load(JavaObject rubyClass) {
             ImmutableList<JavaObject> names = Models.getFieldObjectArray(rubyClass,
                     "variableNames", JavaObject.class);
             return ImmutableList.copyOf(Lists.transform(names,
@@ -62,31 +61,40 @@ class JRubyObject extends ObjectModel {
     }
 
     private static final LoadingCache<JavaObject, ImmutableList<String>> VARIABLE_NAME_CACHE
-            = CacheBuilder.newBuilder().softValues().build(
-                    CacheLoader.from(GetVariableNames.INSTANCE));
+            = CacheBuilder.newBuilder().softValues().build(new GetVariableNames());
+
+    private static class PropertiesSupplier implements Supplier<ImmutableMap<String, JavaThing>> {
+        private final JavaObject obj;
+        private final JavaObject rubyClass;
+
+        public PropertiesSupplier(JavaObject obj, JavaObject rubyClass) {
+            this.obj = obj;
+            this.rubyClass = rubyClass;
+        }
+
+        @Override
+        public ImmutableMap<String, JavaThing> get() {
+            List<String> names = VARIABLE_NAME_CACHE.getUnchecked(rubyClass);
+            if (names.isEmpty())
+                return ImmutableMap.of();
+            List<JavaThing> values = Models.getFieldObjectArray(obj, "varTable", JavaThing.class);
+            ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
+            Iterator<JavaThing> iter = values.iterator();
+            for (String name : names) {
+                if (!iter.hasNext())
+                    break;
+                builder.put(name, iter.next());
+            }
+            return builder.build();
+        }
+    }
 
     private final JavaObject obj;
-    private final ImmutableMap<String, JavaThing> properties;
+    private final Supplier<ImmutableMap<String, JavaThing>> properties;
 
     public JRubyObject(JavaObject obj) {
         this.obj = obj;
-        this.properties = makeProperties(obj, getClassObject());
-    }
-
-    private static ImmutableMap<String, JavaThing> makeProperties(JavaObject obj,
-            JavaObject rubyClass) {
-        List<String> names = VARIABLE_NAME_CACHE.getUnchecked(rubyClass);
-        if (names.isEmpty())
-            return ImmutableMap.of();
-        List<JavaThing> values = Models.getFieldObjectArray(obj, "varTable", JavaThing.class);
-        ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
-        Iterator<JavaThing> iter = values.iterator();
-        for (String name : names) {
-            if (!iter.hasNext())
-                break;
-            builder.put(name, iter.next());
-        }
-        return builder.build();
+        this.properties = Suppliers.memoize(new PropertiesSupplier(obj, getClassObject()));
     }
 
     @Override
@@ -103,6 +111,6 @@ class JRubyObject extends ObjectModel {
 
     @Override
     public Map<String, JavaThing> getProperties() {
-        return properties;
+        return properties.get();
     }
 }

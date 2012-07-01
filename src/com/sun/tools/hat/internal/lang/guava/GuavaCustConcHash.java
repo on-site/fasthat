@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -35,6 +35,8 @@ package com.sun.tools.hat.internal.lang.guava;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.lang.Models;
@@ -42,43 +44,54 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 class GuavaCustConcHash extends MapModel {
-    private final ImmutableMap<JavaThing, JavaThing> map;
+    private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
+        private final Iterable<JavaObject> segments;
 
-    private GuavaCustConcHash(ImmutableMap<JavaThing, JavaThing> map) {
+        public MapSupplier(Iterable<JavaObject> segments) {
+            this.segments = segments;
+        }
+
+        @Override
+        public ImmutableMap<JavaThing, JavaThing> get() {
+            ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+            for (JavaObject segment : segments) {
+                JavaObject table = Models.getFieldObject(segment, "table");
+                List<JavaObject> array = Models.getFieldObjectArray(table, "array",
+                        JavaObject.class);
+                if (array != null) {
+                    for (JavaObject entry : array) {
+                        // Strong keys use the "key" field
+                        // Soft/weak keys use the "referent" field
+                        JavaThing key = entry.getField("key");
+                        if (key == null)
+                            key = entry.getField("referent");
+                        JavaObject valueReference = Models.getFieldObject(entry,
+                                "valueReference");
+                        JavaThing value = valueReference.getField("referent");
+                        if (key != null && value != null)
+                            builder.put(key, value);
+                    }
+                }
+            }
+            return builder.build();
+        }
+    }
+
+    private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
+
+    private GuavaCustConcHash(Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
         this.map = map;
     }
 
     public static GuavaCustConcHash make(JavaObject chm) {
         List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
                 JavaObject.class);
-        if (segments == null)
-            return null;
-
-        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-        for (JavaObject segment : segments) {
-            JavaObject table = Models.getFieldObject(segment, "table");
-            List<JavaObject> array = Models.getFieldObjectArray(table, "array",
-                    JavaObject.class);
-            if (array != null) {
-                for (JavaObject entry : array) {
-                    // Strong keys use the "key" field
-                    // Soft/weak keys use the "referent" field
-                    JavaThing key = entry.getField("key");
-                    if (key == null)
-                        key = entry.getField("referent");
-                    JavaObject valueReference = Models.getFieldObject(entry,
-                            "valueReference");
-                    JavaThing value = valueReference.getField("referent");
-                    if (key != null && value != null)
-                        builder.put(key, value);
-                }
-            }
-        }
-        return new GuavaCustConcHash(builder.build());
+        return segments == null ? null
+                : new GuavaCustConcHash(Suppliers.memoize(new MapSupplier(segments)));
     }
 
     @Override
     public Map<JavaThing, JavaThing> getMap() {
-        return map;
+        return map.get();
     }
 }

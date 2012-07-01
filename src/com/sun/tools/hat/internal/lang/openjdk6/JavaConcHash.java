@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -35,6 +35,8 @@ package com.sun.tools.hat.internal.lang.openjdk6;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.lang.Models;
@@ -43,37 +45,48 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 class JavaConcHash extends MapModel {
-    private final ImmutableMap<JavaThing, JavaThing> map;
+    private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
+        private final List<JavaObject> segments;
 
-    private JavaConcHash(ImmutableMap<JavaThing, JavaThing> map) {
+        public MapSupplier(List<JavaObject> segments) {
+            this.segments = segments;
+        }
+
+        @Override
+        public ImmutableMap<JavaThing, JavaThing> get() {
+            final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+            HashCommon.KeyValueVisitor visitor = new HashCommon.KeyValueVisitor() {
+                @Override
+                public void visit(JavaThing key, JavaThing value) {
+                    builder.put(key, value);
+                }
+            };
+
+            for (JavaObject segment : segments) {
+                List<JavaObject> table = Models.getFieldObjectArray(segment, "table",
+                        JavaObject.class);
+                if (table != null)
+                    HashCommon.walkHashTable(table, "key", "value", "next", visitor);
+            }
+            return builder.build();
+        }
+    }
+
+    private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
+
+    private JavaConcHash(Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
         this.map = map;
     }
 
     public static JavaConcHash make(JavaObject chm) {
         List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
                 JavaObject.class);
-        if (segments == null)
-            return null;
-
-        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-        HashCommon.KeyValueVisitor visitor = new HashCommon.KeyValueVisitor() {
-            @Override
-            public void visit(JavaThing key, JavaThing value) {
-                builder.put(key, value);
-            }
-        };
-
-        for (JavaObject segment : segments) {
-            List<JavaObject> table = Models.getFieldObjectArray(segment, "table",
-                    JavaObject.class);
-            if (table != null)
-                HashCommon.walkHashTable(table, "key", "value", "next", visitor);
-        }
-        return new JavaConcHash(builder.build());
+        return segments == null ? null
+                : new JavaConcHash(Suppliers.memoize(new MapSupplier(segments)));
     }
 
     @Override
     public Map<JavaThing, JavaThing> getMap() {
-        return map;
+        return map.get();
     }
 }
