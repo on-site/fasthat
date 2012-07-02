@@ -171,10 +171,18 @@ abstract class QueryHandler implements Runnable {
     }
 
     protected void printThing(JavaThing thing) {
-        printThing(thing, false);
+        printThing(thing, true, true);
     }
 
-    protected void printThing(JavaThing thing, boolean simple) {
+    protected void printSimple(JavaThing thing) {
+        printThing(thing, false, true);
+    }
+
+    protected void printSummary(JavaThing thing) {
+        printThing(thing, true, false);
+    }
+
+    protected void printThing(JavaThing thing, boolean useModel, boolean showDetail) {
         if (thing == null) {
             out.print("null");
             return;
@@ -186,15 +194,18 @@ abstract class QueryHandler implements Runnable {
             if (id != -1L) {
                 printThingAnchorTag(id);
                 if (ho.isNew())
-                    out.println("<strong>");
+                    out.print("<strong>");
             }
-            Model model = simple ? null : getModelFor(thing);
+            Model model = useModel ? getModelFor(thing) : null;
             printSummary(model, thing);
             if (id != -1) {
                 if (ho.isNew())
-                    out.println("[new]</strong>");
-                out.println("</a>");
-                printDetail(model, ho.getSize());
+                    out.print("[new]</strong>");
+                out.print("</a>");
+                if (showDetail) {
+                    out.println();
+                    printDetail(model, ho.getSize());
+                }
             }
         } else {
             print(thing.toString());
@@ -343,7 +354,7 @@ abstract class QueryHandler implements Runnable {
                             first = false;
                         else
                             out.print(", ");
-                        printThing(thing, true);
+                        printSimple(thing);
                     }
                     if (collection.size() > 10) {
                         out.printf(", &hellip;%d more", collection.size() - 10);
@@ -362,9 +373,9 @@ abstract class QueryHandler implements Runnable {
                             first = false;
                         else
                             out.print(", ");
-                        printThing(entry.getKey(), true);
+                        printSimple(entry.getKey());
                         out.print(" &rArr; ");
-                        printThing(entry.getValue(), true);
+                        printSimple(entry.getValue());
                     }
                     if (map.size() > 10) {
                         out.printf(", &hellip;%d more", map.size() - 10);
@@ -382,9 +393,9 @@ abstract class QueryHandler implements Runnable {
                             first = false;
                         else
                             out.print(", ");
-                        out.print(entry.getKey());
+                        print(entry.getKey());
                         out.print(": ");
-                        printThing(entry.getValue(), true);
+                        printSimple(entry.getValue());
                     }
                     out.print("}");
                 }
@@ -399,7 +410,7 @@ abstract class QueryHandler implements Runnable {
                             first = false;
                         else
                             out.print(", ");
-                        printThing(cls.getClassObject(), true);
+                        printSummary(cls.getClassObject());
                     }
                     out.print(")");
                 }
