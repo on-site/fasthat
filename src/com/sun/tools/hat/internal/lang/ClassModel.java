@@ -34,6 +34,8 @@ package com.sun.tools.hat.internal.lang;
 
 import java.util.Collection;
 
+import com.sun.tools.hat.internal.model.JavaObject;
+
 /**
  * A class model models a single class, which has superclasses, properties
  * (fields/instance variables), and methods.
@@ -49,6 +51,13 @@ public abstract class ClassModel extends AbstractModel {
     public void visit(ModelVisitor visitor) {
         visitor.visit(this);
     }
+
+    /**
+     * Returns this model's associated class object.
+     *
+     * @return the class object for this class
+     */
+    public abstract JavaObject getClassObject();
 
     /**
      * Returns the fully-qualified name of this class. Same concept as

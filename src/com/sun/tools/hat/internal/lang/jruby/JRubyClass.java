@@ -124,6 +124,11 @@ public class JRubyClass extends ClassModel {
         return Models.getFieldString(classObject, baseNameField) == null;
     }
 
+    @Override
+    public JavaObject getClassObject() {
+        return classObject;
+    }
+
     private class NameSupplier implements Supplier<String> {
         // Based on RubyModule.calculateName()
         @Override

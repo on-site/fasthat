@@ -399,7 +399,7 @@ abstract class QueryHandler implements Runnable {
                             first = false;
                         else
                             out.print(", ");
-                        out.print(cls.getName());
+                        printThing(cls.getClassObject(), true);
                     }
                     out.print(")");
                 }
