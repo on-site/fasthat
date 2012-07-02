@@ -79,17 +79,18 @@ public class JRubyArray extends CollectionModel {
 
     private final Supplier<List<JavaThing>> value;
 
-    private JRubyArray(Supplier<List<JavaThing>> value) {
+    private JRubyArray(JRuby factory, Supplier<List<JavaThing>> value) {
+        super(factory);
         this.value = value;
     }
 
-    public static JRubyArray make(JavaObject obj) {
+    public static JRubyArray make(JRuby factory, JavaObject obj) {
         JavaObjectArray arr = Models.getFieldThing(obj, "values", JavaObjectArray.class);
         JavaInt begin = Models.getFieldThing(obj, "begin", JavaInt.class);
         JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
         if (arr == null || begin == null || length == null)
             return null;
-        return new JRubyArray(Suppliers.memoize(new CollectionSupplier(arr,
+        return new JRubyArray(factory, Suppliers.memoize(new CollectionSupplier(arr,
                 begin.value, length.value)));
     }
 

@@ -38,9 +38,11 @@ import java.util.Map;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
+import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
+import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
@@ -108,21 +110,21 @@ class JRubyObject extends ObjectModel {
     private final JavaObject obj;
     private final Supplier<ImmutableMap<String, JavaThing>> properties;
 
-    public JRubyObject(JavaObject obj) {
+    public JRubyObject(JRuby12 factory, JavaObject obj) {
+        super(factory);
         this.obj = obj;
         this.properties = Suppliers.memoize(new PropertiesSupplier(obj));
     }
 
     @Override
-    public String getClassName() {
-        JavaObject cls = getClassObject();
-        String name = Models.getFieldString(cls, "classId");
-        return name != null ? name : "#<Class:" + cls.getIdString() + ">";
+    public ClassModel getClassModel() {
+        return ((JRubyClass) getEigenclassModel()).getRealClass();
     }
 
     @Override
-    public JavaObject getClassObject() {
-        return Models.getFieldObject(obj, "metaClass");
+    public ClassModel getEigenclassModel() {
+        return JRubyClass.make((JRuby12) getFactory(),
+                Models.getFieldObject(obj, "metaClass"));
     }
 
     @Override

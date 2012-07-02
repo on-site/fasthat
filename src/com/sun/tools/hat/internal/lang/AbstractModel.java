@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,30 +30,22 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+/**
+ * Common stuff relating to models.
+ *
+ * @author Chris K. Jester-Young
+ */
+public abstract class AbstractModel implements Model {
+    private final ModelFactory factory;
 
-import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
-
-class JavaArray extends CollectionModel {
-    private final List<JavaThing> items;
-
-    public JavaArray(OpenJDK6 factory, JavaObjectArray array) {
-        super(factory);
-        List<JavaThing> list = Arrays.asList(array.getElements());
-        Collections.replaceAll(list, null, factory.getNullThing());
-        items = ImmutableList.copyOf(list);
+    public AbstractModel(ModelFactory factory) {
+        this.factory = factory;
     }
 
     @Override
-    public Collection<JavaThing> getCollection() {
-        return items;
+    public ModelFactory getFactory() {
+        return factory;
     }
 }

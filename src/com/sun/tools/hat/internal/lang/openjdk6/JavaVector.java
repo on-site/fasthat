@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -47,16 +47,17 @@ import com.sun.tools.hat.internal.model.JavaThing;
 class JavaVector extends CollectionModel {
     private final ImmutableList<JavaThing> items;
 
-    private JavaVector(List<JavaThing> items) {
+    private JavaVector(OpenJDK6 factory, List<JavaThing> items) {
+        super(factory);
         this.items = ImmutableList.copyOf(items);
     }
 
-    public static JavaVector make(JavaObject vec, String sizeField) {
+    public static JavaVector make(OpenJDK6 factory, JavaObject vec, String sizeField) {
         JavaThing[] data = Models.getFieldThing(vec, "elementData",
                 JavaObjectArray.class).getElements();
         JavaInt size = Models.getFieldThing(vec, sizeField, JavaInt.class);
         return data == null || size == null ? null
-                : new JavaVector(Arrays.asList(data).subList(0, size.value));
+                : new JavaVector(factory, Arrays.asList(data).subList(0, size.value));
     }
 
     @Override

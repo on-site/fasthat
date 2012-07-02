@@ -79,15 +79,16 @@ class GuavaCustConcHash extends MapModel {
 
     private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
 
-    private GuavaCustConcHash(Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private GuavaCustConcHash(Guava factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+        super(factory);
         this.map = map;
     }
 
-    public static GuavaCustConcHash make(JavaObject chm) {
+    public static GuavaCustConcHash make(Guava factory, JavaObject chm) {
         List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
                 JavaObject.class);
         return segments == null ? null
-                : new GuavaCustConcHash(Suppliers.memoize(new MapSupplier(segments)));
+                : new GuavaCustConcHash(factory, Suppliers.memoize(new MapSupplier(segments)));
     }
 
     @Override

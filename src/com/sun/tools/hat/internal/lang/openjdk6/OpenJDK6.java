@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -70,6 +70,7 @@ public class OpenJDK6 implements ModelFactory {
         }
     }
 
+    private final JavaThing nullThing;
     private final JavaClass versionClass;
     private final JavaClass concHashMapClass;
     private final JavaClass hashMapClass;
@@ -79,6 +80,7 @@ public class OpenJDK6 implements ModelFactory {
     private final JavaClass linkedListClass;
 
     private OpenJDK6(Snapshot snapshot) {
+        nullThing = snapshot.getNullThing();
         versionClass = Models.grabClass(snapshot, "sun.misc.Version");
         concHashMapClass = Models.grabClass(snapshot, "java.util.concurrent.ConcurrentHashMap");
         hashMapClass = Models.grabClass(snapshot, "java.util.HashMap");
@@ -95,22 +97,26 @@ public class OpenJDK6 implements ModelFactory {
             // XXX The factory dispatch mechanism needs real improvement.
             JavaClass clazz = obj.getClazz();
             if (clazz.isString())
-                return JavaString.make(obj);
+                return JavaString.make(this, obj);
             else if (clazz == concHashMapClass)
-                return JavaConcHash.make(obj);
+                return JavaConcHash.make(this, obj);
             else if (clazz == hashMapClass || clazz == hashtableClass)
-                return JavaHash.make(obj);
+                return JavaHash.make(this, obj);
             else if (clazz == arrayListClass)
-                return JavaVector.make(obj, "size");
+                return JavaVector.make(this, obj, "size");
             else if (clazz == vectorClass)
-                return JavaVector.make(obj, "elementCount");
+                return JavaVector.make(this, obj, "elementCount");
             else if (clazz == linkedListClass)
-                return JavaLinkedList.make(obj);
+                return JavaLinkedList.make(this, obj);
             // TODO Implement all the standard collection classes.
         }
         if (thing instanceof JavaObjectArray)
-            return new JavaArray((JavaObjectArray) thing);
+            return new JavaArray(this, (JavaObjectArray) thing);
         return null;
+    }
+
+    public JavaThing getNullThing() {
+        return nullThing;
     }
 
     @Override

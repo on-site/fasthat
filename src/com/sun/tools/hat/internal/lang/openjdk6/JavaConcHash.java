@@ -74,15 +74,16 @@ class JavaConcHash extends MapModel {
 
     private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
 
-    private JavaConcHash(Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private JavaConcHash(OpenJDK6 factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+        super(factory);
         this.map = map;
     }
 
-    public static JavaConcHash make(JavaObject chm) {
+    public static JavaConcHash make(OpenJDK6 factory, JavaObject chm) {
         List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
                 JavaObject.class);
         return segments == null ? null
-                : new JavaConcHash(Suppliers.memoize(new MapSupplier(segments)));
+                : new JavaConcHash(factory, Suppliers.memoize(new MapSupplier(segments)));
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -71,4 +71,11 @@ public interface ModelVisitor {
      * @param model the object model
      */
     public void visit(ObjectModel model);
+
+    /**
+     * Visits with a class model.
+     *
+     * @param model the class model
+     */
+    public void visit(ClassModel model);
 }

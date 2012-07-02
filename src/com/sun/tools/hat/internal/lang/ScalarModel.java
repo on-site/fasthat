@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -40,7 +40,11 @@ package com.sun.tools.hat.internal.lang;
  *
  * @author Chris K. Jester-Young
  */
-public abstract class ScalarModel implements Model {
+public abstract class ScalarModel extends AbstractModel {
+    public ScalarModel(ModelFactory factory) {
+        super(factory);
+    }
+
     @Override
     public void visit(ModelVisitor visitor) {
         visitor.visit(this);

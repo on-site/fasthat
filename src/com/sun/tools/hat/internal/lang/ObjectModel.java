@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -34,23 +34,47 @@ package com.sun.tools.hat.internal.lang;
 
 import java.util.Map;
 
-import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 /**
- * An object model models a single object, which has a class and a map
- * of properties. Subclasses should implement the {@link #getClassName},
- * {@link #getClassObject}, and {@link #getProperties} methods.
+ * An object model models a single object, which has a class, optionally
+ * an eigenclass, and a map of properties (fields/instance variables).
  *
  * @author Chris K. Jester-Young
  */
-public abstract class ObjectModel implements Model {
+public abstract class ObjectModel extends AbstractModel {
+    public ObjectModel(ModelFactory factory) {
+        super(factory);
+    }
+
     @Override
     public void visit(ModelVisitor visitor) {
         visitor.visit(this);
     }
 
-    public abstract String getClassName();
-    public abstract JavaObject getClassObject();
+    /**
+     * Returns the class model associated with this object's class.
+     *
+     * @return the class model associated with this object's class
+     */
+    public abstract ClassModel getClassModel();
+
+    /**
+     * Returns the class model associated with this object's eigenclass,
+     * if any. Ruby is likely to be the only language where objects have
+     * eigenclasses.
+     *
+     * @return the class model associated with this object's eigenclass,
+     *         or null
+     */
+    public abstract ClassModel getEigenclassModel();
+
+    /**
+     * Returns the properties (field names and values) attached to this
+     * object. In Ruby's case, this means instance variables and their
+     * values.
+     *
+     * @return properties attached to this object
+     */
     public abstract Map<String, JavaThing> getProperties();
 }

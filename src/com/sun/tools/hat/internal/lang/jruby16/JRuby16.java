@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -36,7 +36,9 @@ import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.jruby.JRuby;
 import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
+import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
 import com.sun.tools.hat.internal.lang.jruby.JRubyString;
 import com.sun.tools.hat.internal.lang.openjdk6.JavaHash;
 import com.sun.tools.hat.internal.model.JavaClass;
@@ -49,7 +51,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
  *
  * @author Chris K. Jester-Young
  */
-public class JRuby16 implements ModelFactory {
+public class JRuby16 extends JRuby {
     public enum Factory implements ModelFactoryFactory {
         INSTANCE;
 
@@ -70,18 +72,8 @@ public class JRuby16 implements ModelFactory {
         }
     }
 
-    private final JavaClass constantsClass;
-    private final JavaClass stringClass;
-    private final JavaClass objectClass;
-    private final JavaClass arrayClass;
-    private final JavaClass hashClass;
-
     private JRuby16(Snapshot snapshot) {
-        constantsClass = Models.grabClass(snapshot, "org.jruby.runtime.Constants");
-        stringClass = Models.grabClass(snapshot, "org.jruby.RubyString");
-        objectClass = Models.grabClass(snapshot, "org.jruby.RubyObject");
-        arrayClass = Models.grabClass(snapshot, "org.jruby.RubyArray");
-        hashClass = Models.grabClass(snapshot, "org.jruby.RubyHash");
+        super(snapshot);
     }
 
     @Override
@@ -90,23 +82,18 @@ public class JRuby16 implements ModelFactory {
         if (obj != null) {
             // XXX The factory dispatch mechanism needs real improvement.
             JavaClass clazz = obj.getClazz();
-            if (clazz == stringClass)
-                return JRubyString.make(obj);
-            else if (clazz == objectClass)
-                return new JRubyObject(obj);
-            else if (clazz == arrayClass)
-                return JRubyArray.make(obj);
-            else if (clazz == hashClass)
-                return JavaHash.make(obj);
+            if (clazz == getClassClass())
+                return JRubyClass.make(this, obj);
+            else if (clazz == getStringClass())
+                return JRubyString.make(this, obj);
+            else if (clazz == getObjectClass())
+                return new JRubyObject(this, obj);
+            else if (clazz == getArrayClass())
+                return JRubyArray.make(this, obj);
+            else if (clazz == getHashClass())
+                return JavaHash.make(this, obj);
             // TODO Implement other JRuby types.
         }
         return null;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("JRuby %s (%s)",
-                Models.getStaticString(constantsClass, "VERSION"),
-                Models.getStaticString(constantsClass, "REVISION"));
     }
 }

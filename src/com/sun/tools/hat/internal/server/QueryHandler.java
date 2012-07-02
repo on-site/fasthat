@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2010, 2011 On-Site.com.
+ * Copyright (c) 2010, 2011, 2012 On-Site.com.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.lang.Model;
@@ -312,7 +313,12 @@ abstract class QueryHandler implements Runnable {
 
                 @Override
                 public void visit(ObjectModel model) {
-                    print(model.getClassName());
+                    print(model.getClassModel().getName());
+                }
+
+                @Override
+                public void visit(ClassModel model) {
+                    print(model.getName());
                 }
             });
         } else {
@@ -333,11 +339,10 @@ abstract class QueryHandler implements Runnable {
                     Collection<JavaThing> collection = model.getCollection();
                     boolean first = true;
                     for (JavaThing thing : Iterables.limit(collection, 10)) {
-                        if (first) {
+                        if (first)
                             first = false;
-                        } else {
+                        else
                             out.print(", ");
-                        }
                         printThing(thing, true);
                     }
                     if (collection.size() > 10) {
@@ -353,11 +358,10 @@ abstract class QueryHandler implements Runnable {
                     boolean first = true;
                     for (Map.Entry<JavaThing, JavaThing> entry
                             : Iterables.limit(map.entrySet(), 10)) {
-                        if (first) {
+                        if (first)
                             first = false;
-                        } else {
+                        else
                             out.print(", ");
-                        }
                         printThing(entry.getKey(), true);
                         out.print(" &rArr; ");
                         printThing(entry.getValue(), true);
@@ -374,16 +378,30 @@ abstract class QueryHandler implements Runnable {
                     Map<String, JavaThing> map = model.getProperties();
                     boolean first = true;
                     for (Map.Entry<String, JavaThing> entry : map.entrySet()) {
-                        if (first) {
+                        if (first)
                             first = false;
-                        } else {
+                        else
                             out.print(", ");
-                        }
                         out.print(entry.getKey());
                         out.print(": ");
                         printThing(entry.getValue(), true);
                     }
                     out.print("}");
+                }
+
+                @Override
+                public void visit(ClassModel model) {
+                    out.print(" (");
+                    Collection<ClassModel> supers = model.getSuperclasses();
+                    boolean first = true;
+                    for (ClassModel cls : supers) {
+                        if (first)
+                            first = false;
+                        else
+                            out.print(", ");
+                        out.print(cls.getName());
+                    }
+                    out.print(")");
                 }
             });
         } else {
@@ -406,6 +424,7 @@ abstract class QueryHandler implements Runnable {
     protected static String formatLink(String path, String pathInfo,
             String label, Multimap<String, String> params) {
         StringBuilder sb = new StringBuilder();
+        @SuppressWarnings("resource")
         Formatter fmt = new Formatter(sb);
         fmt.format("<a href='/%s/%s?", path,
                 encodeForURL(Strings.nullToEmpty(pathInfo)));

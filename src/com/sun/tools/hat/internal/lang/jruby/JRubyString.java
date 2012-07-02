@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -42,13 +42,14 @@ import com.sun.tools.hat.internal.model.JavaValueArray;
 public class JRubyString extends ScalarModel {
     private final String value;
 
-    private JRubyString(String value) {
+    private JRubyString(JRuby factory, String value) {
+        super(factory);
         this.value = value;
     }
 
-    public static JRubyString make(JavaObject obj) {
+    public static JRubyString make(JRuby factory, JavaObject obj) {
         String value = getRubyStringValue(obj);
-        return value != null ? new JRubyString(value) : null;
+        return value != null ? new JRubyString(factory, value) : null;
     }
 
     private static String getRubyStringValue(JavaObject obj) {

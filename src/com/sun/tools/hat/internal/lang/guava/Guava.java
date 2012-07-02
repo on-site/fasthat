@@ -74,7 +74,7 @@ public class Guava implements ModelFactory {
             // XXX The factory dispatch mechanism needs real improvement.
             JavaClass clazz = obj.getClazz();
             if (clazz == custConcHashClass)
-                return GuavaCustConcHash.make(obj);
+                return GuavaCustConcHash.make(this, obj);
         }
         return null;
     }

@@ -39,6 +39,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.MapModel;
+import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
@@ -68,14 +69,15 @@ public class JavaHash extends MapModel {
 
     private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
 
-    private JavaHash(Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private JavaHash(ModelFactory factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+        super(factory);
         this.map = map;
     }
 
-    public static JavaHash make(JavaObject hash) {
+    public static JavaHash make(ModelFactory factory, JavaObject hash) {
         List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
         return table == null ? null
-                : new JavaHash(Suppliers.memoize(new MapSupplier(table)));
+                : new JavaHash(factory, Suppliers.memoize(new MapSupplier(table)));
     }
 
     @Override

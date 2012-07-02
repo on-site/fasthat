@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -39,13 +39,14 @@ import com.sun.tools.hat.internal.model.JavaObject;
 class JavaString extends ScalarModel {
     private final String value;
 
-    private JavaString(String value) {
+    private JavaString(OpenJDK6 factory, String value) {
+        super(factory);
         this.value = value;
     }
 
-    public static JavaString make(JavaObject obj) {
+    public static JavaString make(OpenJDK6 factory, JavaObject obj) {
         String value = Models.getStringValue(obj);
-        return value != null ? new JavaString(value) : null;
+        return value != null ? new JavaString(factory, value) : null;
     }
 
     @Override

@@ -65,14 +65,15 @@ class JavaLinkedList extends CollectionModel {
 
     private final Supplier<ImmutableList<JavaThing>> items;
 
-    private JavaLinkedList(Supplier<ImmutableList<JavaThing>> items) {
+    private JavaLinkedList(OpenJDK6 factory, Supplier<ImmutableList<JavaThing>> items) {
+        super(factory);
         this.items = items;
     }
 
-    public static JavaLinkedList make(JavaObject list) {
+    public static JavaLinkedList make(OpenJDK6 factory, JavaObject list) {
         JavaObject header = Models.getFieldObject(list, "header");
         return header == null ? null
-                : new JavaLinkedList(Suppliers.memoize(new ListSupplier(header)));
+                : new JavaLinkedList(factory, Suppliers.memoize(new ListSupplier(header)));
     }
 
     @Override
