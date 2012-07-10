@@ -75,6 +75,7 @@ to improve on that I haven't yet got around to:
     + Allow inspection of JRuby stack traces.
     + Make the object views use language-specific models much more
       pervasively.
+    + Enable OQL queries on language-specific object properties.
     + Implement unpacking of more object types, especially for JRuby
       and Guava.
     + Implement models for OpenJDK 7 and JRuby 1.7.
