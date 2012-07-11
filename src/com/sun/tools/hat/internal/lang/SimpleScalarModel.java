@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,19 +30,23 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang;
 
-import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.SimpleScalarModel;
-import com.sun.tools.hat.internal.model.JavaObject;
+/**
+ * A simple scalar model that simply returns the given string.
+ *
+ * @author Chris K. Jester-Young
+ */
+public class SimpleScalarModel extends AbstractScalarModel {
+    private final String str;
 
-class JavaString extends SimpleScalarModel {
-    private JavaString(OpenJDK6 factory, String value) {
-        super(factory, '"' + value + '"');
+    public SimpleScalarModel(ModelFactory factory, String str) {
+        super(factory);
+        this.str = str;
     }
 
-    public static JavaString make(OpenJDK6 factory, JavaObject obj) {
-        String value = Models.getStringValue(obj);
-        return value != null ? new JavaString(factory, value) : null;
+    @Override
+    public String toString() {
+        return str;
     }
 }

@@ -33,24 +33,16 @@
 package com.sun.tools.hat.internal.lang.jruby;
 
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.AbstractScalarModel;
+import com.sun.tools.hat.internal.lang.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 
-public class JRubySymbol extends AbstractScalarModel {
-    private final String str;
-
+public class JRubySymbol extends SimpleScalarModel {
     private JRubySymbol(JRuby factory, String str) {
-        super(factory);
-        this.str = str;
+        super(factory, ':' + str);
     }
 
     public static JRubySymbol make(JRuby factory, JavaObject obj) {
         String str = Models.getFieldString(obj, "symbol");
         return str == null ? null : new JRubySymbol(factory, str);
-    }
-
-    @Override
-    public String toString() {
-        return ':' + str;
     }
 }

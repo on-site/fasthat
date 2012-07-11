@@ -52,6 +52,9 @@ public abstract class JRuby implements ModelFactory {
     private final JavaClass moduleWrapperClass;
     private final JavaClass stringClass;
     private final JavaClass symbolClass;
+    private final JavaClass nilClass;
+    private final JavaClass booleanClass;
+    private final JavaClass basicObjectClass;
     private final JavaClass objectClass;
     private final JavaClass arrayClass;
     private final JavaClass hashClass;
@@ -64,6 +67,9 @@ public abstract class JRuby implements ModelFactory {
         moduleWrapperClass = Models.grabClass(snapshot, "org.jruby.IncludedModuleWrapper");
         stringClass = Models.grabClass(snapshot, "org.jruby.RubyString");
         symbolClass = Models.grabClass(snapshot, "org.jruby.RubySymbol");
+        nilClass = Models.grabClass(snapshot, "org.jruby.RubyNil");
+        booleanClass = Models.grabClass(snapshot, "org.jruby.RubyBoolean");
+        basicObjectClass = Models.grabClass(snapshot, "org.jruby.RubyBasicObject");
         objectClass = Models.grabClass(snapshot, "org.jruby.RubyObject");
         arrayClass = Models.grabClass(snapshot, "org.jruby.RubyArray");
         hashClass = Models.grabClass(snapshot, "org.jruby.RubyHash");
@@ -95,6 +101,18 @@ public abstract class JRuby implements ModelFactory {
 
     public JavaClass getSymbolClass() {
         return symbolClass;
+    }
+
+    public JavaClass getNilClass() {
+        return nilClass;
+    }
+
+    public JavaClass getBooleanClass() {
+        return booleanClass;
+    }
+
+    public JavaClass getBasicObjectClass() {
+        return basicObjectClass;
     }
 
     public JavaClass getObjectClass() {

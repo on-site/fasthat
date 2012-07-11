@@ -52,6 +52,7 @@ import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ModelVisitor;
 import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -305,12 +306,7 @@ abstract class QueryHandler implements Runnable {
                 final ScalarModel scalar = (ScalarModel) model;
                 // Ensures visit() visits with ScalarModel, not whatever
                 return scalar instanceof AbstractScalarModel ? scalar
-                        : new AbstractScalarModel(scalar.getFactory()) {
-                    @Override
-                    public String toString() {
-                        return scalar.toString();
-                    }
-                };
+                        : new SimpleScalarModel(scalar.getFactory(), scalar.toString());
             }
         }
         return null;

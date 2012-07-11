@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,19 +30,48 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.jruby;
 
+import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.SimpleScalarModel;
+import com.sun.tools.hat.internal.lang.common.Singletons;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 
-class JavaString extends SimpleScalarModel {
-    private JavaString(OpenJDK6 factory, String value) {
-        super(factory, '"' + value + '"');
+/**
+ * Scalar models for special values in JRuby.
+ *
+ * @author Chris K. Jester-Young
+ */
+public final class Specials {
+    private static final Singletons.Key NIL = new Singletons.Key("<nil>");
+    private static final Singletons.Key FALSE = new Singletons.Key("<false>");
+    private static final Singletons.Key TRUE = new Singletons.Key("<true>");
+    private static final Singletons.Key NEVER = new Singletons.Key("<never>");
+    private static final Singletons.Key UNDEF = new Singletons.Key("<undef>");
+
+    /**
+     * Disables instantiation for static class.
+     */
+    private Specials() {}
+
+    public static Model makeNil(JRuby factory) {
+        return NIL.apply(factory);
     }
 
-    public static JavaString make(OpenJDK6 factory, JavaObject obj) {
-        String value = Models.getStringValue(obj);
-        return value != null ? new JavaString(factory, value) : null;
+    public static Model makeBoolean(JRuby factory, JavaObject value) {
+        JavaInt flags = Models.getFieldThing(value, "flags", JavaInt.class);
+        return flags == null ? null
+                : (flags.value & 1) != 0 ? FALSE.apply(factory) : TRUE.apply(factory);
+    }
+
+    public static Model makeSpecial(JRuby factory, JavaObject value) {
+        JavaClass basic = factory.getBasicObjectClass();
+        if (value == basic.getStaticField("NEVER"))
+            return NEVER.apply(factory);
+        if (value == basic.getStaticField("UNDEF"))
+            return UNDEF.apply(factory);
+        return null;
     }
 }
