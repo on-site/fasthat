@@ -171,18 +171,19 @@ abstract class QueryHandler implements Runnable {
     }
 
     protected void printThing(JavaThing thing) {
-        printThing(thing, true, true);
+        printImpl(thing, true, true);
     }
 
     protected void printSimple(JavaThing thing) {
-        printThing(thing, false, true);
+        printImpl(thing, false, true);
     }
 
     protected void printSummary(JavaThing thing) {
-        printThing(thing, true, false);
+        printImpl(thing, true, false);
     }
 
-    protected void printThing(JavaThing thing, boolean useModel, boolean showDetail) {
+    private void printImpl(JavaThing thing, boolean useNonScalarModel,
+            boolean showDetail) {
         if (thing == null) {
             out.print("null");
             return;
@@ -196,14 +197,13 @@ abstract class QueryHandler implements Runnable {
                 if (ho.isNew())
                     out.print("<strong>");
             }
-            Model model = useModel ? getModelFor(thing) : null;
+            Model model = getModelFor(thing, useNonScalarModel);
             printSummary(model, thing);
             if (id != -1) {
                 if (ho.isNew())
                     out.print("[new]</strong>");
                 out.print("</a>");
                 if (showDetail) {
-                    out.println();
                     printDetail(model, ho.getSize());
                 }
             }
@@ -294,10 +294,10 @@ abstract class QueryHandler implements Runnable {
         out.print(Misc.encodeHtml(str));
     }
 
-    protected Model getModelFor(JavaThing thing) {
+    private Model getModelFor(JavaThing thing, boolean useNonScalarModel) {
         for (ModelFactory factory : snapshot.getModelFactories()) {
             Model model = factory.newModel(thing);
-            if (model != null) {
+            if (model != null && (useNonScalarModel || model instanceof ScalarModel)) {
                 return model;
             }
         }
