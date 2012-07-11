@@ -34,12 +34,12 @@ package com.sun.tools.hat.internal.lang.jruby;
 
 import com.google.common.base.Charsets;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.AbstractScalarModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 
-public class JRubyString extends ScalarModel {
+public class JRubyString extends AbstractScalarModel {
     private final String value;
 
     private JRubyString(JRuby factory, String value) {

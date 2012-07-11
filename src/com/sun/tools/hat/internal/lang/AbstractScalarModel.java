@@ -32,16 +32,22 @@
 
 package com.sun.tools.hat.internal.lang;
 
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
-
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * A scalar model models a single quantity. Scalar model objects should
+ * provide a {@link #toString} method that formats the object for printing.
+ * To ease implementation of {@link #toString}, its output is HTML-escaped
+ * before sending to the browser.
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public abstract class AbstractScalarModel extends AbstractModel
+        implements ScalarModel {
+    public AbstractScalarModel(ModelFactory factory) {
+        super(factory);
+    }
+
+    @Override
+    public void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
 }

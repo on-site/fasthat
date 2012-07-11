@@ -40,16 +40,7 @@ package com.sun.tools.hat.internal.lang;
  *
  * @author Chris K. Jester-Young
  */
-public abstract class ScalarModel extends AbstractModel {
-    public ScalarModel(ModelFactory factory) {
-        super(factory);
-    }
-
+public interface ScalarModel extends Model {
     @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public abstract String toString();
+    String toString();
 }

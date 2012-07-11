@@ -38,11 +38,11 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaArray extends CollectionModel {
+class JavaArray extends AbstractCollectionModel {
     private final List<JavaThing> items;
 
     public JavaArray(OpenJDK6 factory, JavaObjectArray array) {

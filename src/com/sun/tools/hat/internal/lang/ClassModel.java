@@ -42,22 +42,13 @@ import com.sun.tools.hat.internal.model.JavaObject;
  *
  * @author Chris K. Jester-Young
  */
-public abstract class ClassModel extends AbstractModel {
-    public ClassModel(ModelFactory factory) {
-        super(factory);
-    }
-
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
-    }
-
+public interface ClassModel extends Model {
     /**
      * Returns this model's associated class object.
      *
      * @return the class object for this class
      */
-    public abstract JavaObject getClassObject();
+    JavaObject getClassObject();
 
     /**
      * Returns the fully-qualified name of this class. Same concept as
@@ -65,7 +56,7 @@ public abstract class ClassModel extends AbstractModel {
      *
      * @return the fully-qualified name of this class
      */
-    public abstract String getName();
+    String getName();
 
     /**
      * Returns the simple name of this class. Same concept as
@@ -74,7 +65,7 @@ public abstract class ClassModel extends AbstractModel {
      *
      * @return the simple name of this class
      */
-    public abstract String getSimpleName();
+    String getSimpleName();
 
     /**
      * Returns the superclasses of this class. In Java, this includes
@@ -82,7 +73,7 @@ public abstract class ClassModel extends AbstractModel {
      *
      * @return superclasses of this class
      */
-    public abstract Collection<ClassModel> getSuperclasses();
+    Collection<ClassModel> getSuperclasses();
 
     /**
      * Returns the property names of this class. In Java, this refers
@@ -90,5 +81,5 @@ public abstract class ClassModel extends AbstractModel {
      *
      * @return the property names of this class
      */
-    public abstract Collection<String> getPropertyNames();
+    Collection<String> getPropertyNames();
 }

@@ -38,14 +38,14 @@ import java.util.Map;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.MapModel;
+import com.sun.tools.hat.internal.lang.AbstractMapModel;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JavaHash extends MapModel {
+public class JavaHash extends AbstractMapModel {
     private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
         private final List<JavaObject> table;
 

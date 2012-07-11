@@ -42,15 +42,6 @@ import com.sun.tools.hat.internal.model.JavaThing;
  *
  * @author Chris K. Jester-Young
  */
-public abstract class CollectionModel extends AbstractModel {
-    public CollectionModel(ModelFactory factory) {
-        super(factory);
-    }
-
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    public abstract Collection<JavaThing> getCollection();
+public interface CollectionModel extends Model {
+    Collection<JavaThing> getCollection();
 }

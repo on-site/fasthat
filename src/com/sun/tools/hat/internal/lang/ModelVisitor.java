@@ -36,7 +36,7 @@ package com.sun.tools.hat.internal.lang;
  * Visitor interface for language-specific models.
  *
  * <p>In the current design of language-specific models, there are three
- * generic types: scalars, lists, and maps, represented by the classes
+ * generic types: scalars, lists, and maps, represented by the interfaces
  * {@link ScalarModel}, {@link CollectionModel}, and {@link MapModel}.
  * In order to allow users of the class not to have to do a bunch of
  * {@code instanceof} tests, a visitor pattern is used instead.

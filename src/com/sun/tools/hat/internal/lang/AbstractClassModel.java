@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,16 +32,20 @@
 
 package com.sun.tools.hat.internal.lang;
 
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
-
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * A class model models a single class, which has superclasses, properties
+ * (fields/instance variables), and methods.
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public abstract class AbstractClassModel extends AbstractModel
+        implements ClassModel {
+    public AbstractClassModel(ModelFactory factory) {
+        super(factory);
+    }
+
+    @Override
+    public void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
 }

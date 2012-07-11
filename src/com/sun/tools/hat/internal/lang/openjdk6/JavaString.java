@@ -33,10 +33,10 @@
 package com.sun.tools.hat.internal.lang.openjdk6;
 
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.AbstractScalarModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 
-class JavaString extends ScalarModel {
+class JavaString extends AbstractScalarModel {
     private final String value;
 
     private JavaString(OpenJDK6 factory, String value) {

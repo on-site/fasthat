@@ -37,12 +37,12 @@ import java.util.Collection;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaLinkedList extends CollectionModel {
+class JavaLinkedList extends AbstractCollectionModel {
     private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
         private final JavaObject header;
 

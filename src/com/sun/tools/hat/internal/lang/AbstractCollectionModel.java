@@ -32,16 +32,20 @@
 
 package com.sun.tools.hat.internal.lang;
 
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
-
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * A collection model models multiple quantities. Collection model objects
+ * should provide a {@link #getCollection} method.
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public abstract class AbstractCollectionModel extends AbstractModel
+        implements CollectionModel {
+    public AbstractCollectionModel(ModelFactory factory) {
+        super(factory);
+    }
+
+    @Override
+    public void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
 }

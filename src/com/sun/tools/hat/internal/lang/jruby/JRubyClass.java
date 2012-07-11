@@ -44,6 +44,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.sun.tools.hat.internal.lang.AbstractClassModel;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaClass;
@@ -55,7 +56,7 @@ import com.sun.tools.hat.internal.model.JavaObject;
  *
  * @author Chris K. Jester-Young
  */
-public class JRubyClass extends ClassModel {
+public class JRubyClass extends AbstractClassModel {
     private static class ClassCacheLoader extends CacheLoader<JavaObject, JRubyClass> {
         private final JRuby factory;
 

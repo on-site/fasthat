@@ -42,22 +42,13 @@ import com.sun.tools.hat.internal.model.JavaThing;
  *
  * @author Chris K. Jester-Young
  */
-public abstract class ObjectModel extends AbstractModel {
-    public ObjectModel(ModelFactory factory) {
-        super(factory);
-    }
-
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
-    }
-
+public interface ObjectModel extends Model {
     /**
      * Returns the class model associated with this object's class.
      *
      * @return the class model associated with this object's class
      */
-    public abstract ClassModel getClassModel();
+    ClassModel getClassModel();
 
     /**
      * Returns the class model associated with this object's eigenclass,
@@ -67,7 +58,7 @@ public abstract class ObjectModel extends AbstractModel {
      * @return the class model associated with this object's eigenclass,
      *         or null
      */
-    public abstract ClassModel getEigenclassModel();
+    ClassModel getEigenclassModel();
 
     /**
      * Returns the properties (field names and values) attached to this
@@ -76,5 +67,5 @@ public abstract class ObjectModel extends AbstractModel {
      *
      * @return properties attached to this object
      */
-    public abstract Map<String, JavaThing> getProperties();
+    Map<String, JavaThing> getProperties();
 }

@@ -37,14 +37,14 @@ import java.util.Collection;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaVector extends CollectionModel {
+class JavaVector extends AbstractCollectionModel {
     private final ImmutableList<JavaThing> items;
 
     private JavaVector(OpenJDK6 factory, List<JavaThing> items) {

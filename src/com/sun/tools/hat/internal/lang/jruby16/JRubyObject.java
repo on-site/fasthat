@@ -43,12 +43,12 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ObjectModel;
+import com.sun.tools.hat.internal.lang.AbstractObjectModel;
 import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JRubyObject extends ObjectModel {
+class JRubyObject extends AbstractObjectModel {
     private static class PropertiesSupplier implements Supplier<ImmutableMap<String, JavaThing>> {
         private final JRuby16 factory;
         private final JavaObject obj;
