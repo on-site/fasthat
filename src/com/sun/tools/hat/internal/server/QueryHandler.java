@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.sun.tools.hat.internal.lang.AbstractScalarModel;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.MapModel;
@@ -297,8 +298,19 @@ abstract class QueryHandler implements Runnable {
     private Model getModelFor(JavaThing thing, boolean useNonScalarModel) {
         for (ModelFactory factory : snapshot.getModelFactories()) {
             Model model = factory.newModel(thing);
-            if (model != null && (useNonScalarModel || model instanceof ScalarModel)) {
+            if (model != null && useNonScalarModel) {
                 return model;
+            }
+            if (model instanceof ScalarModel) {
+                final ScalarModel scalar = (ScalarModel) model;
+                // Ensures visit() visits with ScalarModel, not whatever
+                return scalar instanceof AbstractScalarModel ? scalar
+                        : new AbstractScalarModel(scalar.getFactory()) {
+                    @Override
+                    public String toString() {
+                        return scalar.toString();
+                    }
+                };
             }
         }
         return null;

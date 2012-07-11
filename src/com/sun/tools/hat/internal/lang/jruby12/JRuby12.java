@@ -40,6 +40,7 @@ import com.sun.tools.hat.internal.lang.jruby.JRuby;
 import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
 import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
 import com.sun.tools.hat.internal.lang.jruby.JRubyString;
+import com.sun.tools.hat.internal.lang.jruby.JRubySymbol;
 import com.sun.tools.hat.internal.lang.openjdk6.JavaHash;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
@@ -86,6 +87,8 @@ public class JRuby12 extends JRuby {
                 return JRubyClass.make(this, obj);
             else if (clazz == getStringClass())
                 return JRubyString.make(this, obj);
+            else if (clazz == getSymbolClass())
+                return JRubySymbol.make(this, obj);
             else if (clazz == getObjectClass())
                 return new JRubyObject(this, obj);
             else if (clazz == getArrayClass())

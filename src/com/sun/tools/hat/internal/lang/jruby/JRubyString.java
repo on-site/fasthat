@@ -69,6 +69,6 @@ public class JRubyString extends AbstractScalarModel {
 
     @Override
     public String toString() {
-        return value;
+        return '"' + value + '"';
     }
 }

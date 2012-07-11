@@ -47,6 +47,7 @@ import com.google.common.collect.Lists;
 import com.sun.tools.hat.internal.lang.AbstractClassModel;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 
@@ -56,7 +57,7 @@ import com.sun.tools.hat.internal.model.JavaObject;
  *
  * @author Chris K. Jester-Young
  */
-public class JRubyClass extends AbstractClassModel {
+public class JRubyClass extends AbstractClassModel implements ScalarModel {
     private static class ClassCacheLoader extends CacheLoader<JavaObject, JRubyClass> {
         private final JRuby factory;
 
@@ -130,6 +131,11 @@ public class JRubyClass extends AbstractClassModel {
         return classObject;
     }
 
+    private boolean isClass() {
+        JRuby factory = (JRuby) getFactory();
+        return classObject.getClazz() == factory.getClassClass();
+    }
+
     private class NameSupplier implements Supplier<String> {
         // Based on RubyModule.calculateName()
         @Override
@@ -171,9 +177,7 @@ public class JRubyClass extends AbstractClassModel {
         // Based on RubyModule.calculateAnonymousName()
         @Override
         public String get() {
-            JRuby factory = (JRuby) getFactory();
-            boolean isClass = classObject.getClazz() == factory.getClassClass();
-            return String.format("#<%s:%#x>", isClass ? "Class" : "Module",
+            return String.format("#<%s:%#x>", isClass() ? "Class" : "Module",
                     classObject.getId());
         }
     }
@@ -243,5 +247,10 @@ public class JRubyClass extends AbstractClassModel {
 
     private static <T> T coalesce(T value, Supplier<? extends T> fallback) {
         return value != null ? value : fallback.get();
+    }
+
+    @Override
+    public String toString() {
+        return '<' + (isClass() ? "class" : "module") + ':' + getSimpleName() + '>';
     }
 }
