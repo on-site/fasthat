@@ -39,6 +39,8 @@ import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.jruby.JRuby;
 import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
 import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
+import com.sun.tools.hat.internal.lang.jruby.JRubyFixnum;
+import com.sun.tools.hat.internal.lang.jruby.JRubyFloat;
 import com.sun.tools.hat.internal.lang.jruby.JRubyString;
 import com.sun.tools.hat.internal.lang.jruby.JRubySymbol;
 import com.sun.tools.hat.internal.lang.jruby.Specials;
@@ -96,6 +98,10 @@ public class JRuby16 extends JRuby {
                 return Specials.makeBoolean(this, obj);
             else if (clazz == getBasicObjectClass())
                 return Specials.makeSpecial(this, obj);
+            else if (clazz == getFixnumClass())
+                return JRubyFixnum.make(this, obj);
+            else if (clazz == getFloatClass())
+                return JRubyFloat.make(this, obj);
             else if (clazz == getObjectClass())
                 return new JRubyObject(this, obj);
             else if (clazz == getArrayClass())

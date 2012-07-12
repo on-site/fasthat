@@ -43,29 +43,30 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SafeArray;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 public class JRubyArray extends AbstractCollectionModel {
-    private static class GetObjectArrayElements extends CacheLoader<JavaObjectArray,
+    private static class GetSafeArrayElements extends CacheLoader<SafeArray,
             ImmutableList<JavaThing>> {
         @Override
-        public ImmutableList<JavaThing> load(JavaObjectArray arr) {
+        public ImmutableList<JavaThing> load(SafeArray arr) {
             return ImmutableList.copyOf(arr.getElements());
         }
     }
 
-    private static final LoadingCache<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
-            = CacheBuilder.newBuilder().softValues().build(new GetObjectArrayElements());
+    private static final LoadingCache<SafeArray, ImmutableList<JavaThing>> ELEMENT_CACHE
+            = CacheBuilder.newBuilder().softValues().build(new GetSafeArrayElements());
 
     private static class CollectionSupplier implements Supplier<List<JavaThing>> {
-        private final JavaObjectArray arr;
+        private final SafeArray arr;
         private final int begin;
         private final int length;
 
-        public CollectionSupplier(JavaObjectArray arr, int begin, int length) {
+        public CollectionSupplier(SafeArray arr, int begin, int length) {
             this.arr = arr;
             this.begin = begin;
             this.length = length;
@@ -90,8 +91,8 @@ public class JRubyArray extends AbstractCollectionModel {
         JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
         if (arr == null || begin == null || length == null)
             return null;
-        return new JRubyArray(factory, Suppliers.memoize(new CollectionSupplier(arr,
-                begin.value, length.value)));
+        return new JRubyArray(factory, Suppliers.memoize(new CollectionSupplier(
+                new SafeArray(arr, factory.getNullThing()), begin.value, length.value)));
     }
 
     @Override

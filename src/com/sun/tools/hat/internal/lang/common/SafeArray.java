@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,42 +30,42 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.common;
 
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.Collections;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
-import com.sun.tools.hat.internal.lang.common.SafeArray;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaArray extends AbstractCollectionModel {
-    private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
-        private final SafeArray array;
+/**
+ * A {@link JavaObjectArray} with all actual nulls replaced by null
+ * things.
+ *
+ * @author Chris K. Jester-Young
+ */
+public class SafeArray {
+    public final JavaObjectArray array;
+    private final JavaThing nullThing;
 
-        public ListSupplier(SafeArray array) {
-            this.array = array;
-        }
-
-        @Override
-        public ImmutableList<JavaThing> get() {
-            return ImmutableList.copyOf(array.getElements());
-        }
+    public SafeArray(JavaObjectArray array, JavaThing nullThing) {
+        this.array = array;
+        this.nullThing = nullThing;
     }
 
-    private final Supplier<ImmutableList<JavaThing>> items;
-
-    public JavaArray(OpenJDK6 factory, JavaObjectArray array) {
-        super(factory);
-        items = Suppliers.memoize(new ListSupplier(new SafeArray(array,
-                factory.getNullThing())));
+    public JavaThing[] getElements() {
+        JavaThing[] elements = array.getElements();
+        Collections.replaceAll(Arrays.asList(elements), null, nullThing);
+        return elements;
     }
 
     @Override
-    public Collection<JavaThing> getCollection() {
-        return items.get();
+    public boolean equals(Object obj) {
+        return obj instanceof SafeArray && array.equals(((SafeArray) obj).array);
+    }
+
+    @Override
+    public int hashCode() {
+        return array.hashCode();
     }
 }

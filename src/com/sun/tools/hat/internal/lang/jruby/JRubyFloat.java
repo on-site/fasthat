@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,42 +30,33 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Collection;
+import com.sun.tools.hat.internal.lang.AbstractScalarModel;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.model.JavaDouble;
+import com.sun.tools.hat.internal.model.JavaObject;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
-import com.sun.tools.hat.internal.lang.common.SafeArray;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
+/**
+ * Model for Ruby flonums.
+ *
+ * @author Chris K. Jester-Young
+ */
+public class JRubyFloat extends AbstractScalarModel {
+    private final double value;
 
-class JavaArray extends AbstractCollectionModel {
-    private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
-        private final SafeArray array;
-
-        public ListSupplier(SafeArray array) {
-            this.array = array;
-        }
-
-        @Override
-        public ImmutableList<JavaThing> get() {
-            return ImmutableList.copyOf(array.getElements());
-        }
+    private JRubyFloat(JRuby factory, double value) {
+        super(factory);
+        this.value = value;
     }
 
-    private final Supplier<ImmutableList<JavaThing>> items;
-
-    public JavaArray(OpenJDK6 factory, JavaObjectArray array) {
-        super(factory);
-        items = Suppliers.memoize(new ListSupplier(new SafeArray(array,
-                factory.getNullThing())));
+    public static JRubyFloat make(JRuby factory, JavaObject obj) {
+        JavaDouble value = Models.getFieldThing(obj, "value", JavaDouble.class);
+        return value == null ? null : new JRubyFloat(factory, value.value);
     }
 
     @Override
-    public Collection<JavaThing> getCollection() {
-        return items.get();
+    public String toString() {
+        return Double.toString(value);
     }
 }

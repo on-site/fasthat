@@ -50,12 +50,10 @@ import com.sun.tools.hat.internal.model.JavaThing;
 
 class JRubyObject extends AbstractObjectModel {
     private static class PropertiesSupplier implements Supplier<ImmutableMap<String, JavaThing>> {
-        private final JRuby16 factory;
         private final JavaObject obj;
         private final ClassModel rubyClass;
 
-        public PropertiesSupplier(JRuby16 factory, JavaObject obj, ClassModel rubyClass) {
-            this.factory = factory;
+        public PropertiesSupplier(JavaObject obj, ClassModel rubyClass) {
             this.obj = obj;
             this.rubyClass = rubyClass;
         }
@@ -71,7 +69,11 @@ class JRubyObject extends AbstractObjectModel {
             ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
             Iterator<JavaThing> iter = values.iterator();
             for (String name : names) {
-                builder.put(name, iter.hasNext() ? iter.next() : factory.getNullThing());
+                if (!iter.hasNext())
+                    break;
+                JavaThing thing = iter.next();
+                if (thing != null)
+                    builder.put(name, thing);
             }
             return builder.build();
         }
@@ -83,8 +85,7 @@ class JRubyObject extends AbstractObjectModel {
     public JRubyObject(JRuby16 factory, JavaObject obj) {
         super(factory);
         this.obj = obj;
-        this.properties = Suppliers.memoize(new PropertiesSupplier(factory,
-                obj, getClassModel()));
+        this.properties = Suppliers.memoize(new PropertiesSupplier(obj, getClassModel()));
     }
 
     @Override

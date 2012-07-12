@@ -45,9 +45,9 @@ import com.sun.tools.hat.internal.model.JavaObject;
  * @author Chris K. Jester-Young
  */
 public final class Specials {
-    private static final Singletons.Key NIL = new Singletons.Key("<nil>");
-    private static final Singletons.Key FALSE = new Singletons.Key("<false>");
-    private static final Singletons.Key TRUE = new Singletons.Key("<true>");
+    private static final Singletons.Key NIL = new Singletons.Key("nil");
+    private static final Singletons.Key FALSE = new Singletons.Key("false");
+    private static final Singletons.Key TRUE = new Singletons.Key("true");
     private static final Singletons.Key NEVER = new Singletons.Key("<never>");
     private static final Singletons.Key UNDEF = new Singletons.Key("<undef>");
 
