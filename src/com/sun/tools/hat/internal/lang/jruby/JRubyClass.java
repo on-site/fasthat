@@ -96,7 +96,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
             = Suppliers.memoize(new NameSupplier());
     private final Supplier<String> anonymousNameSupplier
             = Suppliers.memoize(new AnonymousNameSupplier());
-    private final Supplier<ClassModel> realClassSupplier
+    private final Supplier<JRubyClass> realClassSupplier
             = Suppliers.memoize(new RealClassSupplier());
     private final Supplier<ImmutableList<ClassModel>> superclassesSupplier
             = Suppliers.memoize(new SuperclassesSupplier());
@@ -187,10 +187,10 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
                 anonymousNameSupplier);
     }
 
-    private class RealClassSupplier implements Supplier<ClassModel> {
+    private class RealClassSupplier implements Supplier<JRubyClass> {
         // Based on MetaClass.getRealClass()
         @Override
-        public ClassModel get() {
+        public JRubyClass get() {
             JRuby factory = (JRuby) getFactory();
             JavaClass classClass = factory.getClassClass();
             JavaObject cls = classObject;
@@ -201,7 +201,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         }
     }
 
-    public ClassModel getRealClass() {
+    public JRubyClass getRealClass() {
         return realClassSupplier.get();
     }
 
