@@ -56,7 +56,7 @@ import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.io.Closeables;
+import com.google.common.io.Closer;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 import com.sun.tools.hat.internal.util.Misc;
@@ -205,13 +205,23 @@ public class HttpReader implements Runnable {
         this.snapshot = snapshot;
     }
 
+    @Override
     public void run() {
-        InputStream in = null;
         try {
-            in = new BufferedInputStream(socket.getInputStream());
-            out = new PrintWriter(new BufferedWriter(
+            handleRequest();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void handleRequest() throws IOException {
+        Closer closer = Closer.create();
+        try {
+            closer.register(socket);
+            InputStream in = closer.register(new BufferedInputStream(socket.getInputStream()));
+            out = closer.register(new PrintWriter(new BufferedWriter(
                             new OutputStreamWriter(
-                                socket.getOutputStream(), "UTF-8")));
+                                socket.getOutputStream(), "UTF-8"))));
             out.println("HTTP/1.0 200 OK");
             out.println("Content-Type: text/html; charset=UTF-8");
             out.println("Cache-Control: no-cache");
@@ -252,15 +262,10 @@ public class HttpReader implements Runnable {
             } else {
                 outputError("Query '" + query + "' not implemented");
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (Throwable t) {
+            throw closer.rethrow(t);
         } finally {
-            Closeables.closeQuietly(out);
-            Closeables.closeQuietly(in);
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-            }
+            closer.close();
         }
     }
 
