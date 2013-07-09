@@ -36,6 +36,7 @@ package com.sun.tools.hat.internal.server;
 import java.io.PrintWriter;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
@@ -173,19 +174,23 @@ abstract class QueryHandler implements Runnable {
     }
 
     protected void printThing(JavaThing thing) {
-        printImpl(thing, true, true);
+        printImpl(thing, true, true, null);
+    }
+
+    protected void printDetailed(JavaThing thing) {
+        printImpl(thing, true, true, Integer.MAX_VALUE);
     }
 
     protected void printSimple(JavaThing thing) {
-        printImpl(thing, false, true);
+        printImpl(thing, false, true, null);
     }
 
     protected void printSummary(JavaThing thing) {
-        printImpl(thing, true, false);
+        printImpl(thing, true, false, null);
     }
 
     private void printImpl(JavaThing thing, boolean useNonScalarModel,
-            boolean showDetail) {
+            boolean showDetail, Integer limit) {
         if (thing == null) {
             out.print("null");
             return;
@@ -206,7 +211,7 @@ abstract class QueryHandler implements Runnable {
                     out.print("[new]</strong>");
                 out.print("</a>");
                 if (showDetail) {
-                    printDetail(model, ho.getSize());
+                    printDetail(model, ho.getSize(), limit);
                 }
             }
         } else {
@@ -312,7 +317,7 @@ abstract class QueryHandler implements Runnable {
         return null;
     }
 
-    protected void printSummary(Model model, final JavaThing thing) {
+    private void printSummary(Model model, final JavaThing thing) {
         if (model != null) {
             model.visit(new ModelVisitor() {
                 @Override
@@ -345,9 +350,11 @@ abstract class QueryHandler implements Runnable {
         }
     }
 
-    private void printDetail(Model model, int size) {
+    private void printDetail(Model model, int size, final Integer limit) {
         if (model != null) {
             model.visit(new ModelVisitor() {
+                private final int lim = Objects.firstNonNull(limit, 10);
+
                 @Override
                 public void visit(ScalarModel model) {
                 }
@@ -357,15 +364,15 @@ abstract class QueryHandler implements Runnable {
                     out.print(" [");
                     Collection<JavaThing> collection = model.getCollection();
                     boolean first = true;
-                    for (JavaThing thing : Iterables.limit(collection, 10)) {
+                    for (JavaThing thing : Iterables.limit(collection, lim)) {
                         if (first)
                             first = false;
                         else
                             out.print(", ");
                         printSimple(thing);
                     }
-                    if (collection.size() > 10) {
-                        out.printf(", &hellip;%d more", collection.size() - 10);
+                    if (collection.size() > lim) {
+                        out.printf(", &hellip;%d more", collection.size() - lim);
                     }
                     out.print("]");
                 }
@@ -376,7 +383,7 @@ abstract class QueryHandler implements Runnable {
                     Map<JavaThing, JavaThing> map = model.getMap();
                     boolean first = true;
                     for (Map.Entry<JavaThing, JavaThing> entry
-                            : Iterables.limit(map.entrySet(), 10)) {
+                            : Iterables.limit(map.entrySet(), lim)) {
                         if (first)
                             first = false;
                         else
@@ -385,8 +392,8 @@ abstract class QueryHandler implements Runnable {
                         out.print(" &rArr; ");
                         printSimple(entry.getValue());
                     }
-                    if (map.size() > 10) {
-                        out.printf(", &hellip;%d more", map.size() - 10);
+                    if (map.size() > lim) {
+                        out.printf(", &hellip;%d more", map.size() - lim);
                     }
                     out.print("}");
                 }
@@ -401,9 +408,14 @@ abstract class QueryHandler implements Runnable {
                             first = false;
                         else
                             out.print(", ");
-                        print(entry.getKey());
+                        String key = entry.getKey();
+                        JavaThing value = entry.getValue();
+                        print(key);
                         out.print(": ");
-                        printSimple(entry.getValue());
+                        if ("@attributes".equals(key))
+                            printDetailed(value);
+                        else
+                            printSimple(value);
                     }
                     out.print("}");
                 }
