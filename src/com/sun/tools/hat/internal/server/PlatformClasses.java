@@ -33,11 +33,13 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Closeables;
+import com.google.common.io.Closer;
 import com.sun.tools.hat.internal.model.JavaClass;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,38 +54,51 @@ import java.io.IOException;
  * @author      Bill Foote
  */
 
-public class PlatformClasses  {
+public class PlatformClasses {
+    private enum GetNames implements Supplier<List<String>> {
+        INSTANCE;
 
-    static volatile List<String> names = null;
+        @Override
+        public List<String> get() {
+            try {
+                return readNames();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                // Shouldn't happen, and if it does, continuing
+                // is the right thing to do anyway.
+                return ImmutableList.of();
+            }
+        }
 
-    public static List<String> getNames() {
-        if (names == null) {
-            List<String> list = new ArrayList<String>();
-            InputStream str
-                = PlatformClasses.class
-                    .getResourceAsStream("/com/sun/tools/hat/resources/platform_names.txt");
-            if (str != null) {
-                BufferedReader rdr = null;
-                try {
-                    rdr = new BufferedReader(new InputStreamReader(str));
+        private static List<String> readNames() throws IOException {
+            ImmutableList.Builder<String> builder = ImmutableList.builder();
+            Closer closer = Closer.create();
+            try {
+                InputStream str = closer.register(PlatformClasses.class
+                        .getResourceAsStream("/com/sun/tools/hat/resources/platform_names.txt"));
+                if (str != null) {
+                    BufferedReader rdr = closer.register(new BufferedReader(new InputStreamReader(str)));
                     String s;
                     while ((s = rdr.readLine()) != null) {
                         if (!s.isEmpty()) {
-                            list.add(s);
+                            builder.add(s);
                         }
                     }
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                    // Shouldn't happen, and if it does, continuing
-                    // is the right thing to do anyway.
-                } finally {
-                    Closeables.closeQuietly(rdr);
-                    Closeables.closeQuietly(str);
                 }
+                return builder.build();
+            } catch (Throwable t) {
+                throw closer.rethrow(t);
+            } finally {
+                closer.close();
             }
-            names = list;
         }
-        return names;
+    }
+
+    private static final Supplier<List<String>> NAMES_SUPPLIER
+            = Suppliers.memoize(GetNames.INSTANCE);
+
+    public static List<String> getNames() {
+        return NAMES_SUPPLIER.get();
     }
 
 

@@ -41,7 +41,7 @@ fasthat uses the following libraries:
 + [Rhino][rhino]
 
 I always try to keep up-to-date with the latest released versions. At
-the time of current writing, I'm using Guava 12.0 and Rhino 1.7R4.
+the time of current writing, I'm using Guava 14.0.1 and Rhino 1.7R4.
 
 I develop and build using Eclipse. [Mike Virata-Stone][mjvs] has created
 an Ant `build.xml` that you may find useful, but I have not tested it.
@@ -75,6 +75,7 @@ to improve on that I haven't yet got around to:
     + Allow inspection of JRuby stack traces.
     + Make the object views use language-specific models much more
       pervasively.
+    + Enable OQL queries on language-specific object properties.
     + Implement unpacking of more object types, especially for JRuby
       and Guava.
     + Implement models for OpenJDK 7 and JRuby 1.7.

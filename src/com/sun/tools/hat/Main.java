@@ -78,7 +78,7 @@ public class Main {
         System.err.println();
         System.err.println("For a dump file that contains multiple heap dumps,");
         System.err.println("you may specify which dump in the file");
-        System.err.println("by appending \"#<number>\" to the file name, i.e. \"foo.hprof#3\".");
+        System.err.println("by appending \"#<number>\" to the file name, e.g., \"foo.hprof#3\".");
         System.err.println();
         System.err.println("All boolean options default to \"true\"");
         System.exit(1);
