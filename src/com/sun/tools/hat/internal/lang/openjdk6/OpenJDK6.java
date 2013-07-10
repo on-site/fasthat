@@ -38,6 +38,7 @@ import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.lang.openjdk.JavaArray;
 import com.sun.tools.hat.internal.lang.openjdk.JavaConcHash;
 import com.sun.tools.hat.internal.lang.openjdk.JavaHash;
+import com.sun.tools.hat.internal.lang.openjdk.JavaPrimArray;
 import com.sun.tools.hat.internal.lang.openjdk.JavaString;
 import com.sun.tools.hat.internal.lang.openjdk.JavaVector;
 import com.sun.tools.hat.internal.lang.openjdk.OpenJDK;
@@ -45,6 +46,7 @@ import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.model.JavaValueArray;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 public class OpenJDK6 extends OpenJDK {
@@ -88,6 +90,8 @@ public class OpenJDK6 extends OpenJDK {
         }
         if (thing instanceof JavaObjectArray)
             return new JavaArray(this, (JavaObjectArray) thing);
+        if (thing instanceof JavaValueArray)
+            return new JavaPrimArray(this, (JavaValueArray) thing);
         return null;
     }
 }
