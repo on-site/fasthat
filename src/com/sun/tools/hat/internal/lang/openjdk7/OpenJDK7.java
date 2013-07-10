@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.openjdk7;
 
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
@@ -47,22 +47,22 @@ import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
-public class OpenJDK6 extends OpenJDK {
+public class OpenJDK7 extends OpenJDK {
     public enum Factory implements ModelFactoryFactory {
         INSTANCE;
 
         @Override
         public boolean isSupported(Snapshot snapshot) {
-            return checkVersion(snapshot, "1.6.0_");
+            return checkVersion(snapshot, "1.7.0_");
         }
 
         @Override
         public ModelFactory newFactory(Snapshot snapshot) {
-            return new OpenJDK6(snapshot);
+            return new OpenJDK7(snapshot);
         }
     }
 
-    private OpenJDK6(Snapshot snapshot) {
+    private OpenJDK7(Snapshot snapshot) {
         super(snapshot);
     }
 

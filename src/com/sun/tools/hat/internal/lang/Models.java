@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2011, 2012, 2013 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -120,8 +120,12 @@ public final class Models {
                 JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
                 JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
                 JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
-                if (value != null && offset != null && count != null) {
-                    return new String((char[]) value.getElements(), offset.value, count.value);
+                if (value != null) {
+                    if (offset != null && count != null) {
+                        return new String((char[]) value.getElements(), offset.value, count.value);
+                    } else {
+                        return new String((char[]) value.getElements());
+                    }
                 }
             }
             return null;

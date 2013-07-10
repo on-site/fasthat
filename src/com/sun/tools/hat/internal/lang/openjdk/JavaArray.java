@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2011, 2012, 2013 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.openjdk;
 
 import java.util.Collection;
 
@@ -42,7 +42,7 @@ import com.sun.tools.hat.internal.lang.common.SafeArray;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaArray extends AbstractCollectionModel {
+public class JavaArray extends AbstractCollectionModel {
     private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
         private final SafeArray array;
 
@@ -58,7 +58,7 @@ class JavaArray extends AbstractCollectionModel {
 
     private final Supplier<ImmutableList<JavaThing>> items;
 
-    public JavaArray(OpenJDK6 factory, JavaObjectArray array) {
+    public JavaArray(OpenJDK factory, JavaObjectArray array) {
         super(factory);
         items = Suppliers.memoize(new ListSupplier(new SafeArray(array,
                 factory.getNullThing())));

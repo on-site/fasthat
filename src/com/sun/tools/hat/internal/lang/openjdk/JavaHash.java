@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.openjdk;
 
 import java.util.List;
 import java.util.Map;
@@ -39,51 +39,45 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.AbstractMapModel;
+import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaConcHash extends AbstractMapModel {
+public class JavaHash extends AbstractMapModel {
     private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
-        private final List<JavaObject> segments;
+        private final List<JavaObject> table;
 
-        public MapSupplier(List<JavaObject> segments) {
-            this.segments = segments;
+        public MapSupplier(List<JavaObject> table) {
+            this.table = table;
         }
 
         @Override
         public ImmutableMap<JavaThing, JavaThing> get() {
             final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-            HashCommon.KeyValueVisitor visitor = new HashCommon.KeyValueVisitor() {
+            HashCommon.walkHashTable(table, "key", "value", "next",
+                    new HashCommon.KeyValueVisitor() {
                 @Override
                 public void visit(JavaThing key, JavaThing value) {
                     builder.put(key, value);
                 }
-            };
-
-            for (JavaObject segment : segments) {
-                List<JavaObject> table = Models.getFieldObjectArray(segment, "table",
-                        JavaObject.class);
-                if (table != null)
-                    HashCommon.walkHashTable(table, "key", "value", "next", visitor);
-            }
+            });
             return builder.build();
         }
     }
 
     private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
 
-    private JavaConcHash(OpenJDK6 factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private JavaHash(ModelFactory factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
         super(factory);
         this.map = map;
     }
 
-    public static JavaConcHash make(OpenJDK6 factory, JavaObject chm) {
-        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
-                JavaObject.class);
-        return segments == null ? null
-                : new JavaConcHash(factory, Suppliers.memoize(new MapSupplier(segments)));
+    public static JavaHash make(ModelFactory factory, JavaObject hash) {
+        List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
+        return table == null ? null
+                : new JavaHash(factory, Suppliers.memoize(new MapSupplier(table)));
     }
 
     @Override

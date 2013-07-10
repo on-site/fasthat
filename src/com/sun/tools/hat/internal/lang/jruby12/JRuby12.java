@@ -44,7 +44,7 @@ import com.sun.tools.hat.internal.lang.jruby.JRubyFloat;
 import com.sun.tools.hat.internal.lang.jruby.JRubyString;
 import com.sun.tools.hat.internal.lang.jruby.JRubySymbol;
 import com.sun.tools.hat.internal.lang.jruby.Specials;
-import com.sun.tools.hat.internal.lang.openjdk6.JavaHash;
+import com.sun.tools.hat.internal.lang.openjdk.JavaHash;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2011, 2012, 2013 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,19 +30,38 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.openjdk;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.SimpleScalarModel;
+import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaObjectArray;
+import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaString extends SimpleScalarModel {
-    private JavaString(OpenJDK6 factory, String value) {
-        super(factory, '"' + value + '"');
+public class JavaVector extends AbstractCollectionModel {
+    private final ImmutableList<JavaThing> items;
+
+    private JavaVector(OpenJDK factory, List<JavaThing> items) {
+        super(factory);
+        this.items = ImmutableList.copyOf(items);
     }
 
-    public static JavaString make(OpenJDK6 factory, JavaObject obj) {
-        String value = Models.getStringValue(obj);
-        return value != null ? new JavaString(factory, value) : null;
+    public static JavaVector make(OpenJDK factory, JavaObject vec, String sizeField) {
+        JavaThing[] data = Models.getFieldThing(vec, "elementData",
+                JavaObjectArray.class).getElements();
+        JavaInt size = Models.getFieldThing(vec, sizeField, JavaInt.class);
+        return data == null || size == null ? null
+                : new JavaVector(factory, Arrays.asList(data).subList(0, size.value));
+    }
+
+    @Override
+    public Collection<JavaThing> getCollection() {
+        return items;
     }
 }
