@@ -60,7 +60,7 @@ class OQLQuery extends QueryHandler {
         out.println("<p align='center'>");
         out.println("<textarea name='query' cols=80 rows=10>");
         if (oql != null) {
-            out.print(oql);
+            print(oql);
         }
         out.println("</textarea>");
         out.println("</p>");
@@ -83,10 +83,7 @@ class OQLQuery extends QueryHandler {
                          try {
                              out.println(engine.get().toHtml(o));
                          } catch (Exception e) {
-                             out.println(e.getMessage());
-                             out.println("<pre>");
-                             e.printStackTrace(out);
-                             out.println("</pre>");
+                             printException(e);
                          }
                          out.println("</td></tr>");
                          return out.checkError();
@@ -94,10 +91,7 @@ class OQLQuery extends QueryHandler {
                  });
             out.println("</table>");
         } catch (OQLException exp) {
-            out.println(exp.getMessage());
-            out.println("<pre>");
-            exp.printStackTrace(out);
-            out.println("</pre>");
+            printException(exp);
         }
     }
 

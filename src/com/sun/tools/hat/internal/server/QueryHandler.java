@@ -52,6 +52,7 @@ import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
+import java.io.StringWriter;
 
 import java.net.URLEncoder;
 import java.util.Collection;
@@ -150,7 +151,7 @@ abstract class QueryHandler implements Runnable {
     }
 
     protected void error(String msg) {
-        out.println(Misc.encodeHtml(msg));
+        println(msg);
     }
 
     protected void printAnchorStart() {
@@ -264,6 +265,15 @@ abstract class QueryHandler implements Runnable {
             print(f.getSourceFileName() + " line " + f.getLineNumber());
             out.println("<br>");
         }
+    }
+
+    protected void printException(Throwable t) {
+        println(t.getMessage());
+        out.println("<pre>");
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        print(sw.toString());
+        out.println("</pre>");
     }
 
     protected void printHex(long addr) {
@@ -519,5 +529,9 @@ abstract class QueryHandler implements Runnable {
             }
             out.println("</p>");
         }
+    }
+
+    protected void println(String str) {
+        out.println(Misc.encodeHtml(str));
     }
 }
