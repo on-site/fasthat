@@ -104,7 +104,7 @@ public class RefsByTypeQuery extends QueryHandler {
         out.println("<p align='center'>");
         printClass(clazz);
         if (clazz.getId() != -1) {
-            out.println("[" + clazz.getIdString() + "]");
+            println("[" + clazz.getIdString() + "]");
         }
         out.println("</p>");
         printBreadcrumbs(path, null, null, clazz, referrers, null);
