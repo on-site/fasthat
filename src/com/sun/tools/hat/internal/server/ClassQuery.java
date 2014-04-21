@@ -32,12 +32,10 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
 import java.util.Arrays;
-import java.util.Comparator;
 
 /**
  *
@@ -46,27 +44,6 @@ import java.util.Comparator;
 
 
 class ClassQuery extends QueryHandler {
-    private enum Sorters implements Function<JavaField, Comparable<?>>,
-            Comparator<JavaField> {
-        BY_NAME {
-            @Override
-            public String apply(JavaField cls) {
-                return cls.getName();
-            }
-        };
-
-        private final Ordering<JavaField> ordering;
-
-        private Sorters() {
-            this.ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(JavaField lhs, JavaField rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
     public ClassQuery() {
     }
 
@@ -107,13 +84,12 @@ class ClassQuery extends QueryHandler {
         }
 
         out.println("<h2>Instance Data Members:</h2>");
-        JavaField[] ff = clazz.getFields().clone();
-        Arrays.sort(ff, Sorters.BY_NAME);
-        for (JavaField f : ff) {
+        Arrays.asList(clazz.getFields()).stream().sorted(Ordering.natural()
+                .onResultOf(JavaField::getName)).forEach(f -> {
             out.print("    ");
             printField(f);
             out.println("<br>");
-        }
+        });
 
         out.println("<h2>Static Data Members:</h2>");
         JavaStatic[] ss = clazz.getStatics();

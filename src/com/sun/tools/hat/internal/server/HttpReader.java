@@ -42,6 +42,7 @@ package com.sun.tools.hat.internal.server;
 
 import java.net.Socket;
 import java.net.URLDecoder;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import java.io.InputStream;
@@ -53,10 +54,8 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 
 import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.io.Closer;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 import com.sun.tools.hat.internal.util.Misc;
@@ -151,52 +150,28 @@ public class HttpReader implements Runnable {
         ImmutableList.Builder<HandlerRoute> builder = ImmutableList.builder();
 
         if (isOQLSupported) {
-            builder.add(new HandlerRoute("/oql/", new Supplier<QueryHandler>() {
-                public QueryHandler get() {return new OQLQuery(engine);}
-            }), new HandlerRoute("/oqlhelp/", new Supplier<QueryHandler>() {
-                public QueryHandler get() {return new OQLHelp();}
-            }));
+            builder.add(new HandlerRoute("/oql/", () -> new OQLQuery(engine)),
+                        new HandlerRoute("/oqlhelp/", OQLHelp::new));
         }
-        builder.add(new HandlerRoute("/", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new AllClassesQuery(true, isOQLSupported);}
-        }), new HandlerRoute("/allClassesWithPlatform/", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new AllClassesQuery(false, isOQLSupported);}
-        }), new HandlerRoute("/showRoots/", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new AllRootsQuery();}
-        }), new HandlerRoute("/showInstanceCounts/", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new InstancesCountQuery(true);}
-        }), new HandlerRoute("/showInstanceCounts/includePlatform/", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new InstancesCountQuery(false);}
-        }), new HandlerRoute("/instances/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new InstancesQuery(false, false);}
-        }), new HandlerRoute("/newInstances/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new InstancesQuery(false, true);}
-        }), new HandlerRoute("/allInstances/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new InstancesQuery(true, false);}
-        }), new HandlerRoute("/allNewInstances/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new InstancesQuery(true, true);}
-        }), new HandlerRoute("/object/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new ObjectQuery();}
-        }), new HandlerRoute("/class/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new ClassQuery();}
-        }), new HandlerRoute("/roots/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new RootsQuery(false);}
-        }), new HandlerRoute("/allRoots/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new RootsQuery(true);}
-        }), new HandlerRoute("/reachableFrom/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new ReachableQuery();}
-        }), new HandlerRoute("/rootStack/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new RootStackQuery();}
-        }), new HandlerRoute("/histo/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new HistogramQuery();}
-        }), new HandlerRoute("/refsByType/*", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new RefsByTypeQuery();}
-        }), new HandlerRoute("/finalizerSummary/", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new FinalizerSummaryQuery();}
-        }), new HandlerRoute("/finalizerObjects/", new Supplier<QueryHandler>() {
-            public QueryHandler get() {return new FinalizerObjectsQuery();}
-        }));
-
+        builder.add(new HandlerRoute("/", () -> new AllClassesQuery(true, isOQLSupported)),
+                    new HandlerRoute("/allClassesWithPlatform/", () -> new AllClassesQuery(false, isOQLSupported)),
+                    new HandlerRoute("/showRoots/", AllRootsQuery::new),
+                    new HandlerRoute("/showInstanceCounts/", () -> new InstancesCountQuery(true)),
+                    new HandlerRoute("/showInstanceCounts/includePlatform/", () -> new InstancesCountQuery(false)),
+                    new HandlerRoute("/instances/*", () -> new InstancesQuery(false, false)),
+                    new HandlerRoute("/newInstances/*", () -> new InstancesQuery(false, true)),
+                    new HandlerRoute("/allInstances/*", () -> new InstancesQuery(true, false)),
+                    new HandlerRoute("/allNewInstances/*", () -> new InstancesQuery(true, true)),
+                    new HandlerRoute("/object/*", ObjectQuery::new),
+                    new HandlerRoute("/class/*", ClassQuery::new),
+                    new HandlerRoute("/roots/*", () -> new RootsQuery(false)),
+                    new HandlerRoute("/allRoots/*", () -> new RootsQuery(true)),
+                    new HandlerRoute("/reachableFrom/*", ReachableQuery::new),
+                    new HandlerRoute("/rootStack/*", RootStackQuery::new),
+                    new HandlerRoute("/histo/*", HistogramQuery::new),
+                    new HandlerRoute("/refsByType/*", RefsByTypeQuery::new),
+                    new HandlerRoute("/finalizerSummary/", FinalizerSummaryQuery::new),
+                    new HandlerRoute("/finalizerObjects/", FinalizerObjectsQuery::new));
         return builder.build();
     }
 
@@ -215,13 +190,10 @@ public class HttpReader implements Runnable {
     }
 
     private void handleRequest() throws IOException {
-        Closer closer = Closer.create();
-        try {
-            closer.register(socket);
-            InputStream in = closer.register(new BufferedInputStream(socket.getInputStream()));
-            out = closer.register(new PrintWriter(new BufferedWriter(
-                            new OutputStreamWriter(
-                                socket.getOutputStream(), "UTF-8"))));
+        try (InputStream in = new BufferedInputStream(socket.getInputStream());
+             PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+                socket.getOutputStream(), "UTF-8")))) {
+            this.out = out;
             out.println("HTTP/1.0 200 OK");
             out.println("Content-Type: text/html; charset=UTF-8");
             out.println("Cache-Control: no-cache");
@@ -262,10 +234,6 @@ public class HttpReader implements Runnable {
             } else {
                 outputError("Query '" + query + "' not implemented");
             }
-        } catch (Throwable t) {
-            throw closer.rethrow(t);
-        } finally {
-            closer.close();
         }
     }
 

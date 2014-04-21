@@ -32,11 +32,9 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
@@ -49,27 +47,6 @@ import java.util.*;
  *
  */
 public class RefsByTypeQuery extends QueryHandler {
-    private enum Sorters implements Function<Multiset.Entry<JavaClass>, Integer>,
-            Comparator<Multiset.Entry<JavaClass>> {
-        BY_COUNT {
-            @Override
-            public Integer apply(Multiset.Entry<JavaClass> entry) {
-                return ~entry.getCount();
-            }
-        };
-
-        private final Ordering<Multiset.Entry<JavaClass>> ordering;
-
-        private Sorters() {
-            ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(Multiset.Entry<JavaClass> lhs, Multiset.Entry<JavaClass> rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
     public void run() {
         ClassResolver resolver = new ClassResolver(snapshot, true);
         JavaClass clazz = resolver.apply(query);
@@ -127,11 +104,9 @@ public class RefsByTypeQuery extends QueryHandler {
     private void print(Multiset<JavaClass> multiset, JavaClass primary,
             Collection<JavaClass> referrers, boolean supportsChaining) {
         out.println("<table border='1' align='center'>");
-        List<Multiset.Entry<JavaClass>> entries = Lists.newArrayList(multiset.entrySet());
-        Collections.sort(entries, Sorters.BY_COUNT);
-
         out.println("<tr><th>Class</th><th>Count</th></tr>");
-        for (Multiset.Entry<JavaClass> entry : entries) {
+        multiset.entrySet().stream().sorted(Ordering.natural().reverse()
+                .onResultOf(entry -> entry.getCount())).forEach(entry -> {
             out.println("<tr><td>");
             JavaClass clazz = entry.getElement();
             printClass(clazz);
@@ -146,7 +121,7 @@ public class RefsByTypeQuery extends QueryHandler {
             out.println("</td><td>");
             out.println(entry.getCount());
             out.println("</td></tr>");
-        }
+        });
         out.println("</table>");
     }
 

@@ -32,12 +32,14 @@
 
 package com.sun.tools.hat.internal.server;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -47,75 +49,36 @@ import com.sun.tools.hat.internal.model.*;
 
 
 class AllRootsQuery extends QueryHandler {
-    private enum Sorters implements Function<Root, Comparable<?>>,
-            Comparator<Root> {
-        BY_TYPE {
-            @Override
-            public Integer apply(Root root) {
-                return root.getType();
-            }
-        },
-
-        BY_DESCRIPTION {
-            @Override
-            public String apply(Root root) {
-                return root.getDescription();
-            }
-        };
-
-        private final Ordering<Root> ordering;
-
-        private Sorters() {
-            this.ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(Root lhs, Root rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
     public AllRootsQuery() {
     }
 
     public void run() {
         startHtml("All Members of the Rootset");
 
-        Root[] roots = snapshot.getRootsArray();
-        Arrays.sort(roots, new Comparator<Root>() {
-            public int compare(Root left, Root right) {
-                return ComparisonChain.start()
-                        // More interesting values are *higher*
-                        .compare(right, left, Sorters.BY_TYPE)
-                        .compare(left, right, Sorters.BY_DESCRIPTION)
-                        .result();
-            }
-        });
+        // More interesting values are *higher*
+        Multimap<Integer, Root> roots = TreeMultimap.create(Comparator.reverseOrder(),
+                Ordering.natural().onResultOf(Root::getDescription));
+        roots.putAll(Multimaps.index(snapshot.getRoots(), Root::getType));
+        for (Map.Entry<Integer, Collection<Root>> entry : roots.asMap().entrySet()) {
+            out.print("<h2>");
+            print(Root.getTypeName(entry.getKey()) + " References");
+            out.println("</h2>");
+            for (Root root : entry.getValue()) {
+                printRoot(root);
+                if (root.getReferer() != null) {
+                    out.print("<small> (from ");
+                    printThingAnchorTag(root.getReferer().getId());
+                    print(root.getReferer().toString());
+                    out.print(")</a></small>");
+                }
+                out.print(" :<br>");
 
-        int lastType = Root.INVALID_TYPE;
-
-        for (Root root : roots) {
-            if (root.getType() != lastType) {
-                lastType = root.getType();
-                out.print("<h2>");
-                print(root.getTypeName() + " References");
-                out.println("</h2>");
-            }
-
-            printRoot(root);
-            if (root.getReferer() != null) {
-                out.print("<small> (from ");
-                printThingAnchorTag(root.getReferer().getId());
-                print(root.getReferer().toString());
-                out.print(")</a></small>");
-            }
-            out.print(" :<br>");
-
-            JavaThing t = snapshot.findThing(root.getId());
-            if (t != null) {    // It should always be
-                print("--> ");
-                printThing(t);
-                out.println("<br>");
+                JavaThing t = snapshot.findThing(root.getId());
+                if (t != null) {    // It should always be
+                    print("--> ");
+                    printThing(t);
+                    out.println("<br>");
+                }
             }
         }
 

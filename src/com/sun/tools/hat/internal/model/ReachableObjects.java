@@ -32,12 +32,9 @@
 
 package com.sun.tools.hat.internal.model;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 
@@ -46,27 +43,6 @@ import com.google.common.collect.Ordering;
  */
 
 public class ReachableObjects {
-    private enum Sorters implements Function<JavaThing, Comparable<?>>,
-            Comparator<JavaThing> {
-        BY_SIZE {
-            @Override
-            public Integer apply(JavaThing thing) {
-                return thing.getSize();
-            }
-        };
-
-        private final Ordering<JavaThing> ordering;
-
-        private Sorters() {
-            this.ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(JavaThing lhs, JavaThing rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
     public ReachableObjects(JavaHeapObject root,
                             final ReachableExcludes excludes) {
         this.root = root;
@@ -106,27 +82,13 @@ public class ReachableObjects {
         visitor.visit(root);
         bag.remove(root);
 
-        // Now grab the elements into a vector, and sort it in decreasing size
-        JavaThing[] things = new JavaThing[bag.size()];
-        int i = 0;
-        for (JavaHeapObject thing : bag) {
-            things[i++] = thing;
-        }
-        Arrays.sort(things, new Comparator<JavaThing>() {
-            public int compare(JavaThing left, JavaThing right) {
-                return ComparisonChain.start()
-                        .compare(right, left, Sorters.BY_SIZE)
-                        .compare(left, right)
-                        .result();
-            }
-        });
-        this.reachables = things;
+        this.reachables = bag.stream().sorted((left, right) -> ComparisonChain.start()
+                .compare(left, right, Ordering.natural().reverse().onResultOf(JavaThing::getSize))
+                .compare(left, right)
+                .result()).toArray(JavaThing[]::new);
 
-        long totalSize = root.getSize();
-        for (JavaThing thing : things) {
-            totalSize += thing.getSize();
-        }
-        this.totalSize = totalSize;
+        this.totalSize = bag.stream().mapToLong(JavaThing::getSize).sum()
+                + root.getSize();
 
         excludedFields = getElements(fieldsExcluded);
         usedFields = getElements(fieldsUsed);
@@ -153,9 +115,7 @@ public class ReachableObjects {
     }
 
     private static String[] getElements(Set<String> set) {
-        String[] res = set.toArray(new String[set.size()]);
-        Arrays.sort(res);
-        return res;
+        return set.stream().sorted().toArray(String[]::new);
     }
 
     private final JavaHeapObject root;

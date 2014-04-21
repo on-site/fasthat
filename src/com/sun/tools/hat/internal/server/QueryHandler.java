@@ -34,6 +34,12 @@
 package com.sun.tools.hat.internal.server;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.Collection;
+import java.util.Formatter;
+import java.util.Map;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -52,13 +58,6 @@ import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
-import java.io.StringWriter;
-
-import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.Formatter;
-import java.util.Map;
-import java.io.UnsupportedEncodingException;
 
 /**
  *
@@ -67,15 +66,6 @@ import java.io.UnsupportedEncodingException;
 
 
 abstract class QueryHandler implements Runnable {
-    protected enum GetIdString implements Function<JavaClass, String> {
-        INSTANCE;
-
-        @Override
-        public String apply(JavaClass clazz) {
-            return clazz.getIdString();
-        }
-    }
-
     protected static class ClassResolver implements Function<String, JavaClass> {
         private final Snapshot snapshot;
         private final boolean valueRequired;
@@ -90,9 +80,8 @@ abstract class QueryHandler implements Runnable {
             if (name == null && !valueRequired) {
                 return null;
             }
-            JavaClass result = snapshot.findClass(name);
-            Preconditions.checkNotNull(result, "class not found: %s", name);
-            return result;
+            return Preconditions.checkNotNull(snapshot.findClass(name),
+                    "class not found: %s", name);
         }
     }
 
@@ -474,7 +463,7 @@ abstract class QueryHandler implements Runnable {
             }
             if (referrers != null) {
                 builder.putAll("referrer", Collections2.transform(referrers,
-                        GetIdString.INSTANCE));
+                        JavaClass::getIdString));
             }
             if (tail != null) {
                 builder.put("referrer", tail.getIdString());

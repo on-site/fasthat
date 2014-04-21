@@ -416,21 +416,17 @@ public class Snapshot {
         return roots;
     }
 
-    public Root[] getRootsArray() {
-        return roots.toArray(new Root[roots.size()]);
-    }
-
     public Root getRootAt(int i) {
         return roots.get(i);
     }
 
-    public ReferenceChain[]
+    public ImmutableList<ReferenceChain>
     rootsetReferencesTo(JavaHeapObject target, boolean includeWeak) {
         Queue<ReferenceChain> fifo = new ArrayDeque<ReferenceChain>();
             // Must be a fifo to go breadth-first
         Set<JavaHeapObject> visited = new HashSet<JavaHeapObject>();
         // Objects are added here right after being added to fifo.
-        List<ReferenceChain> result = new ArrayList<ReferenceChain>();
+        ImmutableList.Builder<ReferenceChain> result = ImmutableList.builder();
         visited.add(target);
         fifo.add(new ReferenceChain(target, null));
 
@@ -451,7 +447,7 @@ public class Snapshot {
                 }
             }
         }
-        return result.toArray(new ReferenceChain[result.size()]);
+        return result.build();
     }
 
     public boolean getUnresolvedObjectsOK() {
