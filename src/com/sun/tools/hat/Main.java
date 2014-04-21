@@ -37,6 +37,7 @@ import java.io.File;
 import com.sun.tools.hat.internal.lang.guava.Guava;
 import com.sun.tools.hat.internal.lang.jruby12.JRuby12;
 import com.sun.tools.hat.internal.lang.jruby16.JRuby16;
+import com.sun.tools.hat.internal.lang.jruby17.JRuby17;
 import com.sun.tools.hat.internal.lang.openjdk6.OpenJDK6;
 import com.sun.tools.hat.internal.lang.openjdk7.OpenJDK7;
 import com.sun.tools.hat.internal.model.Snapshot;
@@ -180,7 +181,8 @@ public class Main {
         }
         model.setUpModelFactories(OpenJDK6.Factory.INSTANCE,
                 OpenJDK7.Factory.INSTANCE, Guava.Factory.INSTANCE,
-                JRuby12.Factory.INSTANCE, JRuby16.Factory.INSTANCE);
+                JRuby12.Factory.INSTANCE, JRuby16.Factory.INSTANCE,
+                JRuby17.Factory.INSTANCE);
         if ( debugLevel == 2 ) {
             System.out.println("No server, -debug 2 was used.");
             System.exit(0);

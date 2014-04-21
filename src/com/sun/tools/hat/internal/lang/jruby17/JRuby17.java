@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby16;
+package com.sun.tools.hat.internal.lang.jruby17;
 
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
@@ -38,7 +38,6 @@ import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.jruby.JRuby;
 import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
-import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
 import com.sun.tools.hat.internal.lang.jruby.JRubyFixnum;
 import com.sun.tools.hat.internal.lang.jruby.JRubyFloat;
 import com.sun.tools.hat.internal.lang.jruby.JRubyObject;
@@ -52,11 +51,11 @@ import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
- * Model factory for JRuby 1.6.
+ * Model factory for JRuby 1.7.
  *
  * @author Chris K. Jester-Young
  */
-public class JRuby16 extends JRuby {
+public class JRuby17 extends JRuby {
     public enum Factory implements ModelFactoryFactory {
         INSTANCE;
 
@@ -68,16 +67,16 @@ public class JRuby16 extends JRuby {
              * them too.
              */
             JavaClass constants = snapshot.findClass("org.jruby.runtime.Constants");
-            return Models.checkStaticString(constants, "VERSION", "1.6.");
+            return Models.checkStaticString(constants, "VERSION", "1.7.");
         }
 
         @Override
         public ModelFactory newFactory(Snapshot snapshot) {
-            return isSupported(snapshot) ? new JRuby16(snapshot) : null;
+            return isSupported(snapshot) ? new JRuby17(snapshot) : null;
         }
     }
 
-    private JRuby16(Snapshot snapshot) {
+    private JRuby17(Snapshot snapshot) {
         super(snapshot);
     }
 

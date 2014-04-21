@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2011, 2012, 2014 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby16;
+package com.sun.tools.hat.internal.lang.jruby;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -44,11 +44,10 @@ import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.AbstractObjectModel;
-import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JRubyObject extends AbstractObjectModel {
+public class JRubyObject extends AbstractObjectModel {
     private static class PropertiesSupplier implements Supplier<ImmutableMap<String, JavaThing>> {
         private final JavaObject obj;
         private final ClassModel rubyClass;
@@ -82,7 +81,7 @@ class JRubyObject extends AbstractObjectModel {
     private final JavaObject obj;
     private final Supplier<ImmutableMap<String, JavaThing>> properties;
 
-    public JRubyObject(JRuby16 factory, JavaObject obj) {
+    public JRubyObject(JRuby factory, JavaObject obj) {
         super(factory);
         this.obj = obj;
         this.properties = Suppliers.memoize(new PropertiesSupplier(obj, getClassModel()));
@@ -95,7 +94,7 @@ class JRubyObject extends AbstractObjectModel {
 
     @Override
     public JRubyClass getEigenclassModel() {
-        return JRubyClass.make((JRuby16) getFactory(),
+        return JRubyClass.make((JRuby) getFactory(),
                 Models.getFieldObject(obj, "metaClass"));
     }
 
