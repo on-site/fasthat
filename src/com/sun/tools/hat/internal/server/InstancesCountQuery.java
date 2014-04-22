@@ -33,7 +33,6 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
@@ -66,11 +65,9 @@ class InstancesCountQuery extends QueryHandler {
 
         long totalSize = classes.stream().mapToLong(JavaClass::getTotalInstanceSize).sum();
         long instances = classes.stream().mapToLong(cls -> cls.getInstancesCount(false)).sum();
-        classes.stream().sorted((lhs, rhs) -> ComparisonChain.start()
-                .compare(lhs, rhs, Ordering.natural().reverse().onResultOf(cls -> cls.getInstancesCount(false)))
-                .compare(lhs, rhs, Ordering.natural().onResultOf(cls -> cls.getName().startsWith("[")))
-                .compare(lhs, rhs, Ordering.natural().onResultOf(JavaClass::getName))
-                .result()).forEach(clazz -> {
+        classes.stream().sorted(Ordering.natural().reverse().onResultOf((JavaClass cls) -> cls.getInstancesCount(false))
+                .compound(Ordering.natural().onResultOf((JavaClass cls) -> cls.getName().startsWith("[")))
+                .compound(Ordering.natural().onResultOf(JavaClass::getName))).forEach(clazz -> {
             int count = clazz.getInstancesCount(false);
             print("" + count);
             printAnchorStart();

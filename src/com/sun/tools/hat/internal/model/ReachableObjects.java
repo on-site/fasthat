@@ -35,7 +35,6 @@ package com.sun.tools.hat.internal.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 
 /**
@@ -82,10 +81,8 @@ public class ReachableObjects {
         visitor.visit(root);
         bag.remove(root);
 
-        this.reachables = bag.stream().sorted((left, right) -> ComparisonChain.start()
-                .compare(left, right, Ordering.natural().reverse().onResultOf(JavaThing::getSize))
-                .compare(left, right)
-                .result()).toArray(JavaThing[]::new);
+        this.reachables = bag.stream().sorted(Ordering.natural().reverse().onResultOf(JavaThing::getSize)
+                .compound(Ordering.natural())).toArray(JavaThing[]::new);
 
         this.totalSize = bag.stream().mapToLong(JavaThing::getSize).sum()
                 + root.getSize();

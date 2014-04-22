@@ -32,14 +32,9 @@
 
 package com.sun.tools.hat.internal.server;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Map;
-
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -77,15 +72,16 @@ class RootsQuery extends QueryHandler {
         printThing(target);
         out.println("</h1>");
         // More interesting values are *higher*
-        Multimap<Integer, ReferenceChain> refs = TreeMultimap.create(Comparator.reverseOrder(),
-                Ordering.natural().reverse().onResultOf(ReferenceChain::getDepth));
-        refs.putAll(Multimaps.index(snapshot.rootsetReferencesTo(target, includeWeak),
-                chain -> chain.getObj().getRoot().getType()));
-        for (Map.Entry<Integer, Collection<ReferenceChain>> entry : refs.asMap().entrySet()) {
+        Multimap<Integer, ReferenceChain> refs = Multimaps.index(
+                snapshot.rootsetReferencesTo(target, includeWeak),
+                chain -> chain.getObj().getRoot().getType());
+        refs.asMap().entrySet().stream().sorted(Ordering.natural().reverse()
+                .onResultOf(entry -> entry.getKey())).forEach(entry -> {
             out.print("<h2>");
             print(Root.getTypeName(entry.getKey()) + " References");
             out.println("</h2>");
-            for (ReferenceChain ref : entry.getValue()) {
+            entry.getValue().stream().sorted(Ordering.natural()
+                    .onResultOf(ReferenceChain::getDepth)).forEach(ref -> {
                 Root root = ref.getObj().getRoot();
                 out.print("<h3>");
                 printRoot(root);
@@ -110,8 +106,8 @@ class RootsQuery extends QueryHandler {
                     out.println("<br>");
                     ref = next;
                 }
-            }
-        }
+            });
+        });
 
         out.println("<h2>Other queries</h2>");
 

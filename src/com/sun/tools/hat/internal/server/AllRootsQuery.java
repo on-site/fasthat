@@ -32,14 +32,9 @@
 
 package com.sun.tools.hat.internal.server;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Map;
-
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -56,14 +51,14 @@ class AllRootsQuery extends QueryHandler {
         startHtml("All Members of the Rootset");
 
         // More interesting values are *higher*
-        Multimap<Integer, Root> roots = TreeMultimap.create(Comparator.reverseOrder(),
-                Ordering.natural().onResultOf(Root::getDescription));
-        roots.putAll(Multimaps.index(snapshot.getRoots(), Root::getType));
-        for (Map.Entry<Integer, Collection<Root>> entry : roots.asMap().entrySet()) {
+        Multimap<Integer, Root> roots = Multimaps.index(snapshot.getRoots(), Root::getType);
+        roots.asMap().entrySet().stream().sorted(Ordering.natural().reverse()
+                .onResultOf(entry -> entry.getKey())).forEach(entry -> {
             out.print("<h2>");
             print(Root.getTypeName(entry.getKey()) + " References");
             out.println("</h2>");
-            for (Root root : entry.getValue()) {
+            entry.getValue().stream().sorted(Ordering.natural()
+                    .onResultOf(Root::getDescription)).forEach(root -> {
                 printRoot(root);
                 if (root.getReferer() != null) {
                     out.print("<small> (from ");
@@ -79,8 +74,8 @@ class AllRootsQuery extends QueryHandler {
                     printThing(t);
                     out.println("<br>");
                 }
-            }
-        }
+            });
+        });
 
         out.println("<h2>Other Queries</h2>");
         out.println("<ul>");
