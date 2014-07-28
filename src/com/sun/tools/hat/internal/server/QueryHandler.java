@@ -405,6 +405,7 @@ abstract class QueryHandler implements Runnable {
     protected static String formatLink(String path, String pathInfo,
             String label, Multimap<String, String> params) {
         StringBuilder sb = new StringBuilder();
+        @SuppressWarnings("resource") // StringBuilder is not closeable
         Formatter fmt = new Formatter(sb);
         fmt.format("<a href='/%s/%s?", path,
                 encodeForURL(Strings.nullToEmpty(pathInfo)));

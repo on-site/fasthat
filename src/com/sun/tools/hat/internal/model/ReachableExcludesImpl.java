@@ -79,9 +79,8 @@ public class ReachableExcludesImpl implements ReachableExcludes {
         long lm = excludesFile.lastModified();
         Set<String> m = new HashSet<String>();
 
-        try {
-            BufferedReader r = new BufferedReader(new InputStreamReader(
-                                    new FileInputStream(excludesFile)));
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(
+                new FileInputStream(excludesFile)))) {
 
             String method;
             while ((method = r.readLine()) != null) {
