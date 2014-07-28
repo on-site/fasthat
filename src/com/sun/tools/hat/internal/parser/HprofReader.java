@@ -159,13 +159,13 @@ public class HprofReader extends Reader {
         this.dumpsToSkip = dumpNumber - 1;
         this.callStack = callStack;
         this.debugLevel = debugLevel;
-        names = new HashMap<Long, String>();
-        threadObjects = new HashMap<Integer, ThreadObject>(43);
-        classNameFromObjectID = new HashMap<Long, String>();
+        names = new HashMap<>();
+        threadObjects = new HashMap<>(43);
+        classNameFromObjectID = new HashMap<>();
         if (callStack) {
-            stackFrames = new HashMap<Long, StackFrame>(43);
-            stackTraces = new HashMap<Integer, StackTrace>(43);
-            classNameFromSerialNo = new HashMap<Integer, String>();
+            stackFrames = new HashMap<>(43);
+            stackTraces = new HashMap<>(43);
+            classNameFromSerialNo = new HashMap<>();
         } else {
             stackFrames = null;
             stackTraces = null;
