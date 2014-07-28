@@ -230,21 +230,21 @@ public class Snapshot {
         // resolution.
         javaLangClass = findClass("java.lang.Class");
         if (javaLangClass == null) {
-            System.out.println("WARNING:  hprof file does not include java.lang.Class!");
+            System.err.println("WARNING:  hprof file does not include java.lang.Class!");
             javaLangClass = new JavaClass("java.lang.Class", 0, 0, 0, 0,
                                  EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
             addFakeClass(javaLangClass);
         }
         javaLangString = findClass("java.lang.String");
         if (javaLangString == null) {
-            System.out.println("WARNING:  hprof file does not include java.lang.String!");
+            System.err.println("WARNING:  hprof file does not include java.lang.String!");
             javaLangString = new JavaClass("java.lang.String", 0, 0, 0, 0,
                                  EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
             addFakeClass(javaLangString);
         }
         javaLangClassLoader = findClass("java.lang.ClassLoader");
         if (javaLangClassLoader == null) {
-            System.out.println("WARNING:  hprof file does not include java.lang.ClassLoader!");
+            System.err.println("WARNING:  hprof file does not include java.lang.ClassLoader!");
             javaLangClassLoader = new JavaClass("java.lang.ClassLoader", 0, 0, 0, 0,
                                  EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
             addFakeClass(javaLangClassLoader);
@@ -296,7 +296,7 @@ public class Snapshot {
             }
         }
         if (calculateRefs) {
-            System.out.println("");
+            System.out.println();
         }
     }
 

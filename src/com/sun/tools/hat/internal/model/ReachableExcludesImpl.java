@@ -89,7 +89,7 @@ public class ReachableExcludesImpl implements ReachableExcludes {
             lastModified = lm;
             methods = m;        // We want this to be atomic
         } catch (IOException ex) {
-            System.out.println("Error reading " + excludesFile + ":  " + ex);
+            System.err.println("Error reading " + excludesFile + ":  " + ex);
         }
     }
 

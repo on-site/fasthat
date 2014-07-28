@@ -203,7 +203,7 @@ public class HprofReader extends Reader {
             // length >2GB.  so store 32bit value in long to keep it unsigned.
             long length = in.readInt() & 0xffffffffL;
             if (debugLevel > 0) {
-                System.out.println("Read record type " + type
+                System.err.println("Read record type " + type
                                    + ", length " + length
                                    + " at position " + toHex(currPos));
             }
@@ -242,7 +242,7 @@ public class HprofReader extends Reader {
                             handleEOF(exp, snapshot);
                         }
                         if (debugLevel > 0) {
-                            System.out.println("    Finished processing instances in heap dump.");
+                            System.err.println("    Finished processing instances in heap dump.");
                         }
                         return snapshot;
                     } else {
@@ -389,7 +389,7 @@ public class HprofReader extends Reader {
         while (bytesLeft > 0) {
             int type = in.readUnsignedByte();
             if (debugLevel > 0) {
-                System.out.println("    Read heap sub-record type " + type
+                System.err.println("    Read heap sub-record type " + type
                                    + " at position "
                                    + toHex(posAtEnd - bytesLeft));
             }
@@ -507,7 +507,7 @@ public class HprofReader extends Reader {
             skipBytes(bytesLeft);
         }
         if (debugLevel > 0) {
-            System.out.println("    Finished heap sub-records.");
+            System.err.println("    Finished heap sub-records.");
         }
     }
 
@@ -866,7 +866,7 @@ public class HprofReader extends Reader {
     }
 
     private static void warn(String msg) {
-        System.out.println("WARNING: " + msg);
+        System.err.println("WARNING: " + msg);
     }
 
     //

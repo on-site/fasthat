@@ -154,7 +154,7 @@ public class JavaClass extends JavaHeapObject {
                     sc.resolveSuperclass(snapshot);
                     totalNumFields += sc.totalNumFields;
                 } catch (ClassCastException ex) {
-                    System.out.println("Warning!  Superclass of " + name + " is " + superclass);
+                    System.err.println("Warning!  Superclass of " + name + " is " + superclass);
                     superclass = null;
                 }
             }
