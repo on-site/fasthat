@@ -57,7 +57,7 @@ public abstract class JavaThing implements Comparable<JavaThing> {
      * @param field     The field this thing represents.  If null, it is
      *                  assumed this thing is an object (and never a value).
      */
-    public JavaThing dereference(Snapshot shapshot, JavaField field) {
+    public JavaThing dereference(Snapshot snapshot, JavaField field) {
         return this;
     }
 
@@ -65,7 +65,7 @@ public abstract class JavaThing implements Comparable<JavaThing> {
     /**
      * Are we the same type as other?
      *
-     * @see JavaObject.isSameTypeAs()
+     * @see JavaObject#isSameTypeAs
      */
     public boolean isSameTypeAs(JavaThing other) {
         return getClass() == other.getClass();
@@ -87,7 +87,7 @@ public abstract class JavaThing implements Comparable<JavaThing> {
 
     /**
      * Compare our string representation to other's
-     * @see java.lang.String.compareTo()
+     * @see String#compareTo
      */
     public int compareTo(JavaThing other) {
         return toString().compareTo(other.toString());

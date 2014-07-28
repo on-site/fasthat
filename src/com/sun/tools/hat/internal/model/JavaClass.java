@@ -206,7 +206,7 @@ public class JavaClass extends JavaHeapObject {
      * Get the class responsible for field i, where i is a field number that
      * could be passed into getFieldForInstance.
      *
-     * @see JavaClass.getFieldForInstance()
+     * @see JavaClass#getFieldForInstance
      */
     public JavaClass getClassForField(int i) {
         if (superclass != null) {
