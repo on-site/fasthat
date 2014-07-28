@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.sun.tools.hat.internal.model.ArrayTypeCodes.*;
+import static com.sun.tools.hat.internal.util.Misc.toHex;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -714,10 +715,6 @@ public class HprofReader extends Reader {
         return bytesRead;
     }
 
-    private String toHex(long addr) {
-        return com.sun.tools.hat.internal.util.Misc.toHex(addr);
-    }
-
     //
     // Handle a HPROF_GC_INSTANCE_DUMP
     // Return number of bytes read
@@ -868,7 +865,7 @@ public class HprofReader extends Reader {
         snapshot.setUnresolvedObjectsOK(true);
     }
 
-    private void warn(String msg) {
+    private static void warn(String msg) {
         System.out.println("WARNING: " + msg);
     }
 

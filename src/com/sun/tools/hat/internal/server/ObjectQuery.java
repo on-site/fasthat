@@ -83,7 +83,7 @@ class ObjectQuery extends ClassQuery {
         endHtml();
     }
 
-    private Map<JavaField, JavaThing> makeFieldMap(JavaField[] fields, JavaThing[] values) {
+    private static Map<JavaField, JavaThing> makeFieldMap(JavaField[] fields, JavaThing[] values) {
         ImmutableSortedMap.Builder<JavaField, JavaThing> builder
                 = ImmutableSortedMap.orderedBy(Ordering.natural().onResultOf(JavaField::getName));
         for (int i = 0; i < fields.length; ++i) {
