@@ -84,7 +84,7 @@ class ClassQuery extends QueryHandler {
         }
 
         out.println("<h2>Instance Data Members:</h2>");
-        Arrays.asList(clazz.getFields()).stream().sorted(Ordering.natural()
+        Arrays.stream(clazz.getFields()).sorted(Ordering.natural()
                 .onResultOf(JavaField::getName)).forEach(f -> {
             out.print("    ");
             printField(f);
