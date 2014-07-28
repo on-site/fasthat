@@ -6,7 +6,7 @@
   <property name="bin" value="bin"/>
   <property name="jar" value="${base.build}/jar/fasthat.jar"/>
   <property name="tmp" value="tmp"/>
-  <property name="guava.ver" value="16.0.1"/>
+  <property name="guava.ver" value="17.0"/>
   <property name="rhino.ver" value="1.7R4"/>
   <property name="guava.jar" value="guava-${guava.ver}.jar"/>
   <property name="rhino.jar" value="rhino-${rhino.ver}.jar"/>
