@@ -140,7 +140,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         // Based on RubyModule.calculateName()
         @Override
         public String get() {
-            Deque<String> names = new ArrayDeque<String>();
+            Deque<String> names = new ArrayDeque<>();
             LoadingCache<JavaObject, JRubyClass> cache = getClassCache();
             JavaObject cls = classObject;
             do {
