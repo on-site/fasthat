@@ -61,29 +61,24 @@ public class Snapshot {
     private static final JavaStatic[] EMPTY_STATIC_ARRAY = new JavaStatic[0];
 
     // all heap objects
-    private final Map<Number, JavaHeapObject> heapObjects =
-                 new HashMap<Number, JavaHeapObject>();
+    private final Map<Number, JavaHeapObject> heapObjects = new HashMap<>();
 
-    private final Map<Number, JavaClass> fakeClasses =
-                 new HashMap<Number, JavaClass>();
+    private final Map<Number, JavaClass> fakeClasses = new HashMap<>();
 
     // all Roots in this Snapshot
-    private final List<Root> roots = new ArrayList<Root>();
+    private final List<Root> roots = new ArrayList<>();
 
     // name-to-class map
-    private final Map<String, JavaClass> classes =
-                 new TreeMap<String, JavaClass>();
+    private final Map<String, JavaClass> classes = new TreeMap<>();
 
     // new objects relative to a baseline
-    private final Set<JavaHeapObject> newObjects = new HashSet<JavaHeapObject>();
+    private final Set<JavaHeapObject> newObjects = new HashSet<>();
 
     // allocation site traces for all objects
-    private final Map<JavaHeapObject, StackTrace> siteTraces =
-                 new HashMap<JavaHeapObject, StackTrace>();
+    private final Map<JavaHeapObject, StackTrace> siteTraces = new HashMap<>();
 
     // object-to-Root map for all objects
-    private final Map<JavaHeapObject, Root> rootsMap =
-                 new HashMap<JavaHeapObject, Root>();
+    private final Map<JavaHeapObject, Root> rootsMap = new HashMap<>();
 
     // soft cache of finalizeable objects - lazily initialized
     private SoftReference<List<JavaHeapObject>> finalizablesCache;
@@ -230,21 +225,21 @@ public class Snapshot {
         // resolution.
         javaLangClass = findClass("java.lang.Class");
         if (javaLangClass == null) {
-            System.out.println("WARNING:  hprof file does not include java.lang.Class!");
+            System.err.println("WARNING:  hprof file does not include java.lang.Class!");
             javaLangClass = new JavaClass("java.lang.Class", 0, 0, 0, 0,
                                  EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
             addFakeClass(javaLangClass);
         }
         javaLangString = findClass("java.lang.String");
         if (javaLangString == null) {
-            System.out.println("WARNING:  hprof file does not include java.lang.String!");
+            System.err.println("WARNING:  hprof file does not include java.lang.String!");
             javaLangString = new JavaClass("java.lang.String", 0, 0, 0, 0,
                                  EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
             addFakeClass(javaLangString);
         }
         javaLangClassLoader = findClass("java.lang.ClassLoader");
         if (javaLangClassLoader == null) {
-            System.out.println("WARNING:  hprof file does not include java.lang.ClassLoader!");
+            System.err.println("WARNING:  hprof file does not include java.lang.ClassLoader!");
             javaLangClassLoader = new JavaClass("java.lang.ClassLoader", 0, 0, 0, 0,
                                  EMPTY_FIELD_ARRAY, EMPTY_STATIC_ARRAY, 0);
             addFakeClass(javaLangClassLoader);
@@ -296,7 +291,7 @@ public class Snapshot {
             }
         }
         if (calculateRefs) {
-            System.out.println("");
+            System.out.println();
         }
     }
 
@@ -395,7 +390,7 @@ public class Snapshot {
         JavaClass clazz = findClass("java.lang.ref.Finalizer");
         JavaObject queue = (JavaObject) clazz.getStaticField("queue");
         JavaThing tmp = queue.getField("head");
-        List<JavaHeapObject> finalizables = new ArrayList<JavaHeapObject>();
+        List<JavaHeapObject> finalizables = new ArrayList<>();
         if (tmp != getNullThing()) {
             JavaObject head = (JavaObject) tmp;
             while (true) {
@@ -408,7 +403,7 @@ public class Snapshot {
                 finalizables.add(referent);
             }
         }
-        finalizablesCache = new SoftReference<List<JavaHeapObject>>(finalizables);
+        finalizablesCache = new SoftReference<>(finalizables);
         return finalizables;
     }
 
@@ -416,21 +411,17 @@ public class Snapshot {
         return roots;
     }
 
-    public Root[] getRootsArray() {
-        return roots.toArray(new Root[roots.size()]);
-    }
-
     public Root getRootAt(int i) {
         return roots.get(i);
     }
 
-    public ReferenceChain[]
+    public ImmutableList<ReferenceChain>
     rootsetReferencesTo(JavaHeapObject target, boolean includeWeak) {
-        Queue<ReferenceChain> fifo = new ArrayDeque<ReferenceChain>();
+        Queue<ReferenceChain> fifo = new ArrayDeque<>();
             // Must be a fifo to go breadth-first
-        Set<JavaHeapObject> visited = new HashSet<JavaHeapObject>();
+        Set<JavaHeapObject> visited = new HashSet<>();
         // Objects are added here right after being added to fifo.
-        List<ReferenceChain> result = new ArrayList<ReferenceChain>();
+        ImmutableList.Builder<ReferenceChain> result = ImmutableList.builder();
         visited.add(target);
         fifo.add(new ReferenceChain(target, null));
 
@@ -451,7 +442,7 @@ public class Snapshot {
                 }
             }
         }
-        return result.toArray(new ReferenceChain[result.size()]);
+        return result.build();
     }
 
     public boolean getUnresolvedObjectsOK() {

@@ -240,7 +240,7 @@ public class OQLEngine {
     }
 
     private static void debugPrint(String msg) {
-        if (debug) System.out.println(msg);
+        if (debug) System.err.println(msg);
     }
 
     private void init(Snapshot snapshot) throws RuntimeException {

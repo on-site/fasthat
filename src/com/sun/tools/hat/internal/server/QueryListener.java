@@ -72,10 +72,11 @@ public class QueryListener implements Runnable {
     }
 
     private void waitForRequests() throws IOException {
-        ServerSocket ss = new ServerSocket(port);
-        while (true) {
-            Socket s = ss.accept();
-            executor.execute(new HttpReader(s, snapshot));
+        try (ServerSocket ss = new ServerSocket(port)) {
+            while (true) {
+                Socket s = ss.accept();
+                executor.execute(new HttpReader(s, snapshot));
+            }
         }
     }
 

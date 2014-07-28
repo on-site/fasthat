@@ -32,7 +32,9 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.primitives.Longs;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 import java.util.*;
 
@@ -48,44 +50,13 @@ public class FinalizerSummaryQuery extends QueryHandler {
         endHtml();
     }
 
-    private static class HistogramElement implements Comparable<HistogramElement> {
-        public HistogramElement(JavaClass clazz) {
-            this.clazz = clazz;
-        }
-
-        public void updateCount() {
-            this.count++;
-        }
-
-        @Override
-        public int compareTo(HistogramElement other) {
-            return Longs.compare(other.count, count);
-        }
-
-        public JavaClass getClazz() {
-            return clazz;
-        }
-
-        public long getCount() {
-            return count;
-        }
-
-        private final JavaClass clazz;
-        private long count;
-    }
-
     private void printFinalizerSummary(Collection<? extends JavaHeapObject> objs) {
         int count = 0;
-        Map<JavaClass, HistogramElement> map = new HashMap<JavaClass, HistogramElement>();
+        Multiset<JavaClass> bag = HashMultiset.create();
 
         for (JavaHeapObject obj : objs) {
             count++;
-            JavaClass clazz = obj.getClazz();
-            if (! map.containsKey(clazz)) {
-                map.put(clazz, new HistogramElement(clazz));
-            }
-            HistogramElement element = map.get(clazz);
-            element.updateCount();
+            bag.add(obj.getClazz());
         }
 
         out.println("<p align='center'>");
@@ -105,18 +76,16 @@ public class FinalizerSummaryQuery extends QueryHandler {
         }
 
         // calculate and print histogram
-        HistogramElement[] elements = map.values().toArray(new HistogramElement[map.size()]);
-        Arrays.sort(elements);
-
         out.println("<table border=1 align=center>");
         out.println("<tr><th>Count</th><th>Class</th></tr>");
-        for (HistogramElement element : elements) {
+        bag.entrySet().stream().sorted(Ordering.natural().reverse()
+                .onResultOf(entry -> entry.getCount())).forEach(entry -> {
             out.println("<tr><td>");
-            out.println(element.getCount());
+            out.println(entry.getCount());
             out.println("</td><td>");
-            printClass(element.getClazz());
+            printClass(entry.getElement());
             out.println("</td><tr>");
-        }
+        });
         out.println("</table>");
     }
 }

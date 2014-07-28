@@ -34,7 +34,6 @@ package com.sun.tools.hat.internal.parser;
 
 import java.io.*;
 
-import com.google.common.io.Closer;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -83,10 +82,8 @@ public abstract class Reader {
             }
             heapFile = heapFile.substring(0, pos);
         }
-        Closer closer = Closer.create();
-        try {
-            PositionDataInputStream in = closer.register(new PositionDataInputStream(
-                    new BufferedInputStream(new FileInputStream(heapFile))));
+        try (PositionDataInputStream in = new PositionDataInputStream(
+                new BufferedInputStream(new FileInputStream(heapFile)))) {
             int i = in.readInt();
             if (i == HprofReader.MAGIC_NUMBER) {
                 Reader r
@@ -96,10 +93,6 @@ public abstract class Reader {
             } else {
                 throw new IOException("Unrecognized magic number: " + i);
             }
-        } catch (Throwable t) {
-            throw closer.rethrow(t);
-        } finally {
-            closer.close();
         }
     }
 }

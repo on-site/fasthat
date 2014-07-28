@@ -77,18 +77,16 @@ class OQLQuery extends QueryHandler {
     private void executeQuery(String q) {
         try {
             out.println("<table border='1'>");
-            engine.get().executeQuery(q, new ObjectVisitor() {
-                     public boolean visit(Object o) {
-                         out.println("<tr><td>");
-                         try {
-                             out.println(engine.get().toHtml(o));
-                         } catch (Exception e) {
-                             printException(e);
-                         }
-                         out.println("</td></tr>");
-                         return out.checkError();
-                     }
-                 });
+            engine.get().executeQuery(q, o -> {
+                out.println("<tr><td>");
+                try {
+                    out.println(engine.get().toHtml(o));
+                } catch (Exception e) {
+                    printException(e);
+                }
+                out.println("</td></tr>");
+                return out.checkError();
+            });
             out.println("</table>");
         } catch (OQLException exp) {
             printException(exp);

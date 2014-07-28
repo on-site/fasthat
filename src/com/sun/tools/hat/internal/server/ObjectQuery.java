@@ -32,12 +32,10 @@
 
 package com.sun.tools.hat.internal.server;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Map;
 
-import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
-import com.google.common.primitives.Ints;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -48,46 +46,6 @@ import com.sun.tools.hat.internal.model.*;
 
 class ObjectQuery extends ClassQuery {
         // We inherit printFullClass from ClassQuery
-
-    private enum Sorters implements Function<FieldThing, Comparable<?>>,
-            Comparator<FieldThing> {
-        BY_FIELD_NAME {
-            @Override
-            public String apply(FieldThing ft) {
-                return ft.field.getName();
-            }
-        };
-
-        private final Ordering<FieldThing> ordering;
-
-        private Sorters() {
-            this.ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(FieldThing lhs, FieldThing rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
-    private static class FieldThing {
-        public final JavaField field;
-        public final JavaThing thing;
-
-        public FieldThing(JavaField field, JavaThing thing) {
-            this.field = field;
-            this.thing = thing;
-        }
-
-        public static FieldThing[] make(JavaField[] fields, JavaThing[] things) {
-            int len = Ints.min(fields.length, things.length);
-            FieldThing[] result = new FieldThing[len];
-            for (int i = 0; i < len; ++i) {
-                result[i] = new FieldThing(fields[i], things[i]);
-            }
-            return result;
-        }
-    }
 
     public ObjectQuery() {
     }
@@ -125,6 +83,14 @@ class ObjectQuery extends ClassQuery {
         endHtml();
     }
 
+    private static Map<JavaField, JavaThing> makeFieldMap(JavaField[] fields, JavaThing[] values) {
+        ImmutableSortedMap.Builder<JavaField, JavaThing> builder
+                = ImmutableSortedMap.orderedBy(Ordering.natural().onResultOf(JavaField::getName));
+        for (int i = 0; i < fields.length; ++i) {
+            builder.put(fields[i], values[i]);
+        }
+        return builder.build();
+    }
 
     private void printFullObject(JavaObject obj) {
         out.print("<h1>instance of ");
@@ -136,13 +102,11 @@ class ObjectQuery extends ClassQuery {
         printClass(obj.getClazz());
 
         out.println("<h2>Instance data members:</h2>");
-        FieldThing[] fieldThings = FieldThing.make(
-                obj.getClazz().getFieldsForInstance(), obj.getFields());
-        Arrays.sort(fieldThings, Sorters.BY_FIELD_NAME);
-        for (FieldThing fieldThing : fieldThings) {
-            printField(fieldThing.field);
+        for (Map.Entry<JavaField, JavaThing> entry : makeFieldMap(
+                obj.getClazz().getFieldsForInstance(), obj.getFields()).entrySet()) {
+            printField(entry.getKey());
             out.print(" : ");
-            printThing(fieldThing.thing);
+            printThing(entry.getValue());
             out.println("<br>");
         }
     }

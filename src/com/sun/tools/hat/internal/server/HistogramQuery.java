@@ -33,7 +33,6 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableMultiset;
@@ -47,7 +46,6 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.util.Misc;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 
@@ -56,31 +54,10 @@ import java.util.Comparator;
  *
  */
 public class HistogramQuery extends QueryHandler {
-    private enum Sorters implements Function<JavaClass, Comparable<?>>,
-            Comparator<JavaClass> {
-        BY_NAME {
-            @Override
-            public String apply(JavaClass clazz) {
-                return clazz.getName();
-            }
-        };
-
-        private final Ordering<JavaClass> ordering;
-
-        private Sorters() {
-            ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(JavaClass lhs, JavaClass rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
     private static abstract class MetricsProvider {
-        private final JavaClass[] classes;
+        private final Collection<JavaClass> classes;
 
-        protected MetricsProvider(JavaClass[] classes) {
+        protected MetricsProvider(Collection<JavaClass> classes) {
             this.classes = classes;
         }
 
@@ -88,33 +65,13 @@ public class HistogramQuery extends QueryHandler {
         public abstract long getSize(JavaClass clazz);
         public int getRefCount(JavaClass clazz) {throw new UnsupportedOperationException();}
 
-        /*
-         * If Java had first-class methods, these functions would not be
-         * necessary. :-(
-         */
-        public Function<JavaClass, Integer> getCountMethod() {
-            return new Function<JavaClass, Integer>() {
-                public Integer apply(JavaClass clazz) {return getCount(clazz);}
-            };
-        }
-        public Function<JavaClass, Long> getSizeMethod() {
-            return new Function<JavaClass, Long>() {
-                public Long apply(JavaClass clazz) {return getSize(clazz);}
-            };
-        }
-        public Function<JavaClass, Integer> getRefCountMethod() {
-            return new Function<JavaClass, Integer>() {
-                public Integer apply(JavaClass clazz) {return getRefCount(clazz);}
-            };
-        }
-
-        public JavaClass[] getClasses() {return classes.clone();}
+        public Collection<JavaClass> getClasses() {return classes;}
         public boolean hasRefCount() {return false;}
     }
 
     private static class GlobalMetricsProvider extends MetricsProvider {
         public GlobalMetricsProvider(Snapshot snapshot) {
-            super(snapshot.getClassesArray());
+            super(snapshot.getClasses());
         }
 
         @Override
@@ -129,21 +86,12 @@ public class HistogramQuery extends QueryHandler {
     }
 
     private static class RefereeMetricsProvider extends MetricsProvider {
-        private enum GetClass implements Function<JavaHeapObject, JavaClass> {
-            INSTANCE;
-
-            @Override
-            public JavaClass apply(JavaHeapObject obj) {
-                return obj.getClazz();
-            }
-        }
-
         final ImmutableMultimap<JavaClass, JavaHeapObject> referrers;
         final ImmutableMultiset<JavaClass> references;
 
         private RefereeMetricsProvider(ImmutableMultimap<JavaClass, JavaHeapObject> referrers,
                 ImmutableMultiset<JavaClass> references) {
-            super(referrers.keySet().toArray(new JavaClass[0]));
+            super(referrers.keySet());
             this.referrers = referrers;
             this.references = references;
         }
@@ -153,7 +101,7 @@ public class HistogramQuery extends QueryHandler {
             ImmutableSet<JavaHeapObject> instances = Misc.getInstances(referee,
                     false, referrers);
             return new RefereeMetricsProvider(
-                    Multimaps.index(Misc.getReferrers(instances), GetClass.INSTANCE),
+                    Multimaps.index(Misc.getReferrers(instances), JavaHeapObject::getClazz),
                     getReferences(instances).keys());
         }
 
@@ -165,14 +113,9 @@ public class HistogramQuery extends QueryHandler {
         @Override
         public long getSize(JavaClass clazz) {
             Collection<JavaHeapObject> subset = referrers.get(clazz);
-            if (!clazz.isArray()) {
-                return (long) clazz.getInstanceSize() * subset.size();
-            }
-            long size = 0;
-            for (JavaHeapObject instance : subset) {
-                size += instance.getSize();
-            }
-            return size;
+            return clazz.isArray()
+                    ? subset.stream().mapToLong(JavaHeapObject::getSize).sum()
+                    : (long) clazz.getInstanceSize() * subset.size();
         }
 
         @Override
@@ -210,19 +153,6 @@ public class HistogramQuery extends QueryHandler {
             metrics = RefereeMetricsProvider.make(referee, referrers);
         }
 
-        Comparator<JavaClass> comparator;
-        if (query.equals("count")) {
-            comparator = Ordering.natural().reverse().onResultOf(metrics.getCountMethod());
-        } else if (query.equals("class")) {
-            comparator = Sorters.BY_NAME;
-        } else if (query.equals("size") || !metrics.hasRefCount()) {
-            comparator = Ordering.natural().reverse().onResultOf(metrics.getSizeMethod());
-        } else {
-            comparator = Ordering.natural().reverse().onResultOf(metrics.getRefCountMethod());
-        }
-        JavaClass[] classes = metrics.getClasses();
-        Arrays.sort(classes, comparator);
-
         startHtml("Heap Histogram");
 
         printBreadcrumbs(query, referee, referrers);
@@ -239,7 +169,19 @@ public class HistogramQuery extends QueryHandler {
         printHeader("count", "Instance Count", referee, referrers);
         printHeader("size", "Total Size", referee, referrers);
         out.println("</tr>");
-        for (JavaClass clazz : classes) {
+
+        Comparator<JavaClass> comparator;
+        if (query.equals("count")) {
+            comparator = Ordering.natural().reverse().onResultOf(metrics::getCount);
+        } else if (query.equals("class")) {
+            comparator = Ordering.natural().onResultOf(JavaClass::getName);
+        } else if (query.equals("size") || !metrics.hasRefCount()) {
+            comparator = Ordering.natural().reverse().onResultOf(metrics::getSize);
+        } else {
+            comparator = Ordering.natural().reverse().onResultOf(metrics::getRefCount);
+        }
+
+        metrics.getClasses().stream().sorted(comparator).forEach(clazz -> {
             out.print("<tr><td>");
             printClass(clazz);
             if (referee == null) {
@@ -273,7 +215,7 @@ public class HistogramQuery extends QueryHandler {
                         count, null, referee, referrers, clazz, null));
             }
             out.printf("<td>%s</td></tr>%n", metrics.getSize(clazz));
-        }
+        });
         out.println("</table>");
 
         endHtml();

@@ -78,7 +78,7 @@ public class JavaObjectRef extends JavaThing {
                     msg += " for field " + field.getName()
                             + " (signature " + field.getSignature() + ")";
                 }
-                System.out.println(msg);
+                System.err.println(msg);
                 // Thread.dumpStack();
             }
             result = new HackJavaValue("Unresolved object "

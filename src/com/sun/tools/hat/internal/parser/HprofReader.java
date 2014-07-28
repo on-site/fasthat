@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.sun.tools.hat.internal.model.ArrayTypeCodes.*;
+import static com.sun.tools.hat.internal.util.Misc.toHex;
 import com.sun.tools.hat.internal.model.*;
 
 /**
@@ -158,13 +159,13 @@ public class HprofReader extends Reader {
         this.dumpsToSkip = dumpNumber - 1;
         this.callStack = callStack;
         this.debugLevel = debugLevel;
-        names = new HashMap<Long, String>();
-        threadObjects = new HashMap<Integer, ThreadObject>(43);
-        classNameFromObjectID = new HashMap<Long, String>();
+        names = new HashMap<>();
+        threadObjects = new HashMap<>(43);
+        classNameFromObjectID = new HashMap<>();
         if (callStack) {
-            stackFrames = new HashMap<Long, StackFrame>(43);
-            stackTraces = new HashMap<Integer, StackTrace>(43);
-            classNameFromSerialNo = new HashMap<Integer, String>();
+            stackFrames = new HashMap<>(43);
+            stackTraces = new HashMap<>(43);
+            classNameFromSerialNo = new HashMap<>();
         } else {
             stackFrames = null;
             stackTraces = null;
@@ -202,7 +203,7 @@ public class HprofReader extends Reader {
             // length >2GB.  so store 32bit value in long to keep it unsigned.
             long length = in.readInt() & 0xffffffffL;
             if (debugLevel > 0) {
-                System.out.println("Read record type " + type
+                System.err.println("Read record type " + type
                                    + ", length " + length
                                    + " at position " + toHex(currPos));
             }
@@ -241,7 +242,7 @@ public class HprofReader extends Reader {
                             handleEOF(exp, snapshot);
                         }
                         if (debugLevel > 0) {
-                            System.out.println("    Finished processing instances in heap dump.");
+                            System.err.println("    Finished processing instances in heap dump.");
                         }
                         return snapshot;
                     } else {
@@ -388,7 +389,7 @@ public class HprofReader extends Reader {
         while (bytesLeft > 0) {
             int type = in.readUnsignedByte();
             if (debugLevel > 0) {
-                System.out.println("    Read heap sub-record type " + type
+                System.err.println("    Read heap sub-record type " + type
                                    + " at position "
                                    + toHex(posAtEnd - bytesLeft));
             }
@@ -506,7 +507,7 @@ public class HprofReader extends Reader {
             skipBytes(bytesLeft);
         }
         if (debugLevel > 0) {
-            System.out.println("    Finished heap sub-records.");
+            System.err.println("    Finished heap sub-records.");
         }
     }
 
@@ -714,10 +715,6 @@ public class HprofReader extends Reader {
         return bytesRead;
     }
 
-    private String toHex(long addr) {
-        return com.sun.tools.hat.internal.util.Misc.toHex(addr);
-    }
-
     //
     // Handle a HPROF_GC_INSTANCE_DUMP
     // Return number of bytes read
@@ -868,8 +865,8 @@ public class HprofReader extends Reader {
         snapshot.setUnresolvedObjectsOK(true);
     }
 
-    private void warn(String msg) {
-        System.out.println("WARNING: " + msg);
+    private static void warn(String msg) {
+        System.err.println("WARNING: " + msg);
     }
 
     //

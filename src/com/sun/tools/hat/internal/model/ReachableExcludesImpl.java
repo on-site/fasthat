@@ -77,11 +77,10 @@ public class ReachableExcludesImpl implements ReachableExcludes {
 
     private void readFile() {
         long lm = excludesFile.lastModified();
-        Set<String> m = new HashSet<String>();
+        Set<String> m = new HashSet<>();
 
-        try {
-            BufferedReader r = new BufferedReader(new InputStreamReader(
-                                    new FileInputStream(excludesFile)));
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(
+                new FileInputStream(excludesFile)))) {
 
             String method;
             while ((method = r.readLine()) != null) {
@@ -90,7 +89,7 @@ public class ReachableExcludesImpl implements ReachableExcludes {
             lastModified = lm;
             methods = m;        // We want this to be atomic
         } catch (IOException ex) {
-            System.out.println("Error reading " + excludesFile + ":  " + ex);
+            System.err.println("Error reading " + excludesFile + ":  " + ex);
         }
     }
 

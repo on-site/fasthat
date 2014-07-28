@@ -32,15 +32,11 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.Collection;
 
 /**
  *
@@ -49,50 +45,6 @@ import java.util.Comparator;
 
 
 class InstancesCountQuery extends QueryHandler {
-    private enum NonPlatformPredicate implements Predicate<JavaClass> {
-        INSTANCE;
-
-        @Override
-        public boolean apply(JavaClass clazz) {
-            return !PlatformClasses.isPlatformClass(clazz);
-        }
-    }
-
-    private enum Sorters implements Function<JavaClass, Comparable<?>>,
-            Comparator<JavaClass> {
-        BY_INSTANCE_COUNT {
-            @Override
-            public Integer apply(JavaClass cls) {
-                return cls.getInstancesCount(false);
-            }
-        },
-
-        BY_ARRAY_TYPE {
-            @Override
-            public Boolean apply(JavaClass cls) {
-                return cls.getName().startsWith("[");
-            }
-        },
-
-        BY_NAME {
-            @Override
-            public String apply(JavaClass cls) {
-                return cls.getName();
-            }
-        };
-
-        private final Ordering<JavaClass> ordering;
-
-        private Sorters() {
-            this.ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(JavaClass lhs, JavaClass rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
     private final boolean excludePlatform;
 
     public InstancesCountQuery(boolean excludePlatform) {
@@ -106,25 +58,16 @@ class InstancesCountQuery extends QueryHandler {
             startHtml("Instance Counts for All Classes (including platform)");
         }
 
-        JavaClass[] classes = snapshot.getClassesArray();
+        Collection<JavaClass> classes = snapshot.getClasses();
         if (excludePlatform) {
-            classes = Collections2.filter(Arrays.asList(classes),
-                    NonPlatformPredicate.INSTANCE).toArray(new JavaClass[0]);
+            classes = Collections2.filter(classes, cls -> !PlatformClasses.isPlatformClass(cls));
         }
-        Arrays.sort(classes, new Comparator<JavaClass>() {
-            public int compare(JavaClass lhs, JavaClass rhs) {
-                return ComparisonChain.start()
-                        // Sort from biggest to smallest
-                        .compare(rhs, lhs, Sorters.BY_INSTANCE_COUNT)
-                        .compare(lhs, rhs, Sorters.BY_ARRAY_TYPE)
-                        .compare(lhs, rhs, Sorters.BY_NAME)
-                        .result();
-            }
-        });
 
-        long totalSize = 0;
-        long instances = 0;
-        for (JavaClass clazz : classes) {
+        long totalSize = classes.stream().mapToLong(JavaClass::getTotalInstanceSize).sum();
+        long instances = classes.stream().mapToLong(cls -> cls.getInstancesCount(false)).sum();
+        classes.stream().sorted(Ordering.natural().reverse().onResultOf((JavaClass cls) -> cls.getInstancesCount(false))
+                .compound(Ordering.natural().onResultOf((JavaClass cls) -> cls.getName().startsWith("[")))
+                .compound(Ordering.natural().onResultOf(JavaClass::getName))).forEach(clazz -> {
             int count = clazz.getInstancesCount(false);
             print("" + count);
             printAnchorStart();
@@ -153,9 +96,7 @@ class InstancesCountQuery extends QueryHandler {
             print("of ");
             printClass(clazz);
             out.println("<br>");
-            instances += count;
-            totalSize += clazz.getTotalInstanceSize();
-        }
+        });
         out.println("<h2>Total of " + instances + " instances occupying " + totalSize + " bytes.</h2>");
 
         out.println("<h2>Other Queries</h2>");

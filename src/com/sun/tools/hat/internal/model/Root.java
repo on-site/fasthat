@@ -109,6 +109,10 @@ public class Root {
     }
 
     public String getTypeName() {
+        return getTypeName(type);
+    }
+
+    public static String getTypeName(int type) {
         switch(type) {
             case INVALID_TYPE:          return "Invalid (?!?)";
             case UNKNOWN:               return "Unknown";

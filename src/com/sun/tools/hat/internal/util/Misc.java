@@ -33,9 +33,7 @@
 
 package com.sun.tools.hat.internal.util;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.sun.tools.hat.internal.model.AbstractJavaHeapObjectVisitor;
@@ -50,15 +48,6 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 
 public class Misc {
-    private enum GetClass implements Function<JavaHeapObject, JavaClass> {
-        INSTANCE;
-
-        @Override
-        public JavaClass apply(JavaHeapObject obj) {
-            return obj.getClazz();
-        }
-    }
-
     private static final String digits = "0123456789abcdef";
 
     public final static String toHex(int addr) {
@@ -157,8 +146,7 @@ public class Misc {
 
     public static ImmutableSet<JavaHeapObject> getReferrersByClass(
             Iterable<JavaHeapObject> instances, JavaClass clazz) {
-        return getReferrers(instances, Predicates.compose(
-                Predicates.equalTo(clazz), GetClass.INSTANCE));
+        return getReferrers(instances, instance -> instance.getClazz() == clazz);
     }
 
     public static ImmutableSet<JavaHeapObject> getReferees(
@@ -179,8 +167,7 @@ public class Misc {
 
     public static ImmutableSet<JavaHeapObject> getRefereesByClass(
             Iterable<JavaHeapObject> instances, JavaClass clazz) {
-        return getReferees(instances, Predicates.compose(
-                Predicates.equalTo(clazz), GetClass.INSTANCE));
+        return getReferees(instances, instance -> instance.getClazz() == clazz);
     }
 
     public static ImmutableSet<JavaHeapObject> getInstances(JavaClass clazz,

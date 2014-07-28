@@ -32,11 +32,8 @@
 
 package com.sun.tools.hat.internal.server;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
-import com.google.common.base.Function;
-import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
@@ -47,34 +44,6 @@ import com.sun.tools.hat.internal.model.*;
 
 
 class RootsQuery extends QueryHandler {
-    private enum Sorters implements Function<ReferenceChain, Comparable<?>>,
-            Comparator<ReferenceChain> {
-        BY_ROOT_TYPE {
-            @Override
-            public Integer apply(ReferenceChain chain) {
-                return chain.getObj().getRoot().getType();
-            }
-        },
-
-        BY_DEPTH {
-            @Override
-            public Integer apply(ReferenceChain chain) {
-                return chain.getDepth();
-            }
-        };
-
-        private final Ordering<ReferenceChain> ordering;
-
-        private Sorters() {
-            this.ordering = Ordering.natural().onResultOf(this);
-        }
-
-        @Override
-        public int compare(ReferenceChain lhs, ReferenceChain rhs) {
-            return ordering.compare(lhs, rhs);
-        }
-    }
-
     private final boolean includeWeak;
 
     public RootsQuery(boolean includeWeak) {
@@ -99,54 +68,46 @@ class RootsQuery extends QueryHandler {
         }
         out.flush();
 
-        ReferenceChain[] refs
-            = snapshot.rootsetReferencesTo(target, includeWeak);
-        Arrays.sort(refs, new Comparator<ReferenceChain>() {
-            public int compare(ReferenceChain left, ReferenceChain right) {
-                return ComparisonChain.start()
-                        // More interesting values are *higher*
-                        .compare(right, left, Sorters.BY_ROOT_TYPE)
-                        .compare(left, right, Sorters.BY_DEPTH)
-                        .result();
-            }
-        });
-
         out.print("<h1>References to ");
         printThing(target);
         out.println("</h1>");
-        int lastType = Root.INVALID_TYPE;
-        for (ReferenceChain ref : refs) {
-            Root root = ref.getObj().getRoot();
-            if (root.getType() != lastType) {
-                lastType = root.getType();
-                out.print("<h2>");
-                print(root.getTypeName() + " References");
-                out.println("</h2>");
-            }
-            out.print("<h3>");
-            printRoot(root);
-            if (root.getReferer() != null) {
-                out.print("<small> (from ");
-                printThingAnchorTag(root.getReferer().getId());
-                print(root.getReferer().toString());
-                out.print(")</a></small>");
+        // More interesting values are *higher*
+        Multimap<Integer, ReferenceChain> refs = Multimaps.index(
+                snapshot.rootsetReferencesTo(target, includeWeak),
+                chain -> chain.getObj().getRoot().getType());
+        refs.asMap().entrySet().stream().sorted(Ordering.natural().reverse()
+                .onResultOf(entry -> entry.getKey())).forEach(entry -> {
+            out.print("<h2>");
+            print(Root.getTypeName(entry.getKey()) + " References");
+            out.println("</h2>");
+            entry.getValue().stream().sorted(Ordering.natural()
+                    .onResultOf(ReferenceChain::getDepth)).forEach(ref -> {
+                Root root = ref.getObj().getRoot();
+                out.print("<h3>");
+                printRoot(root);
+                if (root.getReferer() != null) {
+                    out.print("<small> (from ");
+                    printThingAnchorTag(root.getReferer().getId());
+                    print(root.getReferer().toString());
+                    out.print(")</a></small>");
 
-            }
-            out.print(" :</h3>");
-            while (ref != null) {
-                ReferenceChain next = ref.getNext();
-                JavaHeapObject obj = ref.getObj();
-                print("--> ");
-                printThing(obj);
-                if (next != null) {
-                    print(" (" +
-                          obj.describeReferenceTo(next.getObj(), snapshot)
-                          + ":)");
                 }
-                out.println("<br>");
-                ref = next;
-            }
-        }
+                out.print(" :</h3>");
+                while (ref != null) {
+                    ReferenceChain next = ref.getNext();
+                    JavaHeapObject obj = ref.getObj();
+                    print("--> ");
+                    printThing(obj);
+                    if (next != null) {
+                        print(" (" +
+                                obj.describeReferenceTo(next.getObj(), snapshot)
+                                + ":)");
+                    }
+                    out.println("<br>");
+                    ref = next;
+                }
+            });
+        });
 
         out.println("<h2>Other queries</h2>");
 

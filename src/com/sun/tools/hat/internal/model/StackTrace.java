@@ -51,7 +51,7 @@ public class StackTrace {
     }
 
     /**
-     * @param depth.  The minimum reasonable depth is 1.
+     * @param depth  The minimum reasonable depth is 1.
      *
      * @return a (possibly new) StackTrace that is limited to depth.
      */

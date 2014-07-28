@@ -63,10 +63,10 @@ public class JavaClass extends JavaHeapObject {
     private final JavaStatic[] statics;
 
     // my subclasses
-    private final List<JavaClass> subclasses = new ArrayList<JavaClass>();
+    private final List<JavaClass> subclasses = new ArrayList<>();
 
     // my instances
-    private final List<JavaHeapObject> instances = new ArrayList<JavaHeapObject>();
+    private final List<JavaHeapObject> instances = new ArrayList<>();
 
     // Who I belong to.  Set on resolve.
     private Snapshot mySnapshot;
@@ -154,7 +154,7 @@ public class JavaClass extends JavaHeapObject {
                     sc.resolveSuperclass(snapshot);
                     totalNumFields += sc.totalNumFields;
                 } catch (ClassCastException ex) {
-                    System.out.println("Warning!  Superclass of " + name + " is " + superclass);
+                    System.err.println("Warning!  Superclass of " + name + " is " + superclass);
                     superclass = null;
                 }
             }
@@ -206,7 +206,7 @@ public class JavaClass extends JavaHeapObject {
      * Get the class responsible for field i, where i is a field number that
      * could be passed into getFieldForInstance.
      *
-     * @see JavaClass.getFieldForInstance()
+     * @see JavaClass#getFieldForInstance
      */
     public JavaClass getClassForField(int i) {
         if (superclass != null) {
@@ -302,7 +302,7 @@ public class JavaClass extends JavaHeapObject {
      * Includes superclass fields
      */
     public JavaField[] getFieldsForInstance() {
-        List<JavaField> v = new ArrayList<JavaField>();
+        List<JavaField> v = new ArrayList<>();
         addFields(v);
         return v.toArray(new JavaField[v.size()]);
     }
