@@ -34,7 +34,7 @@ package com.sun.tools.hat.internal.server;
 
 import java.util.Map;
 
-import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
 
@@ -84,8 +84,7 @@ class ObjectQuery extends ClassQuery {
     }
 
     private static Map<JavaField, JavaThing> makeFieldMap(JavaField[] fields, JavaThing[] values) {
-        ImmutableSortedMap.Builder<JavaField, JavaThing> builder
-                = ImmutableSortedMap.orderedBy(Ordering.natural().onResultOf(JavaField::getName));
+        ImmutableMap.Builder<JavaField, JavaThing> builder = ImmutableMap.builder();
         for (int i = 0; i < fields.length; ++i) {
             builder.put(fields[i], values[i]);
         }
@@ -102,13 +101,14 @@ class ObjectQuery extends ClassQuery {
         printClass(obj.getClazz());
 
         out.println("<h2>Instance data members:</h2>");
-        for (Map.Entry<JavaField, JavaThing> entry : makeFieldMap(
-                obj.getClazz().getFieldsForInstance(), obj.getFields()).entrySet()) {
+        makeFieldMap(obj.getClazz().getFieldsForInstance(), obj.getFields()).entrySet().stream()
+                .sorted(Ordering.natural().onResultOf(e -> e.getKey().getName()))
+                .forEach(entry -> {
             printField(entry.getKey());
             out.print(" : ");
             printThing(entry.getValue());
             out.println("<br>");
-        }
+        });
     }
 
     private void printFullObjectArray(JavaObjectArray arr) {
