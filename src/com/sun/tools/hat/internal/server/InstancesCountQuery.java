@@ -51,6 +51,7 @@ class InstancesCountQuery extends QueryHandler {
         this.excludePlatform = excludePlatform;
     }
 
+    @Override
     public void run() {
         if (excludePlatform) {
             startHtml("Instance Counts for All Classes (excluding platform)");

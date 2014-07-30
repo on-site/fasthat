@@ -47,6 +47,7 @@ import java.util.*;
  *
  */
 public class RefsByTypeQuery extends QueryHandler {
+    @Override
     public void run() {
         ClassResolver resolver = new ClassResolver(snapshot, true);
         JavaClass clazz = resolver.apply(query);
@@ -70,6 +71,7 @@ public class RefsByTypeQuery extends QueryHandler {
             }
             instance.visitReferencedObjects(
                 new AbstractJavaHeapObjectVisitor() {
+                    @Override
                     public void visit(JavaHeapObject obj) {
                         rfeBuilder.put(obj.getClazz(), instance);
                     }

@@ -62,6 +62,7 @@ public class QueryListener implements Runnable {
         this.snapshot = ss;
     }
 
+    @Override
     public void run() {
         try {
             waitForRequests();

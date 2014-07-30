@@ -35,6 +35,7 @@ package com.sun.tools.hat.internal.server;
 import com.sun.tools.hat.internal.model.*;
 
 public class FinalizerObjectsQuery extends QueryHandler {
+    @Override
     public void run() {
         startHtml("Objects pending finalization");
 

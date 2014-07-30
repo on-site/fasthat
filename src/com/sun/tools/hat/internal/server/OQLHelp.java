@@ -45,6 +45,7 @@ class OQLHelp extends QueryHandler {
     public OQLHelp() {
     }
 
+    @Override
     public void run() {
         InputStream is = getClass().getResourceAsStream("/com/sun/tools/hat/resources/oqlhelp.html");
         int ch = -1;

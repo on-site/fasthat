@@ -46,14 +46,17 @@ public class PositionDataInputStream extends DataInputStream {
               in : new PositionInputStream(in));
     }
 
+    @Override
     public boolean markSupported() {
         return false;
     }
 
+    @Override
     public void mark(int readLimit) {
         throw new UnsupportedOperationException("mark");
     }
 
+    @Override
     public void reset() {
         throw new UnsupportedOperationException("reset");
     }

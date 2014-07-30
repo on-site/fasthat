@@ -52,10 +52,12 @@ public class JavaObjectRef extends JavaThing {
         return id;
     }
 
+    @Override
     public boolean isHeapAllocated() {
         return true;
     }
 
+    @Override
     public JavaThing dereference(Snapshot snapshot, JavaField field) {
         return dereference(snapshot, field, true);
     }
@@ -87,10 +89,12 @@ public class JavaObjectRef extends JavaThing {
         return result;
     }
 
+    @Override
     public int getSize() {
         return 0;
     }
 
+    @Override
     public String toString() {
         return "Unresolved object " + Misc.toHex(id);
     }

@@ -60,6 +60,7 @@ class InstancesQuery extends QueryHandler {
         this.newObjects = newObjects;
     }
 
+    @Override
     public void run() {
         ClassResolver resolver = new ClassResolver(snapshot, true);
         JavaClass clazz = resolver.apply(query);

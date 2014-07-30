@@ -46,12 +46,14 @@ public abstract class JavaValue extends JavaThing {
     protected JavaValue() {
     }
 
+    @Override
     public boolean isHeapAllocated() {
         return false;
     }
 
-    abstract public String toString();
+    @Override abstract public String toString();
 
+    @Override
     public int getSize() {
         // The size of a value is already accounted for in the class
         // that has the data member.

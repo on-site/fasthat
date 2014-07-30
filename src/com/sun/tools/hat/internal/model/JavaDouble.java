@@ -47,6 +47,7 @@ public class JavaDouble extends JavaValue {
         this.value = value;
     }
 
+    @Override
     public String toString() {
         return Double.toString(value);
     }

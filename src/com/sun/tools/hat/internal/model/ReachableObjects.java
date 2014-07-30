@@ -50,6 +50,7 @@ public class ReachableObjects {
         final Set<String> fieldsExcluded = new HashSet<>();
         final Set<String> fieldsUsed = new HashSet<>();
         JavaHeapObjectVisitor visitor = new AbstractJavaHeapObjectVisitor() {
+            @Override
             public void visit(JavaHeapObject t) {
                 // Size is zero for things like integer fields
                 if (t != null && t.getSize() > 0 && !bag.contains(t)) {
@@ -58,10 +59,12 @@ public class ReachableObjects {
                 }
             }
 
+            @Override
             public boolean mightExclude() {
                 return excludes != null;
             }
 
+            @Override
             public boolean exclude(JavaClass clazz, JavaField f) {
                 if (excludes == null) {
                     return false;

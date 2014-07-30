@@ -47,10 +47,12 @@ public class JavaObjectArray extends JavaLazyReadObject {
         this.clazz = makeId(classID);
     }
 
+    @Override
     public JavaClass getClazz() {
         return (JavaClass) clazz;
     }
 
+    @Override
     public void resolve(Snapshot snapshot) {
         if (clazz instanceof JavaClass) {
             return;
@@ -101,6 +103,7 @@ public class JavaObjectArray extends JavaLazyReadObject {
         return elements;
     }
 
+    @Override
     public int compareTo(JavaThing other) {
         if (other instanceof JavaObjectArray) {
             return 0;
@@ -112,6 +115,7 @@ public class JavaObjectArray extends JavaLazyReadObject {
         return getValueLength() / getClazz().getIdentifierSize();
     }
 
+    @Override
     public void visitReferencedObjects(JavaHeapObjectVisitor v) {
         super.visitReferencedObjects(v);
         for (JavaThing element : getElements()) {
@@ -125,6 +129,7 @@ public class JavaObjectArray extends JavaLazyReadObject {
      * Describe the reference that this thing has to target.  This will only
      * be called if target is in the array returned by getChildrenForRootset.
      */
+    @Override
     public String describeReferenceTo(JavaThing target, Snapshot ss) {
         JavaThing[] elements = getElements();
         for (int i = 0; i < elements.length; i++) {
@@ -145,6 +150,7 @@ public class JavaObjectArray extends JavaLazyReadObject {
      *     array class ID
      *     array element IDs
      */
+    @Override
     protected final int readValueLength() throws IOException {
         JavaClass cl = getClazz();
         ReadBuffer buf = cl.getReadBuffer();
@@ -154,6 +160,7 @@ public class JavaObjectArray extends JavaLazyReadObject {
         return len * cl.getIdentifierSize();
     }
 
+    @Override
     protected final byte[] readValue() throws IOException {
         JavaClass cl = getClazz();
         ReadBuffer buf = cl.getReadBuffer();

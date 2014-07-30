@@ -48,32 +48,38 @@ public class PositionInputStream extends FilterInputStream {
         super(in);
     }
 
+    @Override
     public int read() throws IOException {
         int res = super.read();
         if (res != -1) position++;
         return res;
     }
 
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         int res = super.read(b, off, len);
         if (res != -1) position += res;
         return res;
     }
 
+    @Override
     public long skip(long n) throws IOException {
         long res = super.skip(n);
         position += res;
         return res;
     }
 
+    @Override
     public boolean markSupported() {
         return false;
     }
 
+    @Override
     public void mark(int readLimit) {
         throw new UnsupportedOperationException("mark");
     }
 
+    @Override
     public void reset() {
         throw new UnsupportedOperationException("reset");
     }

@@ -173,6 +173,7 @@ public class HprofReader extends Reader {
         }
     }
 
+    @Override
     public Snapshot read() throws IOException {
         currPos = 4;    // 4 because of the magic number
         version = readVersionHeader();

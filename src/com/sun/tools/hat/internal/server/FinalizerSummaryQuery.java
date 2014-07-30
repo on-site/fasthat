@@ -39,6 +39,7 @@ import com.sun.tools.hat.internal.model.*;
 import java.util.*;
 
 public class FinalizerSummaryQuery extends QueryHandler {
+    @Override
     public void run() {
         startHtml("Finalizer Summary");
 

@@ -50,6 +50,7 @@ class RootsQuery extends QueryHandler {
         this.includeWeak = includeWeak;
     }
 
+    @Override
     public void run() {
         long id = parseHex(query);
         JavaHeapObject target = snapshot.findThing(id);

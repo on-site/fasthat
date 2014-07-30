@@ -50,6 +50,7 @@ class AllClassesQuery extends QueryHandler {
         this.oqlSupported = oqlSupported;
     }
 
+    @Override
     public void run() {
         if (excludePlatform) {
             startHtml("All Classes (excluding platform)");
