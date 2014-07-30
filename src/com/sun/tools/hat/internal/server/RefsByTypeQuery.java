@@ -69,14 +69,7 @@ public class RefsByTypeQuery extends QueryHandler {
                 }
                 rfrBuilder.put(cl, instance);
             }
-            instance.visitReferencedObjects(
-                new AbstractJavaHeapObjectVisitor() {
-                    @Override
-                    public void visit(JavaHeapObject obj) {
-                        rfeBuilder.put(obj.getClazz(), instance);
-                    }
-                }
-            );
+            instance.visitReferencedObjects(obj -> rfeBuilder.put(obj.getClazz(), instance));
         } // for each instance
 
         startHtml("References by Type");
