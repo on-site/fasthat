@@ -47,6 +47,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
         this.offset = offset;
     }
 
+    @Override
     public final int getSize() {
         return getValueLength() + getClazz().getMinimumObjectSize();
     }
@@ -78,6 +79,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
     }
 
     // get ID of this object
+    @Override
     public final long getId() {
         try {
             ReadBuffer buf = getClazz().getReadBuffer();

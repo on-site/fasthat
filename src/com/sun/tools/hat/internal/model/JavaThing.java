@@ -83,12 +83,13 @@ public abstract class JavaThing implements Comparable<JavaThing> {
     /**
      * @return a human-readable string representation of this thing
      */
-    abstract public String toString();
+    @Override abstract public String toString();
 
     /**
      * Compare our string representation to other's
      * @see String#compareTo
      */
+    @Override
     public int compareTo(JavaThing other) {
         return toString().compareTo(other.toString());
     }

@@ -50,6 +50,7 @@ class ObjectQuery extends ClassQuery {
     public ObjectQuery() {
     }
 
+    @Override
     public void run() {
         startHtml("Object at " + query);
         JavaHeapObject thing = snapshot.findThing(query);

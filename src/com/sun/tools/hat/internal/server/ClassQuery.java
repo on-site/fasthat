@@ -47,6 +47,7 @@ class ClassQuery extends QueryHandler {
     public ClassQuery() {
     }
 
+    @Override
     public void run() {
         startHtml("Class " + query);
         JavaClass clazz = snapshot.findClass(query);

@@ -47,6 +47,7 @@ public class JavaFloat extends JavaValue {
         this.value = value;
     }
 
+    @Override
     public String toString() {
         return Float.toString(value);
     }

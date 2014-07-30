@@ -95,6 +95,7 @@ public class JavaValueArray extends JavaLazyReadObject {
      *    element type (byte)
      *    array data
      */
+    @Override
     protected final int readValueLength() throws IOException {
         JavaClass cl = getClazz();
         ReadBuffer buf = cl.getReadBuffer();
@@ -107,6 +108,7 @@ public class JavaValueArray extends JavaLazyReadObject {
         return len * elementSize(type);
     }
 
+    @Override
     protected final byte[] readValue() throws IOException {
         JavaClass cl = getClazz();
         ReadBuffer buf = cl.getReadBuffer();
@@ -149,14 +151,17 @@ public class JavaValueArray extends JavaLazyReadObject {
         this.data = (elementSignature & SIGNATURE_MASK);
     }
 
+    @Override
     public JavaClass getClazz() {
         return clazz;
     }
 
+    @Override
     public void visitReferencedObjects(JavaHeapObjectVisitor v) {
         super.visitReferencedObjects(v);
     }
 
+    @Override
     public void resolve(Snapshot snapshot) {
         if (clazz != null) {
             return;

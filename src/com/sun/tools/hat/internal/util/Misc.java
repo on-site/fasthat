@@ -36,7 +36,6 @@ package com.sun.tools.hat.internal.util;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.sun.tools.hat.internal.model.AbstractJavaHeapObjectVisitor;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
@@ -153,12 +152,9 @@ public class Misc {
             Iterable<JavaHeapObject> instances, final Predicate<JavaHeapObject> filter) {
         final ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
         for (JavaHeapObject instance : instances) {
-            instance.visitReferencedObjects(new AbstractJavaHeapObjectVisitor() {
-                @Override
-                public void visit(JavaHeapObject obj) {
-                    if (filter.apply(obj)) {
-                        builder.add(obj);
-                    }
+            instance.visitReferencedObjects(obj -> {
+                if (filter.apply(obj)) {
+                    builder.add(obj);
                 }
             });
         }

@@ -47,6 +47,7 @@ public class JavaLong extends JavaValue {
         this.value = value;
     }
 
+    @Override
     public String toString() {
         return Long.toString(value);
     }

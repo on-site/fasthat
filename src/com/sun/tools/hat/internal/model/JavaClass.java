@@ -100,6 +100,7 @@ public class JavaClass extends JavaHeapObject {
              protDomainId, fields, statics, instanceSize);
     }
 
+    @Override
     public final JavaClass getClazz() {
         return mySnapshot.getJavaLangClass();
     }
@@ -112,6 +113,7 @@ public class JavaClass extends JavaHeapObject {
         return mySnapshot.getMinimumObjectSize();
     }
 
+    @Override
     public void resolve(Snapshot snapshot) {
         if (mySnapshot != null) {
             return;
@@ -218,6 +220,7 @@ public class JavaClass extends JavaHeapObject {
         return this;
     }
 
+    @Override
     public long getId() {
         return id;
     }
@@ -322,10 +325,12 @@ public class JavaClass extends JavaHeapObject {
         return null;
     }
 
+    @Override
     public String toString() {
         return "class " + name;
     }
 
+    @Override
     public int compareTo(JavaThing other) {
         if (other instanceof JavaClass) {
             return name.compareTo(((JavaClass) other).name);
@@ -353,7 +358,8 @@ public class JavaClass extends JavaHeapObject {
      * Describe the reference that this thing has to target.  This will only
      * be called if target is in the array returned by getChildrenForRootset.
      */
-     public String describeReferenceTo(JavaThing target, Snapshot ss) {
+    @Override
+    public String describeReferenceTo(JavaThing target, Snapshot ss) {
         for (JavaStatic s : statics) {
             JavaField f = s.getField();
             if (f.hasId()) {
@@ -397,6 +403,7 @@ public class JavaClass extends JavaHeapObject {
     /**
      * @return the size of this object
      */
+    @Override
     public int getSize() {
         JavaClass cl = mySnapshot.getJavaLangClass();
         if (cl == null) {
@@ -406,6 +413,7 @@ public class JavaClass extends JavaHeapObject {
         }
     }
 
+    @Override
     public void visitReferencedObjects(JavaHeapObjectVisitor v) {
         super.visitReferencedObjects(v);
         JavaHeapObject sc = getSuperclass();

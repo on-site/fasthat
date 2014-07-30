@@ -54,10 +54,12 @@ public class HackJavaValue extends JavaValue {
         this.size = size;
     }
 
+    @Override
     public String toString() {
         return value;
     }
 
+    @Override
     public int getSize() {
         return size;
     }

@@ -53,7 +53,7 @@ public abstract class JavaHeapObject extends JavaThing {
     private ImmutableSet<JavaHeapObject> referers;
 
     public abstract JavaClass getClazz();
-    public abstract int getSize();
+    @Override public abstract int getSize();
     public abstract long getId();
 
     /**
@@ -82,6 +82,7 @@ public abstract class JavaHeapObject extends JavaThing {
         return Misc.toHex(getId());
     }
 
+    @Override
     public String toString() {
         return getClazz().getName() + "@" + getIdString();
     }
@@ -153,6 +154,7 @@ public abstract class JavaHeapObject extends JavaThing {
         return "??";
     }
 
+    @Override
     public boolean isHeapAllocated() {
         return true;
     }

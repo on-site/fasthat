@@ -47,6 +47,7 @@ class OQLQuery extends QueryHandler {
         this.engine = engine;
     }
 
+    @Override
     public void run() {
         startHtml("Object Query Language (OQL) query");
         String oql = Iterables.getOnlyElement(params.get("query"), null);

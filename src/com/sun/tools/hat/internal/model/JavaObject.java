@@ -55,6 +55,7 @@ public class JavaObject extends JavaLazyReadObject {
         this.clazz = makeId(classID);
     }
 
+    @Override
     public void resolve(Snapshot snapshot) {
         if (clazz instanceof JavaClass) {
             return;
@@ -96,6 +97,7 @@ public class JavaObject extends JavaLazyReadObject {
      * Are we the same type as other?  We are iff our clazz is the
      * same type as other's.
      */
+    @Override
     public boolean isSameTypeAs(JavaThing other) {
         if (!(other instanceof JavaObject)) {
             return false;
@@ -107,6 +109,7 @@ public class JavaObject extends JavaLazyReadObject {
     /**
      * Return our JavaClass object.  This may only be called after resolve.
      */
+    @Override
     public JavaClass getClazz() {
         return (JavaClass) clazz;
     }
@@ -129,6 +132,7 @@ public class JavaObject extends JavaLazyReadObject {
         return null;
     }
 
+    @Override
     public int compareTo(JavaThing other) {
         if (other instanceof JavaObject) {
             JavaObject oo = (JavaObject) other;
@@ -137,6 +141,7 @@ public class JavaObject extends JavaLazyReadObject {
         return super.compareTo(other);
     }
 
+    @Override
     public void visitReferencedObjects(JavaHeapObjectVisitor v) {
         super.visitReferencedObjects(v);
         JavaThing[] flds = getFields();
@@ -154,6 +159,7 @@ public class JavaObject extends JavaLazyReadObject {
         }
     }
 
+    @Override
     public boolean refersOnlyWeaklyTo(Snapshot ss, JavaThing other) {
         if (ss.getWeakReferenceClass() != null) {
             final int referentFieldIndex = ss.getReferentFieldIndex();
@@ -177,6 +183,7 @@ public class JavaObject extends JavaLazyReadObject {
      * Describe the reference that this thing has to target.  This will only
      * be called if target is in the array returned by getChildrenForRootset.
      */
+    @Override
     public String describeReferenceTo(JavaThing target, Snapshot ss) {
         JavaThing[] flds = getFields();
         for (int i = 0; i < flds.length; i++) {
@@ -188,6 +195,7 @@ public class JavaObject extends JavaLazyReadObject {
         return super.describeReferenceTo(target, ss);
     }
 
+    @Override
     public String toString() {
         if (getClazz().isString()) {
             JavaThing value = getField("value");
@@ -212,6 +220,7 @@ public class JavaObject extends JavaLazyReadObject {
      *     data length (int)
      *     byte[length]
      */
+    @Override
     protected final int readValueLength() throws IOException {
         JavaClass cl = getClazz();
         int idSize = cl.getIdentifierSize();
@@ -219,6 +228,7 @@ public class JavaObject extends JavaLazyReadObject {
         return cl.getReadBuffer().getInt(lengthOffset);
     }
 
+    @Override
     protected final byte[] readValue() throws IOException {
         JavaClass cl = getClazz();
         int idSize = cl.getIdentifierSize();

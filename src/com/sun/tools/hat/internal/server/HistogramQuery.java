@@ -140,6 +140,7 @@ public class HistogramQuery extends QueryHandler {
         }
     }
 
+    @Override
     public void run() {
         ClassResolver resolver = new ClassResolver(snapshot, false);
         JavaClass referee = resolver.apply(Iterables.getOnlyElement(

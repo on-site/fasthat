@@ -302,12 +302,7 @@ public class Snapshot {
         int count = 0;
         for (final JavaHeapObject t : heapObjects.values()) {
             // call addReferenceFrom(t) on all objects t references:
-            t.visitReferencedObjects(new AbstractJavaHeapObjectVisitor() {
-                @Override
-                public void visit(JavaHeapObject other) {
-                    other.addReferenceFrom(t);
-                }
-            });
+            t.visitReferencedObjects(other -> other.addReferenceFrom(t));
             ++count;
             if (count % DOT_LIMIT == 0) {
                 System.out.print(".");
