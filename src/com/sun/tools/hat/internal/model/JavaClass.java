@@ -382,7 +382,7 @@ public class JavaClass extends JavaHeapObject {
     public long getTotalInstanceSize() {
         int count = instances.size();
         if (count == 0 || !isArray()) {
-            return count * instanceSize;
+            return (long) count * instanceSize;
         }
 
         // array class and non-zero count, we have to
