@@ -33,6 +33,8 @@
 
 package com.sun.tools.hat.internal.util;
 
+import java.util.function.IntConsumer;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -87,6 +89,7 @@ public class Misc {
     public static String encodeHtml(String str) {
         final int len = str.length();
         StringBuilder buf = new StringBuilder();
+        IntConsumer numeric = c -> buf.append("&#").append(c).append(';');
         for (int i = 0; i < len; i++) {
             char ch = str.charAt(i);
             if (ch == '<') {
@@ -95,31 +98,21 @@ public class Misc {
                 buf.append("&gt;");
             } else if (ch == '"') {
                 buf.append("&quot;");
-            } else if (ch == '\'') {
-                buf.append("&#039;");
             } else if (ch == '&') {
                 buf.append("&amp;");
-            } else if (ch < ' ') {
-                buf.append("&#" + Integer.toString(ch) + ";");
-            } else if (!Character.isHighSurrogate(ch)) {
-                if (Character.isLowSurrogate(ch)) {
-                    throw new IllegalArgumentException("Stray low surrogate");
-                }
-                int c = (ch & 0xFFFF);
-                if (c > 127) {
-                    buf.append("&#" + c + ";");
-                } else {
-                    buf.append(ch);
-                }
-            } else if (++i < len) {
+            } else if (Character.isHighSurrogate(ch) && ++i < len) {
                 char ch2 = str.charAt(i);
-                if (!Character.isLowSurrogate(ch2)) {
-                    throw new IllegalArgumentException("Stray high surrogate");
+                if (Character.isLowSurrogate(ch2)) {
+                    numeric.accept(Character.toCodePoint(ch, ch2));
+                } else {
+                    // Invalid, just print out what we have.
+                    numeric.accept(ch);
+                    numeric.accept(ch2);
                 }
-                int c = Character.toCodePoint(ch, ch2);
-                buf.append("&#" + c + ";");
+            } else if (ch < ' ' || ch == '\'' || ch > 127) {
+                numeric.accept(ch);
             } else {
-                throw new IllegalArgumentException("Stray high surrogate");
+                buf.append(ch);
             }
         }
         return buf.toString();
