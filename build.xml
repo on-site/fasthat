@@ -7,9 +7,7 @@
   <property name="jar" value="${base.build}/jar/fasthat.jar"/>
   <property name="tmp" value="tmp"/>
   <property name="guava.ver" value="17.0"/>
-  <property name="rhino.ver" value="1.7R4"/>
   <property name="guava.jar" value="guava-${guava.ver}.jar"/>
-  <property name="rhino.jar" value="rhino-${rhino.ver}.jar"/>
 
   <path id="classpath">
     <fileset dir="${lib}">
@@ -18,7 +16,6 @@
   </path>
 
   <available file="${lib}/${guava.jar}" property="guava.exists"/>
-  <available file="${lib}/${rhino.jar}" property="rhino.exists"/>
 
   <target name="clean">
     <delete dir="${base.build}"/>
@@ -33,11 +30,7 @@
     <get src="http://central.maven.org/maven2/com/google/guava/guava/${guava.ver}/${guava.jar}" dest="${lib}"/>
   </target>
 
-  <target name="get-rhino" unless="rhino.exists">
-    <get src="http://central.maven.org/maven2/org/mozilla/rhino/${rhino.ver}/${rhino.jar}" dest="${lib}"/>
-  </target>
-
-  <target name="check-lib" depends="make-lib-dir, get-guava, get-rhino"/>
+  <target name="check-lib" depends="make-lib-dir, get-guava"/>
 
   <target name="init" depends="check-lib">
     <mkdir dir="${build}"/>
@@ -56,10 +49,7 @@
       <manifest>
         <attribute name="Main-Class" value="com.sun.tools.hat.Main"/>
       </manifest>
-      <service type="javax.script.ScriptEngineFactory"
-        provider="com.sun.phobos.script.javascript.RhinoScriptEngineFactory"/>
       <zipfileset src="${lib}/${guava.jar}"/>
-      <zipfileset src="${lib}/${rhino.jar}"/>
     </jar>
   </target>
 

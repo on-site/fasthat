@@ -44,7 +44,7 @@ import javax.script.*;
 public class OQLEngine {
     static {
         ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine jse = manager.getEngineByName("rhino-nonjdk");
+        ScriptEngine jse = manager.getEngineByName("nashorn");
         oqlSupported = jse != null;
     }
 
@@ -247,7 +247,7 @@ public class OQLEngine {
         this.snapshot = snapshot;
         ScriptEngineManager manager = new ScriptEngineManager();
         try {
-            engine = manager.getEngineByName("rhino-nonjdk");
+            engine = manager.getEngineByName("nashorn");
             engine.eval(new InputStreamReader(getInitStream()));
             engine.put("heap", call("wrapHeapSnapshot", snapshot));
         } catch (Exception e) {
