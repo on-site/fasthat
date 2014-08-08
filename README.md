@@ -4,7 +4,7 @@ fasthat, a faster heap dump analyser
 Overview
 --------
 
-fasthat is a fork of OpenJDK 6's [jhat][jhat] that enhances our ability
+fasthat is a fork of OpenJDK 8's [jhat][jhat] that enhances our ability
 to analyse large heap dumps (typically 4 to 8 GB) that we frequently
 work with at On-Site.
 
@@ -17,8 +17,6 @@ is enhanced in the following ways:
 + Performance:
     + Faster loading of large heap dumps, by using a deque for the
       tree-walking phase (which uses a FIFO), rather than a vector.
-    + Faster execution of OQL, by using real Rhino rather than the
-      in-JDK Rhino.
 + Functionality:
     + **Referrer chains**: The histogram now has the ability to look
       at only objects that refer to instances of a specific class.
@@ -38,10 +36,9 @@ Dependencies
 fasthat uses the following libraries:
 
 + [Guava][guava]
-+ [Rhino][rhino]
 
 I always try to keep up-to-date with the latest released versions. At
-the time of current writing, I'm using Guava 14.0.1 and Rhino 1.7R4.
+the time of current writing, I'm using Guava 17.0.
 
 I develop and build using Eclipse. [Mike Virata-Stone][mjvs] has created
 an Ant `build.xml` that you may find useful, but I have not tested it.
@@ -60,9 +57,9 @@ to improve on that I haven't yet got around to:
       and sometimes it's 100%. The more of those 100% we can turn into
       1300%, the better.
     + Audit the code to find and fix any weird concurrency bugs.
-    + Figure out what is shareable per-thread in Rhino, and what must
+    + Figure out what is shareable per-thread in Nashorn, and what must
       be distinct. Currently I've taken the very conservative approach
-      of creating a new Rhino instance for each OQL query, but that is
+      of creating a new Nashorn instance for each OQL query, but that is
       probably way over the top.
     + Make all the model and script operations interruptible, so that
       they can stop running as soon as the user hits the Stop button.
@@ -78,13 +75,10 @@ to improve on that I haven't yet got around to:
     + Enable OQL queries on language-specific object properties.
     + Implement unpacking of more object types, especially for JRuby
       and Guava.
-    + Implement models for OpenJDK 7 and JRuby 1.7.
+    + Implement models for OpenJDK 7 and 8, and JRuby 1.7.
     + Implement better support for detecting Guava data structures
       given that [Guava doesn't have a version signature][guava-ver]
       in the heap dump.
-+ Miscellaneous:
-    + Merge in changes to the Rhino [JSR-223][jsr-223] engine from
-      OpenJDK 7.
 
 Contact and licensing
 ---------------------
@@ -97,7 +91,6 @@ licensed under GPLv2 or later, with Classpath Exception.
 
 [jhat]: http://docs.oracle.com/javase/6/docs/technotes/tools/share/jhat.html
 [guava]: http://code.google.com/p/guava-libraries/
-[rhino]: http://www.mozilla.org/rhino/
 [mjvs]: http://github.com/mikestone
 [guava-ver]: http://stackoverflow.com/q/7694468/13
 [jsr-223]: http://www.jcp.org/en/jsr/detail?id=223
