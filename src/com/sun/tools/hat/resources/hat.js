@@ -1015,12 +1015,12 @@ function toHtml(obj) {
         }
     } else {
         // a Java object
-        obj = wrapIterator(obj);
-        // special case for enumeration
-        if (obj instanceof java.util.Enumeration) {
+        obj = wrapIterable(obj);
+        // special case for iterator
+        if (obj instanceof java.util.Iterator) {
             var res = "[ ";
-            while (obj.hasMoreElements()) {
-                res += toHtml(obj.nextElement()) + ", ";
+            while (obj.hasNext()) {
+                res += toHtml(obj.next()) + ", ";
             }
             res += "]";
             return res;
