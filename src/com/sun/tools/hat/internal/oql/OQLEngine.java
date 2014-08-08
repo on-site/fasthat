@@ -163,26 +163,13 @@ public class OQLEngine {
             }
         }
 
-        StringBuilder buf = new StringBuilder();
-        buf.append("function __select__(");
-        if (q.identifier != null) {
-            buf.append(q.identifier);
-        }
-        buf.append(") { return ");
-        buf.append(q.selectExpr.replace('\n', ' '));
-        buf.append("; }");
-
-        String selectCode = buf.toString();
+        String selectCode = String.format("function __select__(%s) { return %s; }",
+                Objects.toString(q.identifier, ""), q.selectExpr.replace('\n', ' '));
         debugPrint(selectCode);
         String whereCode = null;
         if (q.whereExpr != null) {
-            buf = new StringBuilder();
-            buf.append("function __where__(");
-            buf.append(q.identifier);
-            buf.append(") { return ");
-            buf.append(q.whereExpr.replace('\n', ' '));
-            buf.append("; }");
-            whereCode = buf.toString();
+            whereCode = String.format("function __where__(%s) { return %s; }",
+                    q.identifier, q.whereExpr.replace('\n', ' '));
         }
         debugPrint(whereCode);
 
