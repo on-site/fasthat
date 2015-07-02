@@ -157,6 +157,17 @@ public class Main {
             }
         }
 
+        QueryListener listener = null;
+
+        if (!parseonly) {
+            listener = new QueryListener(portNumber);
+            Thread thread = new Thread(listener);
+            thread.setName("fasthat-query-listener");
+            thread.start();
+            System.out.println("Started HTTP server on port " + portNumber);
+            System.out.println("Server is listening.");
+        }
+
         System.out.println("Reading from " + fileName + "...");
         Snapshot model = com.sun.tools.hat.internal.parser.Reader.readFile(
                 fileName, callStack, debugLevel);
@@ -190,10 +201,7 @@ public class Main {
             System.exit(0);
         }
 
-        QueryListener listener = new QueryListener(portNumber);
         listener.setModel(model);
-        System.out.println("Started HTTP server on port " + portNumber);
         System.out.println("Server is ready.");
-        listener.run();
     }
 }

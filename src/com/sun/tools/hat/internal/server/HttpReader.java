@@ -45,7 +45,6 @@ import java.net.URLDecoder;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import com.google.common.collect.ImmutableList;
@@ -171,11 +170,12 @@ public class HttpReader extends HttpHandler {
         this.snapshot = snapshot;
     }
 
-    protected void handleRequest(String query) throws IOException {
+    @Override
+    protected QueryHandler requestHandler(String query) {
         if (snapshot == null) {
-            outputError("The heap snapshot is still being read.");
-            return;
+            return new ErrorQuery("The heap snapshot is still being read.");
         }
+
         QueryHandler handler = null;
         for (HandlerRoute route : routes) {
             handler = route.parse(query);
@@ -185,17 +185,10 @@ public class HttpReader extends HttpHandler {
         }
 
         if (handler != null) {
-            handler.setOutput(out);
             handler.setSnapshot(snapshot);
-            try {
-                handler.run();
-            } catch (RuntimeException ex) {
-                ex.printStackTrace();
-                outputError(ex.getMessage());
-            }
-        } else {
-            outputError("Query '" + query + "' not implemented");
         }
+
+        return handler;
     }
 
 }

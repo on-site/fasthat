@@ -32,58 +32,15 @@
 
 package com.sun.tools.hat.internal.server;
 
-/**
- *
- * @author      Bill Foote
- */
-
-
 import java.net.Socket;
-import java.net.ServerSocket;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
-import java.io.IOException;
-
-import com.sun.tools.hat.internal.model.Snapshot;
-
-public class QueryListener implements Runnable {
-
-    private final Executor executor = Executors.newCachedThreadPool();
-    private volatile Snapshot snapshot;
-    private final int port;
-
-    public QueryListener(int port) {
-        this.port = port;
-        this.snapshot = null;   // Client will setModel when it's ready
-    }
-
-    public void setModel(Snapshot ss) {
-        this.snapshot = ss;
+public class ServerNotReadyHttpReader extends HttpHandler {
+    public ServerNotReadyHttpReader(Socket s) {
+        super(s);
     }
 
     @Override
-    public void run() {
-        try {
-            waitForRequests();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
+    protected QueryHandler requestHandler(String query) {
+        return new ServerNotReadyQuery();
     }
-
-    private void waitForRequests() throws IOException {
-        try (ServerSocket ss = new ServerSocket(port)) {
-            while (true) {
-                Socket s = ss.accept();
-
-                if (snapshot == null) {
-                    executor.execute(new ServerNotReadyHttpReader(s));
-                } else {
-                    executor.execute(new HttpReader(s, snapshot));
-                }
-            }
-        }
-    }
-
 }

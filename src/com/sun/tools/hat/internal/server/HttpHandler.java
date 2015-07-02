@@ -49,9 +49,6 @@ import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 
-import com.google.common.base.Strings;
-import com.sun.tools.hat.internal.util.Misc;
-
 public abstract class HttpHandler implements Runnable {
     private final Socket socket;
     protected PrintWriter out;
@@ -69,7 +66,7 @@ public abstract class HttpHandler implements Runnable {
         }
     }
 
-    protected abstract void handleRequest(String query) throws IOException;
+    protected abstract QueryHandler requestHandler(String query);
 
     private void handleRequest() throws IOException {
         try (InputStream in = new BufferedInputStream(socket.getInputStream());
@@ -92,15 +89,23 @@ public abstract class HttpHandler implements Runnable {
                 queryBuf.append(ch);
             }
             String query = queryBuf.toString();
-            handleRequest(query);
+            QueryHandler handler = requestHandler(query);
+            if (handler != null) {
+                handler.setOutput(out);
+                try {
+                    handler.run();
+                } catch (RuntimeException ex) {
+                    ex.printStackTrace();
+                    outputError(ex.getMessage());
+                }
+            } else {
+                outputError("Query '" + query + "' not implemented");
+            }
         }
     }
 
-    protected void outputError(String msg) {
-        out.println();
-        out.println("<html><body bgcolor=\"#ffffff\">");
-        out.println(Misc.encodeHtml(Strings.nullToEmpty(msg)));
-        out.println("</body></html>");
+    private void outputError(String msg) {
+        ErrorQuery.output(out, msg);
     }
 
 }
