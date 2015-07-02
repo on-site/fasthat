@@ -66,7 +66,7 @@ class ServerNotReadyQuery extends QueryHandler {
         String size = MB;
         double used = (double) memory.getUsed() / 1024.0 / 1024.0;
         double total = (double) memory.getMax() / 1024.0 / 1024.0;
-        double percentUsed = used / total;
+        double percentUsed = 100.0 * used / total;
 
         if (total >= 1024.0) {
             size = GB;
