@@ -34,7 +34,12 @@ package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.parser.LoadProgress;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
+
 class ServerNotReadyQuery extends QueryHandler {
+    private static final String MB = "MB";
+    private static final String GB = "GB";
     private final LoadProgress loadProgress;
 
     public ServerNotReadyQuery(LoadProgress loadProgress) {
@@ -44,6 +49,7 @@ class ServerNotReadyQuery extends QueryHandler {
     @Override
     public void run() {
         startHtml("Server Not Ready");
+        printMemoryUsage();
         loadProgress.each(p -> printProgress(p));
         out.println("<meta http-equiv=\"refresh\" content=\"1\" />");
         endHtml();
@@ -52,6 +58,24 @@ class ServerNotReadyQuery extends QueryHandler {
     private void printProgress(LoadProgress.ProgressElement progress) {
         out.println("<p>");
         println(progress.getLoadString());
+        out.println("</p>");
+    }
+
+    private void printMemoryUsage() {
+        MemoryUsage memory = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        String size = MB;
+        double used = (double) memory.getUsed() / 1024.0 / 1024.0;
+        double total = (double) memory.getMax() / 1024.0 / 1024.0;
+        double percentUsed = used / total;
+
+        if (total >= 1024.0) {
+            size = GB;
+            used /= 1024.0;
+            total /= 1024.0;
+        }
+
+        out.println("<p>");
+        out.println(String.format("<b>Heap Utilization:</b> %1.2f%s / %1.2f%s (%1.1f%%)", used, size, total, size, percentUsed));
         out.println("</p>");
     }
 }
