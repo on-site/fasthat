@@ -49,7 +49,7 @@ class ServerNotReadyQuery extends QueryHandler {
         endHtml();
     }
 
-    private void printProgress(LoadProgress.StreamProgress progress) {
+    private void printProgress(LoadProgress.ProgressElement progress) {
         out.println("<p>");
         println(progress.getLoadString());
         out.println("</p>");

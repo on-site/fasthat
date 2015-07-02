@@ -39,59 +39,42 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class LoadProgress {
-    private List<StreamProgress> streams = Collections.synchronizedList(new ArrayList<>());
+    private List<ProgressElement> elements = Collections.synchronizedList(new ArrayList<>());
 
     public void startLoadingStream(String heapFile, PositionDataInputStream stream) {
-        streams.add(new StreamProgress(heapFile, stream));
+        elements.add(new StreamProgress(heapFile, stream));
     }
 
-    public void endLoadingStream() {
-        synchronized (streams) {
-            streams.get(streams.size() - 1).end();
+    public TickedProgress startTickedProgress(String name, int numTicks) {
+        TickedProgress progress = new TickedProgress(name, numTicks);
+        elements.add(progress);
+        return progress;
+    }
+
+    public void end() {
+        synchronized (elements) {
+            elements.get(elements.size() - 1).end();
         }
     }
 
-    public void each(Consumer<StreamProgress> callback) {
-        synchronized (streams) {
-            for (StreamProgress progress : streams) {
+    public void each(Consumer<ProgressElement> callback) {
+        synchronized (elements) {
+            for (ProgressElement progress : elements) {
                 callback.accept(progress);
             }
         }
     }
 
-    public static class StreamProgress {
+    public static abstract class ProgressElement {
         private final long startTime;
-        private final String heapFile;
-        private final PositionDataInputStream stream;
-        private final long length;
-        private boolean ended = false;
+        private volatile boolean ended = false;
 
-        public StreamProgress(String heapFile, PositionDataInputStream stream) {
+        public ProgressElement() {
             this.startTime = System.currentTimeMillis();
-            this.heapFile = heapFile;
-            this.stream = stream;
-            this.length = new File(heapFile).length();
         }
 
-        public synchronized void end() {
-            ended = true;
-        }
-
-        public String getHeapFile() {
-            return heapFile;
-        }
-
-        private synchronized boolean isEnded() {
-            return ended;
-        }
-
-        public double getPercentDone() {
-            if (isEnded()) {
-                return 100.0;
-            }
-
-            return ((double) stream.position() / (double) length) * 100.0;
-        }
+        protected abstract double getPercentDone();
+        protected abstract String getLoadDescription();
 
         public String getLoadString() {
             double percentDone = getPercentDone();
@@ -108,7 +91,70 @@ public class LoadProgress {
                 }
             }
 
-            return String.format("%s is loading: %1.1f%%, estimated remaining load time: %s", getHeapFile(), percentDone, loadTime);
+            return String.format("%s: %1.1f%%, estimated remaining load time: %s", getLoadDescription(), percentDone, loadTime);
+        }
+
+        public void end() {
+            ended = true;
+        }
+
+        protected boolean isEnded() {
+            return ended;
+        }
+    }
+
+    public static class StreamProgress extends ProgressElement {
+        private final String heapFile;
+        private final PositionDataInputStream stream;
+        private final long length;
+
+        public StreamProgress(String heapFile, PositionDataInputStream stream) {
+            this.heapFile = heapFile;
+            this.stream = stream;
+            this.length = new File(heapFile).length();
+        }
+
+        @Override
+        protected double getPercentDone() {
+            if (isEnded()) {
+                return 100.0;
+            }
+
+            return ((double) stream.position() / (double) length) * 100.0;
+        }
+
+        @Override
+        protected String getLoadDescription() {
+            return String.format("%s is loading", heapFile);
+        }
+    }
+
+    public static class TickedProgress extends ProgressElement {
+        private final String name;
+        private final int numTicks;
+        private volatile int progress = 0;
+
+        public TickedProgress(String name, int numTicks) {
+            this.name = name;
+            this.numTicks = numTicks;
+        }
+
+        public void tick() {
+            progress++;
+        }
+
+        @Override
+        protected double getPercentDone() {
+            if (isEnded()) {
+                return 100.0;
+            }
+
+            return ((double) progress / (double) numTicks) * 100.0;
+        }
+
+        @Override
+        protected String getLoadDescription() {
+            return name;
         }
     }
 }

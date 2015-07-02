@@ -93,7 +93,7 @@ public abstract class Reader {
                 throw new IOException("Unrecognized magic number: " + i);
             }
         } finally {
-            loadProgress.endLoadingStream();
+            loadProgress.end();
         }
     }
 }

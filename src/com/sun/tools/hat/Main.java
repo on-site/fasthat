@@ -176,7 +176,7 @@ public class Main {
         System.out.println("Reading from " + fileName + "...");
         Snapshot model = Reader.readFile(loadProgress, fileName, callStack, debugLevel);
         System.out.println("Snapshot read, resolving...");
-        model.resolve(calculateRefs);
+        model.resolve(loadProgress, calculateRefs);
         System.out.println("Snapshot resolved.");
 
         if (excludeFile != null) {
@@ -186,7 +186,7 @@ public class Main {
         if (baselineDump != null) {
             System.out.println("Reading baseline snapshot...");
             Snapshot baseline = Reader.readFile(loadProgress, baselineDump, false, debugLevel);
-            baseline.resolve(false);
+            baseline.resolve(loadProgress, false);
             System.out.println("Discovering new objects...");
             model.markNewRelativeTo(baseline);
             baseline = null;    // Guard against conservative GC
