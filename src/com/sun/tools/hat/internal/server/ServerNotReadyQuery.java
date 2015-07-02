@@ -44,6 +44,13 @@ class ServerNotReadyQuery extends QueryHandler {
     @Override
     public void run() {
         startHtml("Server Not Ready");
+        loadProgress.each(p -> printProgress(p));
         endHtml();
+    }
+
+    private void printProgress(LoadProgress.StreamProgress progress) {
+        out.println("<p>");
+        println(String.format("%s is loading: %1.1f", progress.getHeapFile(), progress.getPercentDone()));
+        out.println("</p>");
     }
 }

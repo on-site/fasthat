@@ -174,7 +174,7 @@ public class Main {
         }
 
         System.out.println("Reading from " + fileName + "...");
-        Snapshot model = Reader.readFile(fileName, callStack, debugLevel);
+        Snapshot model = Reader.readFile(loadProgress, fileName, callStack, debugLevel);
         System.out.println("Snapshot read, resolving...");
         model.resolve(calculateRefs);
         System.out.println("Snapshot resolved.");
@@ -185,7 +185,7 @@ public class Main {
 
         if (baselineDump != null) {
             System.out.println("Reading baseline snapshot...");
-            Snapshot baseline = Reader.readFile(baselineDump, false, debugLevel);
+            Snapshot baseline = Reader.readFile(loadProgress, baselineDump, false, debugLevel);
             baseline.resolve(false);
             System.out.println("Discovering new objects...");
             model.markNewRelativeTo(baseline);

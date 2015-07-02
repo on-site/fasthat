@@ -32,5 +32,63 @@
 
 package com.sun.tools.hat.internal.parser;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+
 public class LoadProgress {
+    private List<StreamProgress> streams = Collections.synchronizedList(new ArrayList<>());
+
+    public void startLoadingStream(String heapFile, PositionDataInputStream stream) {
+        streams.add(new StreamProgress(heapFile, stream));
+    }
+
+    public void endLoadingStream() {
+        synchronized (streams) {
+            streams.get(streams.size() - 1).end();
+        }
+    }
+
+    public void each(Consumer<StreamProgress> callback) {
+        synchronized (streams) {
+            for (StreamProgress progress : streams) {
+                callback.accept(progress);
+            }
+        }
+    }
+
+    public static class StreamProgress {
+        private final String heapFile;
+        private final PositionDataInputStream stream;
+        private final long length;
+        private boolean ended = false;
+
+        public StreamProgress(String heapFile, PositionDataInputStream stream) {
+            this.heapFile = heapFile;
+            this.stream = stream;
+            this.length = new File(heapFile).length();
+        }
+
+        public synchronized void end() {
+            ended = true;
+        }
+
+        public String getHeapFile() {
+            return heapFile;
+        }
+
+        private synchronized boolean isEnded() {
+            return ended;
+        }
+
+        public double getPercentDone() {
+            if (isEnded()) {
+                return 100.0;
+            }
+
+            return ((double) stream.position() / (double) length) * 100.0;
+        }
+    }
 }

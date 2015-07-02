@@ -63,9 +63,7 @@ public abstract class Reader {
      * @param heapFile The name of a file containing a heap dump
      * @param callStack If true, read the call stack of allocaation sites
      */
-    public static Snapshot readFile(String heapFile, boolean callStack,
-                                    int debugLevel)
-            throws IOException {
+    public static Snapshot readFile(LoadProgress loadProgress, String heapFile, boolean callStack, int debugLevel) throws IOException {
         int dumpNumber = 1;
         int pos = heapFile.lastIndexOf('#');
         if (pos > -1) {
@@ -84,6 +82,7 @@ public abstract class Reader {
         }
         try (PositionDataInputStream in = new PositionDataInputStream(
                 new BufferedInputStream(new FileInputStream(heapFile)))) {
+            loadProgress.startLoadingStream(heapFile, in);
             int i = in.readInt();
             if (i == HprofReader.MAGIC_NUMBER) {
                 Reader r
@@ -93,6 +92,8 @@ public abstract class Reader {
             } else {
                 throw new IOException("Unrecognized magic number: " + i);
             }
+        } finally {
+            loadProgress.endLoadingStream();
         }
     }
 }
