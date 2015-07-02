@@ -46,15 +46,18 @@ import java.util.concurrent.Executors;
 import java.io.IOException;
 
 import com.sun.tools.hat.internal.model.Snapshot;
+import com.sun.tools.hat.internal.parser.LoadProgress;
 
 public class QueryListener implements Runnable {
 
     private final Executor executor = Executors.newCachedThreadPool();
     private volatile Snapshot snapshot;
     private final int port;
+    private final LoadProgress loadProgress;
 
-    public QueryListener(int port) {
+    public QueryListener(int port, LoadProgress loadProgress) {
         this.port = port;
+        this.loadProgress = loadProgress;
         this.snapshot = null;   // Client will setModel when it's ready
     }
 
@@ -78,7 +81,7 @@ public class QueryListener implements Runnable {
                 Socket s = ss.accept();
 
                 if (snapshot == null) {
-                    executor.execute(new ServerNotReadyHttpReader(s));
+                    executor.execute(new ServerNotReadyHttpReader(s, loadProgress));
                 } else {
                     executor.execute(new HttpReader(s, snapshot));
                 }

@@ -32,15 +32,20 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.sun.tools.hat.internal.parser.LoadProgress;
+
 import java.net.Socket;
 
 public class ServerNotReadyHttpReader extends HttpHandler {
-    public ServerNotReadyHttpReader(Socket s) {
+    private final LoadProgress loadProgress;
+
+    public ServerNotReadyHttpReader(Socket s, LoadProgress loadProgress) {
         super(s);
+        this.loadProgress = loadProgress;
     }
 
     @Override
     protected QueryHandler requestHandler(String query) {
-        return new ServerNotReadyQuery();
+        return new ServerNotReadyQuery(loadProgress);
     }
 }

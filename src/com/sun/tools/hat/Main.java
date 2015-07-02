@@ -40,6 +40,8 @@ import com.sun.tools.hat.internal.lang.jruby16.JRuby16;
 import com.sun.tools.hat.internal.lang.openjdk6.OpenJDK6;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.model.ReachableExcludesImpl;
+import com.sun.tools.hat.internal.parser.LoadProgress;
+import com.sun.tools.hat.internal.parser.Reader;
 import com.sun.tools.hat.internal.server.QueryListener;
 
 /**
@@ -98,7 +100,7 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws InterruptedException, IOException {
         if (args.length < 1) {
             usage("No arguments supplied");
         }
@@ -157,20 +159,22 @@ public class Main {
             }
         }
 
+        Thread serverThread = null;
         QueryListener listener = null;
+        LoadProgress loadProgress = new LoadProgress();
 
-        if (!parseonly) {
-            listener = new QueryListener(portNumber);
-            Thread thread = new Thread(listener);
-            thread.setName("fasthat-query-listener");
-            thread.start();
+        if (!parseonly && debugLevel != 2) {
+            listener = new QueryListener(portNumber, loadProgress);
+            serverThread = new Thread(listener);
+            serverThread.setName("fasthat-query-listener");
+            serverThread.setDaemon(true);
+            serverThread.start();
             System.out.println("Started HTTP server on port " + portNumber);
             System.out.println("Server is listening.");
         }
 
         System.out.println("Reading from " + fileName + "...");
-        Snapshot model = com.sun.tools.hat.internal.parser.Reader.readFile(
-                fileName, callStack, debugLevel);
+        Snapshot model = Reader.readFile(fileName, callStack, debugLevel);
         System.out.println("Snapshot read, resolving...");
         model.resolve(calculateRefs);
         System.out.println("Snapshot resolved.");
@@ -181,8 +185,7 @@ public class Main {
 
         if (baselineDump != null) {
             System.out.println("Reading baseline snapshot...");
-            Snapshot baseline = com.sun.tools.hat.internal.parser.Reader.readFile(
-                    baselineDump, false, debugLevel);
+            Snapshot baseline = Reader.readFile(baselineDump, false, debugLevel);
             baseline.resolve(false);
             System.out.println("Discovering new objects...");
             model.markNewRelativeTo(baseline);
@@ -203,5 +206,6 @@ public class Main {
 
         listener.setModel(model);
         System.out.println("Server is ready.");
+        serverThread.join();
     }
 }

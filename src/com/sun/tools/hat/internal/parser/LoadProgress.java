@@ -30,20 +30,7 @@
  * at JavaSoft/Sun.
  */
 
-package com.sun.tools.hat.internal.server;
+package com.sun.tools.hat.internal.parser;
 
-import com.sun.tools.hat.internal.parser.LoadProgress;
-
-class ServerNotReadyQuery extends QueryHandler {
-    private final LoadProgress loadProgress;
-
-    public ServerNotReadyQuery(LoadProgress loadProgress) {
-        this.loadProgress = loadProgress;
-    }
-
-    @Override
-    public void run() {
-        startHtml("Server Not Ready");
-        endHtml();
-    }
+public class LoadProgress {
 }
