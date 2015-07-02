@@ -38,6 +38,7 @@ import java.util.*;
 import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
+import com.sun.tools.hat.internal.parser.LoadProgress;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -217,7 +218,7 @@ public class Snapshot {
     /**
      * Called after reading complete, to initialize the structure
      */
-    public void resolve(boolean calculateRefs) {
+    public void resolve(LoadProgress loadProgress, boolean calculateRefs) {
         System.out.println("Resolving " + heapObjects.size() + " objects...");
 
         // First, resolve the classes.  All classes must be resolved before
@@ -245,10 +246,14 @@ public class Snapshot {
             addFakeClass(javaLangClassLoader);
         }
 
+        LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Resolving objects", heapObjects.size() * 2);
+
         for (JavaHeapObject t : heapObjects.values()) {
             if (t instanceof JavaClass) {
                 t.resolve(this);
             }
+
+            progress.tick();
         }
 
         // Now, resolve everything else.
@@ -256,8 +261,11 @@ public class Snapshot {
             if (!(t instanceof JavaClass)) {
                 t.resolve(this);
             }
+
+            progress.tick();
         }
 
+        loadProgress.end();
         heapObjects.putAll(fakeClasses);
         fakeClasses.clear();
 
@@ -276,11 +284,12 @@ public class Snapshot {
         }
 
         if (calculateRefs) {
-            calculateReferencesToObjects();
+            calculateReferencesToObjects(loadProgress);
             System.out.print("Eliminating duplicate references");
             System.out.flush();
             // This println refers to the *next* step
         }
+        progress = loadProgress.startTickedProgress("Eliminating duplicate references", heapObjects.size());
         int count = 0;
         for (JavaHeapObject t : heapObjects.values()) {
             t.setupReferers();
@@ -289,13 +298,16 @@ public class Snapshot {
                 System.out.print(".");
                 System.out.flush();
             }
+            progress.tick();
         }
         if (calculateRefs) {
             System.out.println();
         }
+        loadProgress.end();
     }
 
-    private void calculateReferencesToObjects() {
+    private void calculateReferencesToObjects(LoadProgress loadProgress) {
+        LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Chasing references", heapObjects.size() + roots.size());
         System.out.print("Chasing references, expect "
                          + (heapObjects.size() / DOT_LIMIT) + " dots");
         System.out.flush();
@@ -308,6 +320,7 @@ public class Snapshot {
                 System.out.print(".");
                 System.out.flush();
             }
+            progress.tick();
         }
         System.out.println();
         for (Root r : roots) {
@@ -316,7 +329,9 @@ public class Snapshot {
             if (t != null) {
                 t.addReferenceFromRoot(r);
             }
+            progress.tick();
         }
+        loadProgress.end();
     }
 
     public void markNewRelativeTo(Snapshot baseline) {
