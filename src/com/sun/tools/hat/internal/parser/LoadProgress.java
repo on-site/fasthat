@@ -60,12 +60,14 @@ public class LoadProgress {
     }
 
     public static class StreamProgress {
+        private final long startTime;
         private final String heapFile;
         private final PositionDataInputStream stream;
         private final long length;
         private boolean ended = false;
 
         public StreamProgress(String heapFile, PositionDataInputStream stream) {
+            this.startTime = System.currentTimeMillis();
             this.heapFile = heapFile;
             this.stream = stream;
             this.length = new File(heapFile).length();
@@ -89,6 +91,24 @@ public class LoadProgress {
             }
 
             return ((double) stream.position() / (double) length) * 100.0;
+        }
+
+        public String getLoadString() {
+            double percentDone = getPercentDone();
+            String loadTime = "unknown";
+            long elapsed = System.currentTimeMillis() - startTime;
+
+            if (elapsed > 0 && percentDone > 0.0) {
+                double totalExpectedMillis = (elapsed / (percentDone / 100.0)) - elapsed;
+
+                if (totalExpectedMillis > 60000.0) {
+                    loadTime = String.format("%1.1f minutes", totalExpectedMillis / 60000.0);
+                } else {
+                    loadTime = String.format("%1.1f seconds", totalExpectedMillis / 1000.0);
+                }
+            }
+
+            return String.format("%s is loading: %1.1f%%, estimated remaining load time: %s", getHeapFile(), percentDone, loadTime);
         }
     }
 }

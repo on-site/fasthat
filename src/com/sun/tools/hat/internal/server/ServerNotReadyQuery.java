@@ -50,7 +50,7 @@ class ServerNotReadyQuery extends QueryHandler {
 
     private void printProgress(LoadProgress.StreamProgress progress) {
         out.println("<p>");
-        println(String.format("%s is loading: %1.1f", progress.getHeapFile(), progress.getPercentDone()));
+        println(progress.getLoadString());
         out.println("</p>");
     }
 }
