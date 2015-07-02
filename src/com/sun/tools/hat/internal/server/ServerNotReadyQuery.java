@@ -45,6 +45,7 @@ class ServerNotReadyQuery extends QueryHandler {
     public void run() {
         startHtml("Server Not Ready");
         loadProgress.each(p -> printProgress(p));
+        out.println("<meta http-equiv=\"refresh\" content=\"1\" />");
         endHtml();
     }
 
