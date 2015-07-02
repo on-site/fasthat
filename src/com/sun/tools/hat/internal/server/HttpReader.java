@@ -45,22 +45,15 @@ import java.net.URLDecoder;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-import java.io.InputStream;
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.BufferedWriter;
-import java.io.PrintWriter;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
-import com.sun.tools.hat.internal.util.Misc;
 
-public class HttpReader implements Runnable {
+public class HttpReader extends HttpHandler {
     private class EngineThreadLocal extends ThreadLocal<OQLEngine> {
         @Override
         protected OQLEngine initialValue() {
@@ -139,8 +132,6 @@ public class HttpReader implements Runnable {
         }
     }
 
-    private final Socket socket;
-    private PrintWriter out;
     private final Snapshot snapshot;
     private final EngineThreadLocal engine = new EngineThreadLocal();
     private final ImmutableList<HandlerRoute> routes = makeHandlerRoutes();
@@ -176,72 +167,35 @@ public class HttpReader implements Runnable {
     }
 
     public HttpReader (Socket s, Snapshot snapshot) {
-        this.socket = s;
+        super(s);
         this.snapshot = snapshot;
     }
 
-    @Override
-    public void run() {
-        try {
-            handleRequest();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+    protected void handleRequest(String query) throws IOException {
+        if (snapshot == null) {
+            outputError("The heap snapshot is still being read.");
+            return;
         }
-    }
-
-    private void handleRequest() throws IOException {
-        try (InputStream in = new BufferedInputStream(socket.getInputStream());
-             PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
-                socket.getOutputStream(), "UTF-8")))) {
-            this.out = out;
-            out.println("HTTP/1.0 200 OK");
-            out.println("Content-Type: text/html; charset=UTF-8");
-            out.println("Cache-Control: no-cache");
-            out.println("Pragma: no-cache");
-            out.println();
-            if (in.read() != 'G' || in.read() != 'E'
-                    || in.read() != 'T' || in.read() != ' ') {
-                outputError("Protocol error");
-            }
-            int data;
-            StringBuilder queryBuf = new StringBuilder();
-            while ((data = in.read()) != -1 && data != ' ') {
-                char ch = (char) data;
-                queryBuf.append(ch);
-            }
-            String query = queryBuf.toString();
-            if (snapshot == null) {
-                outputError("The heap snapshot is still being read.");
-                return;
-            }
-            QueryHandler handler = null;
-            for (HandlerRoute route : routes) {
-                handler = route.parse(query);
-                if (handler != null) {
-                    break;
-                }
-            }
-
+        QueryHandler handler = null;
+        for (HandlerRoute route : routes) {
+            handler = route.parse(query);
             if (handler != null) {
-                handler.setOutput(out);
-                handler.setSnapshot(snapshot);
-                try {
-                    handler.run();
-                } catch (RuntimeException ex) {
-                    ex.printStackTrace();
-                    outputError(ex.getMessage());
-                }
-            } else {
-                outputError("Query '" + query + "' not implemented");
+                break;
             }
         }
-    }
 
-    private void outputError(String msg) {
-        out.println();
-        out.println("<html><body bgcolor=\"#ffffff\">");
-        out.println(Misc.encodeHtml(Strings.nullToEmpty(msg)));
-        out.println("</body></html>");
+        if (handler != null) {
+            handler.setOutput(out);
+            handler.setSnapshot(snapshot);
+            try {
+                handler.run();
+            } catch (RuntimeException ex) {
+                ex.printStackTrace();
+                outputError(ex.getMessage());
+            }
+        } else {
+            outputError("Query '" + query + "' not implemented");
+        }
     }
 
 }
