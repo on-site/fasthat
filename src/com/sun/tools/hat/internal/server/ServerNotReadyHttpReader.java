@@ -32,61 +32,20 @@
 
 package com.sun.tools.hat.internal.server;
 
-/**
- *
- * @author      Bill Foote
- */
-
-
-import java.net.Socket;
-import java.net.ServerSocket;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import java.io.IOException;
-
-import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.parser.LoadProgress;
 
-public class QueryListener implements Runnable {
+import java.net.Socket;
 
-    private final Executor executor = Executors.newCachedThreadPool();
-    private volatile Snapshot snapshot;
-    private final int port;
+public class ServerNotReadyHttpReader extends HttpHandler {
     private final LoadProgress loadProgress;
 
-    public QueryListener(int port, LoadProgress loadProgress) {
-        this.port = port;
+    public ServerNotReadyHttpReader(Socket s, LoadProgress loadProgress) {
+        super(s);
         this.loadProgress = loadProgress;
-        this.snapshot = null;   // Client will setModel when it's ready
-    }
-
-    public void setModel(Snapshot ss) {
-        this.snapshot = ss;
     }
 
     @Override
-    public void run() {
-        try {
-            waitForRequests();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
+    protected QueryHandler requestHandler(String query) {
+        return new ServerNotReadyQuery(loadProgress);
     }
-
-    private void waitForRequests() throws IOException {
-        try (ServerSocket ss = new ServerSocket(port)) {
-            while (true) {
-                Socket s = ss.accept();
-
-                if (snapshot == null) {
-                    executor.execute(new ServerNotReadyHttpReader(s, loadProgress));
-                } else {
-                    executor.execute(new HttpReader(s, snapshot));
-                }
-            }
-        }
-    }
-
 }

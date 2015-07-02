@@ -51,21 +51,31 @@ public class PositionInputStream extends FilterInputStream {
     @Override
     public int read() throws IOException {
         int res = super.read();
-        if (res != -1) position++;
+        if (res != -1) {
+            synchronized (this) {
+                position++;
+            }
+        }
         return res;
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
         int res = super.read(b, off, len);
-        if (res != -1) position += res;
+        if (res != -1) {
+            synchronized (this) {
+                position += res;
+            }
+        }
         return res;
     }
 
     @Override
     public long skip(long n) throws IOException {
         long res = super.skip(n);
-        position += res;
+        synchronized (this) {
+            position += res;
+        }
         return res;
     }
 
@@ -84,7 +94,7 @@ public class PositionInputStream extends FilterInputStream {
         throw new UnsupportedOperationException("reset");
     }
 
-    public long position() {
+    public synchronized long position() {
         return position;
     }
 }
