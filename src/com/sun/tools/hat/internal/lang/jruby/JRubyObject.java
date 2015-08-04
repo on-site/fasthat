@@ -94,7 +94,7 @@ public class JRubyObject extends AbstractObjectModel {
 
     @Override
     public JRubyClass getEigenclassModel() {
-        return JRubyClass.make((JRuby) getFactory(),
+        return (JRubyClass) getFactory().newModel(
                 Models.getFieldObject(obj, "metaClass"));
     }
 

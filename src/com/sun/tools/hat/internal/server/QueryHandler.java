@@ -42,7 +42,7 @@ import java.util.Formatter;
 import java.util.Map;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
@@ -352,7 +352,7 @@ abstract class QueryHandler implements Runnable {
     private void printDetail(Model model, int size, final Integer limit) {
         if (model != null) {
             model.visit(new ModelVisitor() {
-                private final int lim = Objects.firstNonNull(limit, 10);
+                private final int lim = MoreObjects.firstNonNull(limit, 10);
 
                 @Override
                 public void visit(ScalarModel model) {

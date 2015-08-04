@@ -42,7 +42,7 @@ fasthat uses the following libraries:
 + [Guava][guava]
 
 I always try to keep up-to-date with the latest released versions. At
-the time of current writing, I'm using Guava 17.0.
+the time of current writing, I'm using Guava 18.0.
 
 I develop and build using Eclipse. [Mike Virata-Stone][smellsblue] has created
 an Ant `build.xml` that you may find useful, but I have not tested it.
@@ -96,8 +96,8 @@ licensed under GPLv2 or later, with Classpath Exception.
 
 [jhat]: http://docs.oracle.com/javase/6/docs/technotes/tools/share/jhat.html
 [osmfasthat]: https://github.com/on-site/fasthat
-[guava]: http://code.google.com/p/guava-libraries/
-[smellsblue]: http://github.com/smellsblue
+[guava]: https://github.com/google/guava
+[smellsblue]: https://github.com/smellsblue
 [guava-ver]: http://stackoverflow.com/q/7694468/13
 [jsr-223]: http://www.jcp.org/en/jsr/detail?id=223
-[cky]: http://github.com/cky
+[cky]: https://github.com/cky

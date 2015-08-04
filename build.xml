@@ -6,7 +6,7 @@
   <property name="bin" value="bin"/>
   <property name="jar" value="${base.build}/jar/fasthat.jar"/>
   <property name="tmp" value="tmp"/>
-  <property name="guava.ver" value="17.0"/>
+  <property name="guava.ver" value="18.0"/>
   <property name="guava.jar" value="guava-${guava.ver}.jar"/>
 
   <path id="classpath">

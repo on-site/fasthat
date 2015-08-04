@@ -103,7 +103,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     private final Supplier<ImmutableList<String>> propertyNamesSupplier
             = Suppliers.memoize(new PropertyNamesSupplier());
 
-    private JRubyClass(JRuby factory, JavaObject classObject) {
+    protected JRubyClass(JRuby factory, JavaObject classObject) {
         super(factory);
         this.classObject = classObject;
         baseNameField = Models.findField(classObject, BASE_NAME_FIELDS);
@@ -118,7 +118,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
                 ? CACHE.getUnchecked(factory).getUnchecked(classObject) : null;
     }
 
-    private LoadingCache<JavaObject, JRubyClass> getClassCache() {
+    protected LoadingCache<JavaObject, ? extends JRubyClass> getClassCache() {
         return CACHE.getUnchecked((JRuby) getFactory());
     }
 
@@ -141,7 +141,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         @Override
         public String get() {
             Deque<String> names = new ArrayDeque<>();
-            LoadingCache<JavaObject, JRubyClass> cache = getClassCache();
+            LoadingCache<JavaObject, ? extends JRubyClass> cache = getClassCache();
             JavaObject cls = classObject;
             do {
                 String name = Models.getFieldString(cls, baseNameField);
@@ -209,7 +209,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         @Override
         public ImmutableList<ClassModel> get() {
             ImmutableList.Builder<ClassModel> builder = ImmutableList.builder();
-            LoadingCache<JavaObject, JRubyClass> cache = getClassCache();
+            LoadingCache<JavaObject, ? extends JRubyClass> cache = getClassCache();
             JavaObject cls = Models.getFieldObject(classObject, "superClass");
             while (cls != null) {
                 JRuby factory = (JRuby) getFactory();

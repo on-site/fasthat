@@ -32,11 +32,8 @@
 
 package com.sun.tools.hat.internal.lang.jruby17;
 
-import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Deque;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
@@ -44,11 +41,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.sun.tools.hat.internal.lang.AbstractClassModel;
-import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
-import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
@@ -57,7 +50,7 @@ import com.sun.tools.hat.internal.model.JavaObject;
  *
  * @author Chris K. Jester-Young
  */
-public class JRubyClass extends AbstractClassModel implements ScalarModel {
+public class JRubyClass extends com.sun.tools.hat.internal.lang.jruby.JRubyClass {
     private static class ClassCacheLoader extends CacheLoader<JavaObject, JRubyClass> {
         private final JRuby17 factory;
 
@@ -88,27 +81,11 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     private static final String[] ANONYMOUS_NAME_FIELDS = {"anonymousName",
             "bareName"};
 
-    private final JavaObject classObject;
-    private final String baseNameField;
-    private final String cachedNameField;
-    private final String anonymousNameField;
-    private final Supplier<String> nameSupplier
-            = Suppliers.memoize(new NameSupplier());
-    private final Supplier<String> anonymousNameSupplier
-            = Suppliers.memoize(new AnonymousNameSupplier());
-    private final Supplier<JRubyClass> realClassSupplier
-            = Suppliers.memoize(new RealClassSupplier());
-    private final Supplier<ImmutableList<ClassModel>> superclassesSupplier
-            = Suppliers.memoize(new SuperclassesSupplier());
     private final Supplier<ImmutableList<String>> propertyNamesSupplier
             = Suppliers.memoize(new PropertyNamesSupplier());
 
     private JRubyClass(JRuby17 factory, JavaObject classObject) {
-        super(factory);
-        this.classObject = classObject;
-        baseNameField = Models.findField(classObject, BASE_NAME_FIELDS);
-        cachedNameField = Models.findField(classObject, CACHED_NAME_FIELDS);
-        anonymousNameField = Models.findField(classObject, ANONYMOUS_NAME_FIELDS);
+        super(factory, classObject);
     }
 
     public static JRubyClass make(JRuby17 factory, JavaObject classObject) {
@@ -118,117 +95,9 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
                 ? CACHE.getUnchecked(factory).getUnchecked(classObject) : null;
     }
 
-    private LoadingCache<JavaObject, JRubyClass> getClassCache() {
+    @Override
+    protected LoadingCache<JavaObject, ? extends JRubyClass> getClassCache() {
         return CACHE.getUnchecked((JRuby17) getFactory());
-    }
-
-    private boolean isAnonymous() {
-        return Models.getFieldString(classObject, baseNameField) == null;
-    }
-
-    @Override
-    public JavaObject getClassObject() {
-        return classObject;
-    }
-
-    private boolean isClass() {
-        JRuby17 factory = (JRuby17) getFactory();
-        return classObject.getClazz() == factory.getClassClass();
-    }
-
-    private class NameSupplier implements Supplier<String> {
-        // Based on RubyModule.calculateName()
-        @Override
-        public String get() {
-            Deque<String> names = new ArrayDeque<>();
-            LoadingCache<JavaObject, JRubyClass> cache = getClassCache();
-            JavaObject cls = classObject;
-            do {
-                String name = Models.getFieldString(cls, baseNameField);
-                if (name == null)
-                    name = cache.getUnchecked(cls).getAnonymousName();
-                names.addFirst(name);
-                cls = Models.getFieldObject(cls, "parent");
-            } while (cls != null && cls != getObjectClassObject());
-            return Joiner.on("::").join(names);
-        }
-
-        private JavaObject getObjectClassObject() {
-            JavaObject eigenclass = Models.getFieldObject(classObject, "metaClass");
-            JavaObject runtime = Models.getFieldObject(eigenclass, "runtime");
-            return Models.getFieldObject(runtime, "objectClass");
-        }
-    }
-
-    @Override
-    public String getName() {
-        return isAnonymous() ? getAnonymousName()
-                : coalesce(Models.getFieldString(classObject, cachedNameField),
-                nameSupplier);
-    }
-
-    @Override
-    public String getSimpleName() {
-        return isAnonymous() ? getAnonymousName()
-                : Models.getFieldString(classObject, baseNameField);
-    }
-
-    private class AnonymousNameSupplier implements Supplier<String> {
-        // Based on RubyModule.calculateAnonymousName()
-        @Override
-        public String get() {
-            return String.format("#<%s:%#x>", isClass() ? "Class" : "Module",
-                    classObject.getId());
-        }
-    }
-
-    public String getAnonymousName() {
-        return coalesce(Models.getFieldString(classObject, anonymousNameField),
-                anonymousNameSupplier);
-    }
-
-    private class RealClassSupplier implements Supplier<JRubyClass> {
-        // Based on MetaClass.getRealClass()
-        @Override
-        public JRubyClass get() {
-            JRuby17 factory = (JRuby17) getFactory();
-            JavaClass classClass = factory.getClassClass();
-            JavaObject cls = classObject;
-            while (cls != null && cls.getClazz() != classClass) {
-                cls = Models.getFieldObject(cls, "superClass");
-            }
-            return getClassCache().getUnchecked(cls);
-        }
-    }
-
-    public JRubyClass getRealClass() {
-        return realClassSupplier.get();
-    }
-
-    private class SuperclassesSupplier implements Supplier<ImmutableList<ClassModel>> {
-        @Override
-        public ImmutableList<ClassModel> get() {
-            ImmutableList.Builder<ClassModel> builder = ImmutableList.builder();
-            LoadingCache<JavaObject, JRubyClass> cache = getClassCache();
-            JavaObject cls = Models.getFieldObject(classObject, "superClass");
-            while (cls != null) {
-                JRuby17 factory = (JRuby17) getFactory();
-                if (cls.getClazz() == factory.getClassClass()) {
-                    builder.add(cache.getUnchecked(cls));
-                    break;
-                } else if (cls.getClazz() == factory.getModuleWrapperClass()) {
-                    JavaObject module = Models.getFieldObject(cls, "delegate");
-                    builder.add(cache.getUnchecked(module));
-                }
-                cls = Models.getFieldObject(cls, "superClass");
-            }
-            return builder.build().reverse();
-        }
-    }
-
-    @Override
-    public Collection<ClassModel> getSuperclasses() {
-        return superclassesSupplier.get();
     }
 
     private class PropertyNamesSupplier implements Supplier<ImmutableList<String>> {
@@ -236,7 +105,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         public ImmutableList<String> get() {
             return ImmutableList.copyOf(Lists.transform(
                     Models.getFieldObjectArray(
-                            Models.getFieldObject(classObject, "variableTableManager"),
+                            Models.getFieldObject(getClassObject(), "variableTableManager"),
                             "variableNames", JavaObject.class),
                     Models.GetStringValue.INSTANCE));
         }
@@ -245,14 +114,5 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     @Override
     public Collection<String> getPropertyNames() {
         return propertyNamesSupplier.get();
-    }
-
-    private static <T> T coalesce(T value, Supplier<? extends T> fallback) {
-        return value != null ? value : fallback.get();
-    }
-
-    @Override
-    public String toString() {
-        return '<' + (isClass() ? "class" : "module") + ':' + getSimpleName() + '>';
     }
 }
