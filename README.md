@@ -8,6 +8,10 @@ fasthat is a fork of OpenJDK 8's [jhat][jhat] that enhances our ability
 to analyse large heap dumps (typically 4 to 8 GB) that we frequently
 work with at On-Site.
 
+Since leaving On-Site, I've had occasion to continue using fasthat. This
+fork is my continuation of the work I continue to do. I plan to sync up
+with the [On-Site fasthat repo][osmfasthat] once in a while.
+
 Features
 --------
 
@@ -40,7 +44,7 @@ fasthat uses the following libraries:
 I always try to keep up-to-date with the latest released versions. At
 the time of current writing, I'm using Guava 17.0.
 
-I develop and build using Eclipse. [Mike Virata-Stone][mjvs] has created
+I develop and build using Eclipse. [Mike Virata-Stone][smellsblue] has created
 an Ant `build.xml` that you may find useful, but I have not tested it.
 In particular, you may need to update it to work with the latest Guava
 jars.
@@ -83,6 +87,7 @@ to improve on that I haven't yet got around to:
 Contact and licensing
 ---------------------
 
+fasthat is maintained by [Mike Virata-Stone][smellsblue]. _This fork_ of
 fasthat is maintained by [Chris Jester-Young][cky].
 
 All of the code from OpenJDK are licensed under GPLv2 with Classpath
@@ -90,8 +95,9 @@ Exception. All of the new code (not originating from OpenJDK) are
 licensed under GPLv2 or later, with Classpath Exception.
 
 [jhat]: http://docs.oracle.com/javase/6/docs/technotes/tools/share/jhat.html
+[osmfasthat]: https://github.com/on-site/fasthat
 [guava]: http://code.google.com/p/guava-libraries/
-[mjvs]: http://github.com/mikestone
+[smellsblue]: http://github.com/smellsblue
 [guava-ver]: http://stackoverflow.com/q/7694468/13
 [jsr-223]: http://www.jcp.org/en/jsr/detail?id=223
 [cky]: http://github.com/cky
