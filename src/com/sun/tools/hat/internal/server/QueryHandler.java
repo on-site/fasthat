@@ -95,6 +95,7 @@ abstract class QueryHandler implements Runnable {
     protected PrintWriter out;
     protected Snapshot snapshot;
     protected ImmutableListMultimap<String, String> params;
+    protected boolean rawMode;
 
     void setPath(String s) {
         path = s;
@@ -118,6 +119,7 @@ abstract class QueryHandler implements Runnable {
 
     void setParams(ImmutableListMultimap<String, String> params) {
         this.params = params;
+        rawMode = params.containsKey("raw");
     }
 
     protected static String encodeForURL(String s) {
@@ -301,6 +303,9 @@ abstract class QueryHandler implements Runnable {
     }
 
     private Model getModelFor(JavaThing thing, boolean useNonScalarModel) {
+        if (rawMode) {
+            return null;
+        }
         for (ModelFactory factory : snapshot.getModelFactories()) {
             Model model = factory.newModel(thing);
             if (model != null && useNonScalarModel) {
