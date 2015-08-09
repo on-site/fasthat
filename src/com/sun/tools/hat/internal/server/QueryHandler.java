@@ -141,6 +141,10 @@ abstract class QueryHandler implements Runnable {
         out.println("</h1></center>");
     }
 
+    protected void startHtml(String format, Object... args) {
+        startHtml(String.format(format, args));
+    }
+
     protected void endHtml() {
         out.println("</body></html>");
     }
