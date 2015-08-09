@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,18 +30,33 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.lang.AbstractScalarModel;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.model.JavaLong;
+import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * Model for Ruby fixnums.
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public class JRubyFixnum extends AbstractScalarModel {
+    private final long value;
+
+    private JRubyFixnum(JRuby factory, long value) {
+        super(factory);
+        this.value = value;
+    }
+
+    public static JRubyFixnum make(JRuby factory, JavaObject obj) {
+        JavaLong value = Models.getFieldThing(obj, "value", JavaLong.class);
+        return value == null ? null : new JRubyFixnum(factory, value.value);
+    }
+
+    @Override
+    public String toString() {
+        return Long.toString(value);
+    }
 }

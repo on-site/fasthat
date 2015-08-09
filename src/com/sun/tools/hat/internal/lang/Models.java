@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2011, 2012, 2013 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -120,8 +120,12 @@ public final class Models {
                 JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
                 JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
                 JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
-                if (value != null && offset != null && count != null) {
-                    return new String((char[]) value.getElements(), offset.value, count.value);
+                if (value != null) {
+                    if (offset != null && count != null) {
+                        return new String((char[]) value.getElements(), offset.value, count.value);
+                    } else {
+                        return new String((char[]) value.getElements());
+                    }
                 }
             }
             return null;
@@ -198,6 +202,40 @@ public final class Models {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns whether the given object has a field with the given
+     * name. This will return true as long as the field exists, even
+     * if its value is null.
+     *
+     * @param obj the object to check
+     * @param field the field name to look for
+     * @return true iff {@code obj} has a field of the given name
+     */
+    public static boolean hasField(JavaObject obj, String field) {
+        /*
+         * JavaObject.getField() returns null if the field doesn't
+         * exist, and returns Snapshot.getNullThing() if the field
+         * exists but has a null value.
+         */
+        return obj.getField(field) != null;
+    }
+
+    /**
+     * Returns the first given field found (in the sense of
+     * {@link #hasField}) in the given object.
+     *
+     * @param obj the object to search
+     * @param fields the field names to look for
+     * @return the first field that exists in {@code obj}, or null
+     */
+    public static String findField(JavaObject obj, String... fields) {
+        for (String field : fields) {
+            if (hasField(obj, field))
+                return field;
+        }
+        return null;
     }
 
     /**

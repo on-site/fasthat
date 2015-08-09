@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2011, 2012, 2013 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,7 +30,7 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.guava;
+package com.sun.tools.hat.internal.lang.openjdk;
 
 import java.util.List;
 import java.util.Map;
@@ -40,38 +40,33 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.AbstractMapModel;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class GuavaCustConcHash extends AbstractMapModel {
+public class JavaConcHash extends AbstractMapModel {
     private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
-        private final Iterable<JavaObject> segments;
+        private final List<JavaObject> segments;
 
-        public MapSupplier(Iterable<JavaObject> segments) {
+        public MapSupplier(List<JavaObject> segments) {
             this.segments = segments;
         }
 
         @Override
         public ImmutableMap<JavaThing, JavaThing> get() {
-            ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-            for (JavaObject segment : segments) {
-                JavaObject table = Models.getFieldObject(segment, "table");
-                List<JavaObject> array = Models.getFieldObjectArray(table, "array",
-                        JavaObject.class);
-                if (array != null) {
-                    for (JavaObject entry : array) {
-                        // Strong keys use the "key" field
-                        // Soft/weak keys use the "referent" field
-                        JavaThing key = entry.getField("key");
-                        if (key == null)
-                            key = entry.getField("referent");
-                        JavaObject valueReference = Models.getFieldObject(entry,
-                                "valueReference");
-                        JavaThing value = valueReference.getField("referent");
-                        if (key != null && value != null)
-                            builder.put(key, value);
-                    }
+            final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+            HashCommon.KeyValueVisitor visitor = new HashCommon.KeyValueVisitor() {
+                @Override
+                public void visit(JavaThing key, JavaThing value) {
+                    builder.put(key, value);
                 }
+            };
+
+            for (JavaObject segment : segments) {
+                List<JavaObject> table = Models.getFieldObjectArray(segment, "table",
+                        JavaObject.class);
+                if (table != null)
+                    HashCommon.walkHashTable(table, "key", "value", "next", visitor);
             }
             return builder.build();
         }
@@ -79,16 +74,16 @@ class GuavaCustConcHash extends AbstractMapModel {
 
     private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
 
-    private GuavaCustConcHash(Guava factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private JavaConcHash(OpenJDK factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
         super(factory);
         this.map = map;
     }
 
-    public static GuavaCustConcHash make(Guava factory, JavaObject chm) {
+    public static JavaConcHash make(OpenJDK factory, JavaObject chm) {
         List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
                 JavaObject.class);
         return segments == null ? null
-                : new GuavaCustConcHash(factory, Suppliers.memoize(new MapSupplier(segments)));
+                : new JavaConcHash(factory, Suppliers.memoize(new MapSupplier(segments)));
     }
 
     @Override

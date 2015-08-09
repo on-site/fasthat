@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -33,34 +33,49 @@
 package com.sun.tools.hat.internal.lang.jruby;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.AbstractScalarModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 
-public class JRubyString extends ScalarModel {
-    private final String value;
+public class JRubyString extends AbstractScalarModel {
+    private static class StringSupplier implements Supplier<String> {
+        private final byte[] bytes;
+        private final int offset;
+        private final int length;
 
-    private JRubyString(String value) {
-        this.value = value;
+        public StringSupplier(byte[] bytes, int offset, int length) {
+            this.bytes = bytes;
+            this.offset = offset;
+            this.length = length;
+        }
+
+        @Override
+        public String get() {
+            // All the world's a UTF-8....
+            return '"' + new String(bytes, offset, length, Charsets.UTF_8) + '"';
+        }
     }
 
-    public static JRubyString make(JavaObject obj) {
-        String value = getRubyStringValue(obj);
-        return value != null ? new JRubyString(value) : null;
+    private final Supplier<String> supplier;
+
+    private JRubyString(JRuby factory, byte[] bytes, int offset, int length) {
+        super(factory);
+        supplier = Suppliers.memoize(new StringSupplier(bytes, offset, length));
     }
 
-    private static String getRubyStringValue(JavaObject obj) {
+    public static JRubyString make(JRuby factory, JavaObject obj) {
         JavaObject value = Models.getFieldObject(obj, "value");
         if (value != null) {
             JavaValueArray bytes = Models.safeCast(value.getField("bytes"), JavaValueArray.class);
             JavaInt begin = Models.safeCast(value.getField("begin"), JavaInt.class);
             JavaInt realSize = Models.safeCast(value.getField("realSize"), JavaInt.class);
             if (bytes != null && begin != null && realSize != null) {
-                // All the world's a UTF-8....
-                return new String((byte[]) bytes.getElements(), begin.value,
-                        realSize.value, Charsets.UTF_8);
+                return new JRubyString(factory, (byte[]) bytes.getElements(),
+                        begin.value, realSize.value);
             }
         }
         return null;
@@ -68,6 +83,6 @@ public class JRubyString extends ScalarModel {
 
     @Override
     public String toString() {
-        return value;
+        return supplier.get();
     }
 }

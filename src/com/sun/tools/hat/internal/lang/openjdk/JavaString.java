@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2011, 2012, 2013 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,18 +30,19 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.openjdk;
 
-import java.util.Map;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.SimpleScalarModel;
+import com.sun.tools.hat.internal.model.JavaObject;
 
-import com.sun.tools.hat.internal.model.JavaThing;
+public class JavaString extends SimpleScalarModel {
+    private JavaString(OpenJDK factory, String value) {
+        super(factory, '"' + value + '"');
+    }
 
-/**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
- *
- * @author Chris K. Jester-Young
- */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+    public static JavaString make(OpenJDK factory, JavaObject obj) {
+        String value = Models.getStringValue(obj);
+        return value != null ? new JavaString(factory, value) : null;
+    }
 }

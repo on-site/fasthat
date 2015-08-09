@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,18 +30,33 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.lang.AbstractScalarModel;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.model.JavaDouble;
+import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * Model for Ruby flonums.
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public class JRubyFloat extends AbstractScalarModel {
+    private final double value;
+
+    private JRubyFloat(JRuby factory, double value) {
+        super(factory);
+        this.value = value;
+    }
+
+    public static JRubyFloat make(JRuby factory, JavaObject obj) {
+        JavaDouble value = Models.getFieldThing(obj, "value", JavaDouble.class);
+        return value == null ? null : new JRubyFloat(factory, value.value);
+    }
+
+    @Override
+    public String toString() {
+        return Double.toString(value);
+    }
 }

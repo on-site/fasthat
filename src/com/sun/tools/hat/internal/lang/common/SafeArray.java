@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,18 +30,42 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.common;
 
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collections;
 
+import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * A {@link JavaObjectArray} with all actual nulls replaced by null
+ * things.
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public class SafeArray {
+    public final JavaObjectArray array;
+    private final JavaThing nullThing;
+
+    public SafeArray(JavaObjectArray array, JavaThing nullThing) {
+        this.array = array;
+        this.nullThing = nullThing;
+    }
+
+    public JavaThing[] getElements() {
+        JavaThing[] elements = array.getElements();
+        Collections.replaceAll(Arrays.asList(elements), null, nullThing);
+        return elements;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof SafeArray && array.equals(((SafeArray) obj).array);
+    }
+
+    @Override
+    public int hashCode() {
+        return array.hashCode();
+    }
 }

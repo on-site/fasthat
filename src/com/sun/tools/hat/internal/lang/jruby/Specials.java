@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,37 +30,48 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.Singletons;
+import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaVector extends CollectionModel {
-    private final ImmutableList<JavaThing> items;
+/**
+ * Scalar models for special values in JRuby.
+ *
+ * @author Chris K. Jester-Young
+ */
+public final class Specials {
+    private static final Singletons.Key NIL = new Singletons.Key("nil");
+    private static final Singletons.Key FALSE = new Singletons.Key("false");
+    private static final Singletons.Key TRUE = new Singletons.Key("true");
+    private static final Singletons.Key NEVER = new Singletons.Key("<never>");
+    private static final Singletons.Key UNDEF = new Singletons.Key("<undef>");
 
-    private JavaVector(List<JavaThing> items) {
-        this.items = ImmutableList.copyOf(items);
+    /**
+     * Disables instantiation for static class.
+     */
+    private Specials() {}
+
+    public static Model makeNil(JRuby factory) {
+        return NIL.apply(factory);
     }
 
-    public static JavaVector make(JavaObject vec, String sizeField) {
-        JavaThing[] data = Models.getFieldThing(vec, "elementData",
-                JavaObjectArray.class).getElements();
-        JavaInt size = Models.getFieldThing(vec, sizeField, JavaInt.class);
-        return data == null || size == null ? null
-                : new JavaVector(Arrays.asList(data).subList(0, size.value));
+    public static Model makeBoolean(JRuby factory, JavaObject value) {
+        JavaInt flags = Models.getFieldThing(value, "flags", JavaInt.class);
+        return flags == null ? null
+                : (flags.value & 1) != 0 ? FALSE.apply(factory) : TRUE.apply(factory);
     }
 
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return items;
+    public static Model makeSpecial(JRuby factory, JavaObject value) {
+        JavaClass basic = factory.getBasicObjectClass();
+        if (value == basic.getStaticField("NEVER"))
+            return NEVER.apply(factory);
+        if (value == basic.getStaticField("UNDEF"))
+            return UNDEF.apply(factory);
+        return null;
     }
 }

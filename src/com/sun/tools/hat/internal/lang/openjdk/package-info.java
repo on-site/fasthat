@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2013 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,18 +30,8 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
-
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
-
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
- *
- * @author Chris K. Jester-Young
+ * Models for OpenJDK objects that share the same structure between
+ * OpenJDK versions.
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
-}
+package com.sun.tools.hat.internal.lang.openjdk;

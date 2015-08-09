@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -36,7 +36,7 @@ package com.sun.tools.hat.internal.lang;
  * Base interface that all language-specific models implement.
  *
  * <p>In the current design of language-specific models, there are three
- * generic types: scalars, lists, and maps, represented by the classes
+ * generic types: scalars, lists, and maps, represented by the interfaces
  * {@link ScalarModel}, {@link CollectionModel}, and {@link MapModel}. In order to
  * allow users of the class not to have to do a bunch of {@code instanceof}
  * tests, a visitor pattern is used instead.
@@ -44,6 +44,13 @@ package com.sun.tools.hat.internal.lang;
  * @author Chris K. Jester-Young
  */
 public interface Model {
+    /**
+     * Returns the factory that created this model.
+     *
+     * @return the factory that created this model
+     */
+    ModelFactory getFactory();
+
     /**
      * Sends this model to the given visitor.
      *

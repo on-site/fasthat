@@ -32,16 +32,20 @@
 
 package com.sun.tools.hat.internal.lang;
 
-import java.util.Map;
-
-import com.sun.tools.hat.internal.model.JavaThing;
-
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * An object model models a single object, which has a class, optionally
+ * an eigenclass, and a map of properties (fields/instance variables).
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public abstract class AbstractObjectModel extends AbstractModel
+        implements ObjectModel {
+    public AbstractObjectModel(ModelFactory factory) {
+        super(factory);
+    }
+
+    @Override
+    public void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
 }

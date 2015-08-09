@@ -35,51 +35,68 @@ package com.sun.tools.hat.internal.lang.jruby;
 import java.util.Collection;
 import java.util.List;
 
-import com.google.common.base.Function;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SafeArray;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JRubyArray extends CollectionModel {
-    private enum GetObjectArrayElements implements Function<JavaObjectArray,
+public class JRubyArray extends AbstractCollectionModel {
+    private static class GetSafeArrayElements extends CacheLoader<SafeArray,
             ImmutableList<JavaThing>> {
-        INSTANCE;
-
         @Override
-        public ImmutableList<JavaThing> apply(JavaObjectArray arr) {
+        public ImmutableList<JavaThing> load(SafeArray arr) {
             return ImmutableList.copyOf(arr.getElements());
         }
     }
 
-    private static final LoadingCache<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
-            = CacheBuilder.newBuilder().softValues().build(
-                    CacheLoader.from(GetObjectArrayElements.INSTANCE));
+    private static final LoadingCache<SafeArray, ImmutableList<JavaThing>> ELEMENT_CACHE
+            = CacheBuilder.newBuilder().softValues().build(new GetSafeArrayElements());
 
-    private final Collection<JavaThing> value;
+    private static class CollectionSupplier implements Supplier<List<JavaThing>> {
+        private final SafeArray arr;
+        private final int begin;
+        private final int length;
 
-    private JRubyArray(Collection<JavaThing> value) {
+        public CollectionSupplier(SafeArray arr, int begin, int length) {
+            this.arr = arr;
+            this.begin = begin;
+            this.length = length;
+        }
+
+        @Override
+        public List<JavaThing> get() {
+            return ELEMENT_CACHE.getUnchecked(arr).subList(begin, begin + length);
+        }
+    }
+
+    private final Supplier<List<JavaThing>> value;
+
+    private JRubyArray(JRuby factory, Supplier<List<JavaThing>> value) {
+        super(factory);
         this.value = value;
     }
 
-    public static JRubyArray make(JavaObject obj) {
+    public static JRubyArray make(JRuby factory, JavaObject obj) {
         JavaObjectArray arr = Models.getFieldThing(obj, "values", JavaObjectArray.class);
         JavaInt begin = Models.getFieldThing(obj, "begin", JavaInt.class);
         JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
         if (arr == null || begin == null || length == null)
             return null;
-        List<JavaThing> elements = ELEMENT_CACHE.getUnchecked(arr);
-        return new JRubyArray(elements.subList(begin.value, begin.value + length.value));
+        return new JRubyArray(factory, Suppliers.memoize(new CollectionSupplier(
+                new SafeArray(arr, factory.getNullThing()), begin.value, length.value)));
     }
 
     @Override
     public Collection<JavaThing> getCollection() {
-        return value;
+        return value.get();
     }
 }

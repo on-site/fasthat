@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,42 +30,22 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang;
 
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.MapModel;
-import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.common.HashCommon;
-import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
-
-public class JavaHash extends MapModel {
-    private final ImmutableMap<JavaThing, JavaThing> map;
-
-    private JavaHash(ImmutableMap<JavaThing, JavaThing> map) {
-        this.map = map;
-    }
-
-    public static JavaHash make(JavaObject hash) {
-        List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
-        if (table == null)
-            return null;
-        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-        HashCommon.walkHashTable(table, "key", "value", "next",
-                new HashCommon.KeyValueVisitor() {
-            @Override
-            public void visit(JavaThing key, JavaThing value) {
-                builder.put(key, value);
-            }
-        });
-        return new JavaHash(builder.build());
+/**
+ * A class model models a single class, which has superclasses, properties
+ * (fields/instance variables), and methods.
+ *
+ * @author Chris K. Jester-Young
+ */
+public abstract class AbstractClassModel extends AbstractModel
+        implements ClassModel {
+    public AbstractClassModel(ModelFactory factory) {
+        super(factory);
     }
 
     @Override
-    public Map<JavaThing, JavaThing> getMap() {
-        return map;
+    public void visit(ModelVisitor visitor) {
+        visitor.visit(this);
     }
 }

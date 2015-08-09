@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,16 +32,54 @@
 
 package com.sun.tools.hat.internal.lang;
 
-import java.util.Map;
+import java.util.Collection;
 
-import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
- * A map model models multiple quantities in a key-value style. Map model
- * objects should provide a {@link #getMap} method.
+ * A class model models a single class, which has superclasses, properties
+ * (fields/instance variables), and methods.
  *
  * @author Chris K. Jester-Young
  */
-public interface MapModel extends Model {
-    Map<JavaThing, JavaThing> getMap();
+public interface ClassModel extends Model {
+    /**
+     * Returns this model's associated class object.
+     *
+     * @return the class object for this class
+     */
+    JavaObject getClassObject();
+
+    /**
+     * Returns the fully-qualified name of this class. Same concept as
+     * {@link Class#getName}, though not necessarily the same details.
+     *
+     * @return the fully-qualified name of this class
+     */
+    String getName();
+
+    /**
+     * Returns the simple name of this class. Same concept as
+     * {@link Class#getSimpleName}, though not necessarily the same
+     * details.
+     *
+     * @return the simple name of this class
+     */
+    String getSimpleName();
+
+    /**
+     * Returns the superclasses of this class. In Java, this includes
+     * interfaces. In Ruby, this includes included modules.
+     *
+     * @return superclasses of this class
+     */
+    Collection<ClassModel> getSuperclasses();
+
+    /**
+     * Returns the property names of this class. In Java, this refers
+     * to fields, and in Ruby, this refers to instance variables.
+     *
+     * @return the property names of this class
+     */
+    Collection<String> getPropertyNames();
 }

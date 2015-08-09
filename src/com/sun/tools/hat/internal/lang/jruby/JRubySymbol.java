@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,26 +30,19 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.jruby;
 
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 
-class JavaString extends ScalarModel {
-    private final String value;
-
-    private JavaString(String value) {
-        this.value = value;
+public class JRubySymbol extends SimpleScalarModel {
+    private JRubySymbol(JRuby factory, String str) {
+        super(factory, ':' + str);
     }
 
-    public static JavaString make(JavaObject obj) {
-        String value = Models.getStringValue(obj);
-        return value != null ? new JavaString(value) : null;
-    }
-
-    @Override
-    public String toString() {
-        return value;
+    public static JRubySymbol make(JRuby factory, JavaObject obj) {
+        String str = Models.getFieldString(obj, "symbol");
+        return str == null ? null : new JRubySymbol(factory, str);
     }
 }

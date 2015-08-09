@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,31 +30,22 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import com.sun.tools.hat.internal.lang.CollectionModel;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
-
-class JavaArray extends CollectionModel {
-    private final List<JavaThing> items;
-
-    public JavaArray(JavaObjectArray array) {
-        /*
-         * JavaObjectArray.getElements() returns null elements as null,
-         * not as Snapshot.getNullThing(). So, without doing a lot of
-         * extra work, it's not possible to just use ImmutableList.
-         */
-        items = Collections.unmodifiableList(Arrays.asList(array.getElements()));
+/**
+ * A collection model models multiple quantities. Collection model objects
+ * should provide a {@link #getCollection} method.
+ *
+ * @author Chris K. Jester-Young
+ */
+public abstract class AbstractCollectionModel extends AbstractModel
+        implements CollectionModel {
+    public AbstractCollectionModel(ModelFactory factory) {
+        super(factory);
     }
 
     @Override
-    public Collection<JavaThing> getCollection() {
-        return items;
+    public void visit(ModelVisitor visitor) {
+        visitor.visit(this);
     }
 }

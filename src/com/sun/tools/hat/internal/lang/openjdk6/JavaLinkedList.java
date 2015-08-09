@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -34,35 +34,50 @@ package com.sun.tools.hat.internal.lang.openjdk6;
 
 import java.util.Collection;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaLinkedList extends CollectionModel {
-    private final ImmutableList<JavaThing> items;
+class JavaLinkedList extends AbstractCollectionModel {
+    private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
+        private final JavaObject header;
 
-    private JavaLinkedList(ImmutableList<JavaThing> items) {
+        public ListSupplier(JavaObject header) {
+            this.header = header;
+        }
+
+        @Override
+        public ImmutableList<JavaThing> get() {
+            ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
+            for (JavaObject entry = Models.getFieldObject(header, "next");
+                    entry != header; entry = Models.getFieldObject(entry, "next")) {
+                if (entry == null)
+                    return null;
+                builder.add(entry.getField("element"));
+            }
+            return builder.build();
+        }
+    }
+
+    private final Supplier<ImmutableList<JavaThing>> items;
+
+    private JavaLinkedList(OpenJDK6 factory, Supplier<ImmutableList<JavaThing>> items) {
+        super(factory);
         this.items = items;
     }
 
-    public static JavaLinkedList make(JavaObject list) {
+    public static JavaLinkedList make(OpenJDK6 factory, JavaObject list) {
         JavaObject header = Models.getFieldObject(list, "header");
-        if (header == null)
-            return null;
-        ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
-        for (JavaObject entry = Models.getFieldObject(header, "next");
-                entry != header; entry = Models.getFieldObject(entry, "next")) {
-            if (entry == null)
-                return null;
-            builder.add(entry.getField("element"));
-        }
-        return new JavaLinkedList(builder.build());
+        return header == null ? null
+                : new JavaLinkedList(factory, Suppliers.memoize(new ListSupplier(header)));
     }
 
     @Override
     public Collection<JavaThing> getCollection() {
-        return items;
+        return items.get();
     }
 }

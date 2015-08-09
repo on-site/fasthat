@@ -30,52 +30,58 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.guava;
+package com.sun.tools.hat.internal.lang.openjdk;
 
-import com.sun.tools.hat.internal.lang.Model;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
+import com.sun.tools.hat.internal.lang.AbstractMapModel;
 import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
-import com.sun.tools.hat.internal.model.Snapshot;
 
-public class Guava implements ModelFactory {
-    public enum Factory implements ModelFactoryFactory {
-        INSTANCE;
+public class JavaHash extends AbstractMapModel {
+    private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
+        private final List<JavaObject> table;
 
-        @Override
-        public boolean isSupported(Snapshot snapshot) {
-            return Models.hasClass(snapshot, CLASSES);
+        public MapSupplier(List<JavaObject> table) {
+            this.table = table;
         }
 
         @Override
-        public ModelFactory newFactory(Snapshot snapshot) {
-            return new Guava(snapshot);
+        public ImmutableMap<JavaThing, JavaThing> get() {
+            final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+            HashCommon.walkHashTable(table, "key", "value", "next",
+                    new HashCommon.KeyValueVisitor() {
+                @Override
+                public void visit(JavaThing key, JavaThing value) {
+                    builder.put(key, value);
+                }
+            });
+            return builder.build();
         }
     }
 
-    private static final String[] CLASSES = {
-        "com.google.common.collect.MapMakerInternalMap",
-        "com.google.common.collect.CustomConcurrentHashMap"
-    };
+    private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
 
-    private final JavaClass custConcHashClass;
+    private JavaHash(ModelFactory factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+        super(factory);
+        this.map = map;
+    }
 
-    public Guava(Snapshot snapshot) {
-        custConcHashClass = Models.grabClass(snapshot, CLASSES);
+    public static JavaHash make(ModelFactory factory, JavaObject hash) {
+        List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
+        return table == null ? null
+                : new JavaHash(factory, Suppliers.memoize(new MapSupplier(table)));
     }
 
     @Override
-    public Model newModel(JavaThing thing) {
-        JavaObject obj = Models.safeCast(thing, JavaObject.class);
-        if (obj != null) {
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz == custConcHashClass)
-                return GuavaCustConcHash.make(this, obj);
-        }
-        return null;
+    public Map<JavaThing, JavaThing> getMap() {
+        return map.get();
     }
 }
