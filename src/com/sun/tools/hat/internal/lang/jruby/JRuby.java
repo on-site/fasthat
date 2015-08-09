@@ -47,6 +47,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 public abstract class JRuby implements ModelFactory {
     private final JavaThing nullThing;
     private final JavaClass constantsClass;
+    private final JavaClass metaclassClass;
     private final JavaClass classClass;
     private final JavaClass moduleClass;
     private final JavaClass moduleWrapperClass;
@@ -64,6 +65,7 @@ public abstract class JRuby implements ModelFactory {
     public JRuby(Snapshot snapshot) {
         nullThing = snapshot.getNullThing();
         constantsClass = Models.grabClass(snapshot, "org.jruby.runtime.Constants");
+        metaclassClass = Models.grabClass(snapshot, "org.jruby.MetaClass");
         classClass = Models.grabClass(snapshot, "org.jruby.RubyClass");
         moduleClass = Models.grabClass(snapshot, "org.jruby.RubyModule");
         moduleWrapperClass = Models.grabClass(snapshot, "org.jruby.IncludedModuleWrapper");
@@ -85,6 +87,10 @@ public abstract class JRuby implements ModelFactory {
 
     public JavaClass getConstantsClass() {
         return constantsClass;
+    }
+
+    public JavaClass getMetaclassClass() {
+        return metaclassClass;
     }
 
     public JavaClass getClassClass() {

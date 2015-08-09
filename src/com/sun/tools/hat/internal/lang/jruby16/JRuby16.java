@@ -87,7 +87,7 @@ public class JRuby16 extends JRuby {
         if (obj != null) {
             // XXX The factory dispatch mechanism needs real improvement.
             JavaClass clazz = obj.getClazz();
-            if (clazz == getClassClass() || clazz == getModuleClass())
+            if (clazz == getMetaclassClass() || clazz == getClassClass() || clazz == getModuleClass())
                 return JRubyClass.make(this, obj);
             else if (clazz == getStringClass())
                 return JRubyString.make(this, obj);
