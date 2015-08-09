@@ -73,8 +73,8 @@ class InstancesQuery extends QueryHandler {
             instancesOf = referee ? "New referees" : "New instances";
         else
             instancesOf = referee ? "Referees" : "Instances";
-        startHtml(String.format("%s of %s%s", instancesOf, clazz.getName(),
-                includeSubclasses ? " (including subclasses)" : ""));
+        startHtml("%s of %s%s", instancesOf, clazz.getName(),
+                includeSubclasses ? " (including subclasses)" : "");
         if (referrers.isEmpty()) {
             out.print("<strong>");
             printClass(clazz);

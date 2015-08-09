@@ -153,6 +153,10 @@ abstract class QueryHandler implements Runnable {
         println(msg);
     }
 
+    protected void error(String format, Object... args) {
+        error(String.format(format, args));
+    }
+
     protected void printAnchorStart() {
         out.print("<a href=\"");
         out.print(urlStart);

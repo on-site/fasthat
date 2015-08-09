@@ -49,7 +49,7 @@ class ReachableQuery extends QueryHandler {
 
     @Override
     public void run() {
-        startHtml("Objects Reachable From " + query);
+        startHtml("Objects Reachable From %s", query);
         long id = parseHex(query);
         JavaHeapObject root = snapshot.findThing(id);
         ReachableObjects ro = new ReachableObjects(root,

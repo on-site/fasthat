@@ -52,7 +52,7 @@ class ObjectQuery extends ClassQuery {
 
     @Override
     public void run() {
-        startHtml("Object at " + query);
+        startHtml("Object at %s", query);
         JavaHeapObject thing = snapshot.findThing(query);
         //
         // In the following, I suppose we really should use a visitor
@@ -61,7 +61,7 @@ class ObjectQuery extends ClassQuery {
         // unrecognized type is to do something reasonable.
         //
         if (thing == null) {
-            error("object not found");
+            error("object not found: %s", query);
         } else if (thing instanceof JavaClass) {
             printFullClass((JavaClass) thing);
         } else if (thing instanceof JavaValueArray) {
