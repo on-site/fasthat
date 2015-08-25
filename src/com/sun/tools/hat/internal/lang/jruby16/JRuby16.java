@@ -33,23 +33,7 @@
 
 package com.sun.tools.hat.internal.lang.jruby16;
 
-import com.sun.tools.hat.internal.lang.Model;
-import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.LanguageRuntime;
-import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.jruby.JRuby;
-import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
-import com.sun.tools.hat.internal.lang.jruby.JRubyClass;
-import com.sun.tools.hat.internal.lang.jruby.JRubyFixnum;
-import com.sun.tools.hat.internal.lang.jruby.JRubyFloat;
-import com.sun.tools.hat.internal.lang.jruby.JRubyObject;
-import com.sun.tools.hat.internal.lang.jruby.JRubyString;
-import com.sun.tools.hat.internal.lang.jruby.JRubySymbol;
-import com.sun.tools.hat.internal.lang.jruby.Specials;
-import com.sun.tools.hat.internal.lang.openjdk.JavaHash;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
@@ -60,38 +44,5 @@ import com.sun.tools.hat.internal.model.Snapshot;
 class JRuby16 extends JRuby {
     JRuby16(Snapshot snapshot) {
         super(snapshot);
-    }
-
-    @Override
-    public Model newModel(JavaThing thing) {
-        JavaObject obj = Models.safeCast(thing, JavaObject.class);
-        if (obj != null) {
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz == getMetaclassClass() || clazz == getClassClass() || clazz == getModuleClass())
-                return JRubyClass.make(this, obj);
-            else if (clazz == getStringClass())
-                return JRubyString.make(this, obj);
-            else if (clazz == getSymbolClass())
-                return JRubySymbol.make(this, obj);
-            else if (clazz == getNilClass())
-                return Specials.makeNil(this);
-            else if (clazz == getBooleanClass())
-                return Specials.makeBoolean(this, obj);
-            else if (clazz == getBasicObjectClass())
-                return Specials.makeSpecial(this, obj);
-            else if (clazz == getFixnumClass())
-                return JRubyFixnum.make(this, obj);
-            else if (clazz == getFloatClass())
-                return JRubyFloat.make(this, obj);
-            else if (clazz == getObjectClass())
-                return new JRubyObject(this, obj);
-            else if (clazz == getArrayClass())
-                return JRubyArray.make(this, obj);
-            else if (clazz == getHashClass())
-                return JavaHash.make(this, obj);
-            // TODO Implement other JRuby types.
-        }
-        return null;
     }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -39,49 +40,21 @@ import java.util.Deque;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.sun.tools.hat.internal.lang.AbstractClassModel;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.ScalarModel;
-import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
  * Class model for JRuby. Mostly version-independent except for field
  * name differences.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 public class JRubyClass extends AbstractClassModel implements ScalarModel {
-    private static class ClassCacheLoader extends CacheLoader<JavaObject, JRubyClass> {
-        private final JRuby factory;
-
-        public ClassCacheLoader(JRuby factory) {
-            this.factory = factory;
-        }
-
-        @Override
-        public JRubyClass load(JavaObject classObject) {
-            return new JRubyClass(factory, classObject);
-        }
-    }
-
-    private static class CacheCacheLoader extends CacheLoader<JRuby, LoadingCache<JavaObject, JRubyClass>> {
-        @Override
-        public LoadingCache<JavaObject, JRubyClass> load(JRuby factory) {
-            return CacheBuilder.newBuilder().softValues().build(
-                    new ClassCacheLoader(factory));
-        }
-    }
-
-    private static final LoadingCache<JRuby, LoadingCache<JavaObject, JRubyClass>> CACHE
-            = CacheBuilder.newBuilder().weakKeys().build(new CacheCacheLoader());
-
     private static final String[] BASE_NAME_FIELDS = {"baseName", "classId"};
     private static final String[] CACHED_NAME_FIELDS = {"cachedName",
         "calculatedName", "fullName"};
@@ -93,15 +66,15 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     private final String cachedNameField;
     private final String anonymousNameField;
     private final Supplier<String> nameSupplier
-            = Suppliers.memoize(new NameSupplier());
+            = Suppliers.memoize(this::getNameImpl);
     private final Supplier<String> anonymousNameSupplier
-            = Suppliers.memoize(new AnonymousNameSupplier());
+            = Suppliers.memoize(this::getAnonymousNameImpl);
     private final Supplier<JRubyClass> realClassSupplier
-            = Suppliers.memoize(new RealClassSupplier());
+            = Suppliers.memoize(this::getRealClassImpl);
     private final Supplier<ImmutableList<ClassModel>> superclassesSupplier
-            = Suppliers.memoize(new SuperclassesSupplier());
+            = Suppliers.memoize(this::getSuperclassesImpl);
     private final Supplier<ImmutableList<String>> propertyNamesSupplier
-            = Suppliers.memoize(new PropertyNamesSupplier());
+            = Suppliers.memoize(this::getPropertyNamesImpl);
 
     protected JRubyClass(JRuby factory, JavaObject classObject) {
         super(factory);
@@ -109,17 +82,6 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         baseNameField = Models.findField(classObject, BASE_NAME_FIELDS);
         cachedNameField = Models.findField(classObject, CACHED_NAME_FIELDS);
         anonymousNameField = Models.findField(classObject, ANONYMOUS_NAME_FIELDS);
-    }
-
-    public static JRubyClass make(JRuby factory, JavaObject classObject) {
-        return Models.findField(classObject, BASE_NAME_FIELDS) != null
-                && Models.findField(classObject, CACHED_NAME_FIELDS) != null
-                && Models.findField(classObject, ANONYMOUS_NAME_FIELDS) != null
-                ? CACHE.getUnchecked(factory).getUnchecked(classObject) : null;
-    }
-
-    protected LoadingCache<JavaObject, ? extends JRubyClass> getClassCache() {
-        return CACHE.getUnchecked((JRuby) getFactory());
     }
 
     private boolean isAnonymous() {
@@ -133,31 +95,25 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
 
     private boolean isClass() {
         JRuby factory = (JRuby) getFactory();
-        return classObject.getClazz() == factory.getClassClass();
+        return factory.isClassClass(classObject.getClazz());
     }
 
-    private class NameSupplier implements Supplier<String> {
-        // Based on RubyModule.calculateName()
-        @Override
-        public String get() {
-            Deque<String> names = new ArrayDeque<>();
-            LoadingCache<JavaObject, ? extends JRubyClass> cache = getClassCache();
-            JavaObject cls = classObject;
-            do {
-                String name = Models.getFieldString(cls, baseNameField);
-                if (name == null)
-                    name = cache.getUnchecked(cls).getAnonymousName();
-                names.addFirst(name);
-                cls = Models.getFieldObject(cls, "parent");
-            } while (cls != null && cls != getObjectClassObject());
-            return Joiner.on("::").join(names);
-        }
+    // Based on RubyModule.calculateName()
+    private String getNameImpl() {
+        JavaObject eigenclass = Models.getFieldObject(classObject, "metaClass");
+        JavaObject runtime = Models.getFieldObject(eigenclass, "runtime");
+        JavaObject objectClassObject = Models.getFieldObject(runtime, "objectClass");
+        JRuby factory = (JRuby) getFactory();
 
-        private JavaObject getObjectClassObject() {
-            JavaObject eigenclass = Models.getFieldObject(classObject, "metaClass");
-            JavaObject runtime = Models.getFieldObject(eigenclass, "runtime");
-            return Models.getFieldObject(runtime, "objectClass");
+        Deque<String> names = new ArrayDeque<>();
+        for (JavaObject cls = classObject; cls != null && cls != objectClassObject;
+             cls = Models.getFieldObject(cls, "parent")) {
+            String name = Models.getFieldString(cls, baseNameField);
+            if (name == null)
+                name = factory.lookupClass(cls).getAnonymousName();
+            names.addFirst(name);
         }
+        return Joiner.on("::").join(names);
     }
 
     @Override
@@ -173,13 +129,10 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
                 : Models.getFieldString(classObject, baseNameField);
     }
 
-    private class AnonymousNameSupplier implements Supplier<String> {
-        // Based on RubyModule.calculateAnonymousName()
-        @Override
-        public String get() {
-            return String.format("#<%s:%#x>", isClass() ? "Class" : "Module",
-                    classObject.getId());
-        }
+    // Based on RubyModule.calculateAnonymousName()
+    private String getAnonymousNameImpl() {
+        return String.format("#<%s:%#x>", isClass() ? "Class" : "Module",
+                classObject.getId());
     }
 
     public String getAnonymousName() {
@@ -187,43 +140,35 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
                 anonymousNameSupplier);
     }
 
-    private class RealClassSupplier implements Supplier<JRubyClass> {
-        // Based on MetaClass.getRealClass()
-        @Override
-        public JRubyClass get() {
-            JRuby factory = (JRuby) getFactory();
-            JavaClass classClass = factory.getClassClass();
-            JavaObject cls = classObject;
-            while (cls != null && cls.getClazz() != classClass) {
-                cls = Models.getFieldObject(cls, "superClass");
-            }
-            return getClassCache().getUnchecked(cls);
+    // Based on MetaClass.getRealClass()
+    private JRubyClass getRealClassImpl() {
+        JRuby factory = (JRuby) getFactory();
+        JavaObject cls = classObject;
+        while (cls != null && factory.isClassClass(cls.getClazz())) {
+            cls = Models.getFieldObject(cls, "superClass");
         }
+        return factory.lookupClass(cls);
     }
 
     public JRubyClass getRealClass() {
         return realClassSupplier.get();
     }
 
-    private class SuperclassesSupplier implements Supplier<ImmutableList<ClassModel>> {
-        @Override
-        public ImmutableList<ClassModel> get() {
-            ImmutableList.Builder<ClassModel> builder = ImmutableList.builder();
-            LoadingCache<JavaObject, ? extends JRubyClass> cache = getClassCache();
-            JavaObject cls = Models.getFieldObject(classObject, "superClass");
-            while (cls != null) {
-                JRuby factory = (JRuby) getFactory();
-                if (cls.getClazz() == factory.getClassClass()) {
-                    builder.add(cache.getUnchecked(cls));
-                    break;
-                } else if (cls.getClazz() == factory.getModuleWrapperClass()) {
-                    JavaObject module = Models.getFieldObject(cls, "delegate");
-                    builder.add(cache.getUnchecked(module));
-                }
-                cls = Models.getFieldObject(cls, "superClass");
+    private ImmutableList<ClassModel> getSuperclassesImpl() {
+        ImmutableList.Builder<ClassModel> builder = ImmutableList.builder();
+        JavaObject cls = Models.getFieldObject(classObject, "superClass");
+        while (cls != null) {
+            JRuby factory = (JRuby) getFactory();
+            if (factory.isClassClass(cls.getClazz())) {
+                builder.add(factory.lookupClass(cls));
+                break;
+            } else if (factory.isModuleWrapperClass(cls.getClazz())) {
+                JavaObject module = Models.getFieldObject(cls, "delegate");
+                builder.add(factory.lookupClass(module));
             }
-            return builder.build().reverse();
+            cls = Models.getFieldObject(cls, "superClass");
         }
+        return builder.build().reverse();
     }
 
     @Override
@@ -231,13 +176,10 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         return superclassesSupplier.get();
     }
 
-    private class PropertyNamesSupplier implements Supplier<ImmutableList<String>> {
-        @Override
-        public ImmutableList<String> get() {
-            return ImmutableList.copyOf(Lists.transform(
-                    Models.getFieldObjectArray(classObject, "variableNames", JavaObject.class),
-                    Models.GetStringValue.INSTANCE));
-        }
+    protected ImmutableList<String> getPropertyNamesImpl() {
+        return ImmutableList.copyOf(Lists.transform(
+                Models.getFieldObjectArray(getClassObject(), "variableNames", JavaObject.class),
+                Models.GetStringValue.INSTANCE));
     }
 
     @Override

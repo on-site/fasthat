@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -56,13 +57,7 @@ public class JavaHash extends AbstractMapModel {
         @Override
         public ImmutableMap<JavaThing, JavaThing> get() {
             final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-            HashCommon.walkHashTable(table, "key", "value", "next",
-                    new HashCommon.KeyValueVisitor() {
-                @Override
-                public void visit(JavaThing key, JavaThing value) {
-                    builder.put(key, value);
-                }
-            });
+            HashCommon.walkHashTable(table, "key", "value", "next", builder::put);
             return builder.build();
         }
     }

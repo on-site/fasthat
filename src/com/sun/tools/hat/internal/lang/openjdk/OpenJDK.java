@@ -33,11 +33,20 @@
 
 package com.sun.tools.hat.internal.lang.openjdk;
 
+import com.google.common.collect.ImmutableMap;
+import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.model.JavaValueArray;
 import com.sun.tools.hat.internal.model.Snapshot;
+
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Model factory for OpenJDK.
@@ -47,12 +56,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 public abstract class OpenJDK implements ModelFactory {
     private final JavaThing nullThing;
     private final JavaClass versionClass;
-    private final JavaClass concHashMapClass;
-    private final JavaClass hashMapClass;
-    private final JavaClass hashtableClass;
-    private final JavaClass arrayListClass;
-    private final JavaClass vectorClass;
-    private final JavaClass linkedListClass;
+    private final Map<JavaClass, Function<JavaObject, Model>> dispatchMap;
 
     public static boolean checkVersion(Snapshot snapshot, String prefix) {
         JavaClass version = snapshot.findClass("sun.misc.Version");
@@ -62,46 +66,59 @@ public abstract class OpenJDK implements ModelFactory {
     }
 
     public OpenJDK(Snapshot snapshot) {
+        Function<String, JavaClass> lookup = name -> Models.grabClass(snapshot, name);
         nullThing = snapshot.getNullThing();
-        versionClass = Models.grabClass(snapshot, "sun.misc.Version");
-        concHashMapClass = Models.grabClass(snapshot, "java.util.concurrent.ConcurrentHashMap");
-        hashMapClass = Models.grabClass(snapshot, "java.util.HashMap");
-        hashtableClass = Models.grabClass(snapshot, "java.util.Hashtable");
-        arrayListClass = Models.grabClass(snapshot, "java.util.ArrayList");
-        vectorClass = Models.grabClass(snapshot, "java.util.Vector");
-        linkedListClass = Models.grabClass(snapshot, "java.util.LinkedList");
+        versionClass = lookup.apply("sun.misc.Version");
+
+        dispatchMap = new ImmutableMap.Builder<JavaClass, Function<JavaObject, Model>>()
+                .put(lookup.apply("java.lang.String"), this::makeString)
+                .put(lookup.apply("java.util.concurrent.ConcurrentHashMap"), this::makeConcurrentHash)
+                .put(lookup.apply("java.util.HashMap"), this::makeHash)
+                .put(lookup.apply("java.util.Hashtable"), this::makeHash)
+                .put(lookup.apply("java.util.ArrayList"), obj -> makeVector(obj, "size"))
+                .put(lookup.apply("java.util.Vector"), obj -> makeVector(obj, "elementCount"))
+                .put(lookup.apply("java.util.LinkedList"), this::makeLinkedList)
+                 // TODO Implement all the standard collection classes.
+                .build();
     }
+
+    @Override
+    public Map<JavaClass, Function<JavaObject, Model>> getDispatchMap() {
+        return dispatchMap;
+    }
+
+    @Override
+    public Model newModel(JavaThing thing) {
+        Model result = ModelFactory.super.newModel(thing);
+        if (result != null)
+            return result;
+        if (thing instanceof JavaObjectArray)
+            return new JavaArray(this, (JavaObjectArray) thing);
+        if (thing instanceof JavaValueArray)
+            return new JavaPrimArray(this, (JavaValueArray) thing);
+        return null;
+    }
+
+    protected JavaString makeString(JavaObject obj) {
+        return JavaString.make(this, obj);
+    }
+
+    protected JavaConcHash makeConcurrentHash(JavaObject obj) {
+        return JavaConcHash.make(this, obj);
+    }
+
+    protected JavaHash makeHash(JavaObject obj) {
+        return JavaHash.make(this, obj);
+    }
+
+    protected JavaVector makeVector(JavaObject obj, String sizeField) {
+        return JavaVector.make(this, obj, sizeField);
+    }
+
+    protected abstract CollectionModel makeLinkedList(JavaObject obj);
 
     public JavaThing getNullThing() {
         return nullThing;
-    }
-
-    public JavaClass getVersionClass() {
-        return versionClass;
-    }
-
-    public JavaClass getConcHashMapClass() {
-        return concHashMapClass;
-    }
-
-    public JavaClass getHashMapClass() {
-        return hashMapClass;
-    }
-
-    public JavaClass getHashtableClass() {
-        return hashtableClass;
-    }
-
-    public JavaClass getArrayListClass() {
-        return arrayListClass;
-    }
-
-    public JavaClass getVectorClass() {
-        return vectorClass;
-    }
-
-    public JavaClass getLinkedListClass() {
-        return linkedListClass;
     }
 
     @Override

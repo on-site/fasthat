@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2014 On-Site.com.
+ * Copyright © 2011, 2012, 2014 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -42,60 +43,60 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.ClassModel;
+import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.AbstractObjectModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 public class JRubyObject extends AbstractObjectModel {
-    private static class PropertiesSupplier implements Supplier<ImmutableMap<String, JavaThing>> {
-        private final JavaObject obj;
-        private final ClassModel rubyClass;
-
-        public PropertiesSupplier(JavaObject obj, ClassModel rubyClass) {
-            this.obj = obj;
-            this.rubyClass = rubyClass;
+    private static ImmutableMap<String, JavaThing> getProperties(JRuby factory, JavaObject obj) {
+        Collection<String> names = getClassModel(factory, obj).getPropertyNames();
+        if (names.isEmpty())
+            return ImmutableMap.of();
+        List<JavaThing> values = Models.getFieldObjectArray(obj, "varTable", JavaThing.class);
+        if (values == null)
+            values = Collections.emptyList();
+        ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
+        Iterator<JavaThing> iter = values.iterator();
+        for (String name : names) {
+            if (!iter.hasNext())
+                break;
+            JavaThing thing = iter.next();
+            if (thing != null)
+                builder.put(name, thing);
         }
-
-        @Override
-        public ImmutableMap<String, JavaThing> get() {
-            Collection<String> names = rubyClass.getPropertyNames();
-            if (names.isEmpty())
-                return ImmutableMap.of();
-            List<JavaThing> values = Models.getFieldObjectArray(obj, "varTable", JavaThing.class);
-            if (values == null)
-                values = Collections.emptyList();
-            ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
-            Iterator<JavaThing> iter = values.iterator();
-            for (String name : names) {
-                if (!iter.hasNext())
-                    break;
-                JavaThing thing = iter.next();
-                if (thing != null)
-                    builder.put(name, thing);
-            }
-            return builder.build();
-        }
+        return builder.build();
     }
 
     private final JavaObject obj;
     private final Supplier<ImmutableMap<String, JavaThing>> properties;
 
-    public JRubyObject(JRuby factory, JavaObject obj) {
+    protected JRubyObject(JRuby factory, JavaObject obj, Supplier<ImmutableMap<String, JavaThing>> supplier) {
         super(factory);
         this.obj = obj;
-        this.properties = Suppliers.memoize(new PropertiesSupplier(obj, getClassModel()));
+        this.properties = Suppliers.memoize(supplier);
+    }
+
+    public JRubyObject(JRuby factory, JavaObject obj) {
+        this(factory, obj, () -> getProperties(factory, obj));
+    }
+
+    private static JRubyClass getClassModel(ModelFactory factory, JavaObject obj) {
+        return getEigenclassModel(factory, obj).getRealClass();
     }
 
     @Override
     public JRubyClass getClassModel() {
-        return getEigenclassModel().getRealClass();
+        return getClassModel(getFactory(), obj);
     }
 
+    private static JRubyClass getEigenclassModel(ModelFactory factory, JavaObject obj) {
+        return (JRubyClass) factory.newModel(Models.getFieldObject(obj, "metaClass"));
+    }
     @Override
     public JRubyClass getEigenclassModel() {
-        return (JRubyClass) getFactory().newModel(
-                Models.getFieldObject(obj, "metaClass"));
+        return getEigenclassModel(getFactory(), obj);
     }
 
     @Override

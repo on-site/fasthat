@@ -33,14 +33,19 @@
 
 package com.sun.tools.hat.internal.lang.guava;
 
+import com.google.common.collect.ImmutableMap;
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.LanguageRuntime;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
+
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Model factory for Guava objects.
@@ -48,21 +53,16 @@ import com.sun.tools.hat.internal.model.Snapshot;
  * @author Chris Jester-Young
  */
 class Guava implements ModelFactory {
-    private final JavaClass custConcHashClass;
+    private final Map<JavaClass, Function<JavaObject, Model>> dispatchMap;
 
     public Guava(Snapshot snapshot) {
-        custConcHashClass = Models.grabClass(snapshot, GuavaRuntime.CLASSES);
+        dispatchMap = ImmutableMap.of(
+                Models.grabClass(snapshot, GuavaRuntime.CLASSES),
+                obj -> GuavaCustConcHash.make(this, obj));
     }
 
     @Override
-    public Model newModel(JavaThing thing) {
-        JavaObject obj = Models.safeCast(thing, JavaObject.class);
-        if (obj != null) {
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz == custConcHashClass)
-                return GuavaCustConcHash.make(this, obj);
-        }
-        return null;
+    public Map<JavaClass, Function<JavaObject, Model>> getDispatchMap() {
+        return dispatchMap;
     }
 }

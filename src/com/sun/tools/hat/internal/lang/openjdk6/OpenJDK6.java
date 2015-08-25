@@ -33,21 +33,8 @@
 
 package com.sun.tools.hat.internal.lang.openjdk6;
 
-import com.sun.tools.hat.internal.lang.Model;
-import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.LanguageRuntime;
-import com.sun.tools.hat.internal.lang.openjdk.JavaArray;
-import com.sun.tools.hat.internal.lang.openjdk.JavaConcHash;
-import com.sun.tools.hat.internal.lang.openjdk.JavaHash;
-import com.sun.tools.hat.internal.lang.openjdk.JavaPrimArray;
-import com.sun.tools.hat.internal.lang.openjdk.JavaString;
-import com.sun.tools.hat.internal.lang.openjdk.JavaVector;
 import com.sun.tools.hat.internal.lang.openjdk.OpenJDK;
-import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
-import com.sun.tools.hat.internal.model.JavaValueArray;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
@@ -61,29 +48,7 @@ class OpenJDK6 extends OpenJDK {
     }
 
     @Override
-    public Model newModel(JavaThing thing) {
-        if (thing instanceof JavaObject) {
-            JavaObject obj = (JavaObject) thing;
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz.isString())
-                return JavaString.make(this, obj);
-            else if (clazz == getConcHashMapClass())
-                return JavaConcHash.make(this, obj);
-            else if (clazz == getHashMapClass() || clazz == getHashtableClass())
-                return JavaHash.make(this, obj);
-            else if (clazz == getArrayListClass())
-                return JavaVector.make(this, obj, "size");
-            else if (clazz == getVectorClass())
-                return JavaVector.make(this, obj, "elementCount");
-            else if (clazz == getLinkedListClass())
-                return JavaLinkedList.make(this, obj);
-            // TODO Implement all the standard collection classes.
-        }
-        if (thing instanceof JavaObjectArray)
-            return new JavaArray(this, (JavaObjectArray) thing);
-        if (thing instanceof JavaValueArray)
-            return new JavaPrimArray(this, (JavaValueArray) thing);
-        return null;
+    protected JavaLinkedList makeLinkedList(JavaObject obj) {
+        return JavaLinkedList.make(this, obj);
     }
 }

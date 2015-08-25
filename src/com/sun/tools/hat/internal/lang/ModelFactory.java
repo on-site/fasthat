@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,14 +33,26 @@
 
 package com.sun.tools.hat.internal.lang;
 
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
+
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Factory for language-specific models.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 public interface ModelFactory {
+    /**
+     * Returns the dispatch map used by this model factory.
+     *
+     * @return the dispatch map used by this model factory
+     */
+    Map<JavaClass, Function<JavaObject, Model>> getDispatchMap();
+
     /**
      * Creates a model object for the given {@link JavaThing}. Returns
      * null if the given {@link JavaThing} is not supported.
@@ -47,5 +60,14 @@ public interface ModelFactory {
      * @param thing the object to create a model for
      * @return a model for {@code thing}, or null
      */
-    Model newModel(JavaThing thing);
+    default Model newModel(JavaThing thing) {
+        if (thing instanceof JavaObject) {
+            JavaObject obj = (JavaObject) thing;
+            Map<JavaClass, Function<JavaObject, Model>> dispatchMap = getDispatchMap();
+            JavaClass cls = obj.getClazz();
+            if (dispatchMap.containsKey(cls))
+                return dispatchMap.get(cls).apply(obj);
+        }
+        return null;
+    }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -39,8 +40,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.MapMaker;
-import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.lang.SimpleScalarModel;
 
 /**
@@ -48,10 +49,10 @@ import com.sun.tools.hat.internal.lang.SimpleScalarModel;
  * (e.g., nil, false, true, etc.). Currently these objects must all be
  * scalars.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 public final class Singletons {
-    public static class Key implements Function<ModelFactory, Model> {
+    public static class Key implements Function<ModelFactory, ScalarModel> {
         private final String value;
 
         public Key(String value) {
@@ -60,7 +61,7 @@ public final class Singletons {
         }
 
         @Override
-        public Model apply(ModelFactory factory) {
+        public ScalarModel apply(ModelFactory factory) {
             return CACHE.getUnchecked(factory).getUnchecked(this);
         }
 
@@ -73,13 +74,13 @@ public final class Singletons {
     private static final ConcurrentMap<Key, String> FACTORY_MAP
             = new MapMaker().weakKeys().makeMap();
 
-    private static final LoadingCache<ModelFactory, LoadingCache<Key, Model>> CACHE
-            = CacheBuilder.newBuilder().weakKeys().build(new CacheLoader<ModelFactory, LoadingCache<Key, Model>>() {
+    private static final LoadingCache<ModelFactory, LoadingCache<Key, ScalarModel>> CACHE
+            = CacheBuilder.newBuilder().weakKeys().build(new CacheLoader<ModelFactory, LoadingCache<Key, ScalarModel>>() {
         @Override
-        public LoadingCache<Key, Model> load(final ModelFactory factory) {
-            return CacheBuilder.newBuilder().weakKeys().build(new CacheLoader<Key, Model>() {
+        public LoadingCache<Key, ScalarModel> load(final ModelFactory factory) {
+            return CacheBuilder.newBuilder().weakKeys().build(new CacheLoader<Key, ScalarModel>() {
                 @Override
-                public Model load(Key key) {
+                public ScalarModel load(Key key) {
                     return new SimpleScalarModel(factory, FACTORY_MAP.get(key));
                 }
             });

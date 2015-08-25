@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,117 +33,149 @@
 
 package com.sun.tools.hat.internal.lang.jruby;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.openjdk.JavaHash;
 import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
+
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Common, version-independent components of version-specific JRuby
  * model factories.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 public abstract class JRuby implements ModelFactory {
     private final JavaThing nullThing;
     private final JavaClass constantsClass;
-    private final JavaClass metaclassClass;
     private final JavaClass classClass;
-    private final JavaClass moduleClass;
     private final JavaClass moduleWrapperClass;
-    private final JavaClass stringClass;
-    private final JavaClass symbolClass;
-    private final JavaClass nilClass;
-    private final JavaClass booleanClass;
-    private final JavaClass basicObjectClass;
-    private final JavaClass fixnumClass;
-    private final JavaClass floatClass;
-    private final JavaClass objectClass;
-    private final JavaClass arrayClass;
-    private final JavaClass hashClass;
+    private final JavaThing never;
+    private final JavaThing undef;
+    private final Map<JavaClass, Function<JavaObject, Model>> dispatchMap;
+    private final LoadingCache<JavaObject, JRubyClass> classCache
+            = CacheBuilder.newBuilder().softValues().build(CacheLoader.from(this::makeClassRaw));
 
     public JRuby(Snapshot snapshot) {
+        Function<String, JavaClass> lookup = name -> Models.grabClass(snapshot, name);
         nullThing = snapshot.getNullThing();
-        constantsClass = Models.grabClass(snapshot, "org.jruby.runtime.Constants");
-        metaclassClass = Models.grabClass(snapshot, "org.jruby.MetaClass");
-        classClass = Models.grabClass(snapshot, "org.jruby.RubyClass");
-        moduleClass = Models.grabClass(snapshot, "org.jruby.RubyModule");
-        moduleWrapperClass = Models.grabClass(snapshot, "org.jruby.IncludedModuleWrapper");
-        stringClass = Models.grabClass(snapshot, "org.jruby.RubyString");
-        symbolClass = Models.grabClass(snapshot, "org.jruby.RubySymbol");
-        nilClass = Models.grabClass(snapshot, "org.jruby.RubyNil");
-        booleanClass = Models.grabClass(snapshot, "org.jruby.RubyBoolean");
-        basicObjectClass = Models.grabClass(snapshot, "org.jruby.RubyBasicObject");
-        fixnumClass = Models.grabClass(snapshot, "org.jruby.RubyFixnum");
-        floatClass = Models.grabClass(snapshot, "org.jruby.RubyFloat");
-        objectClass = Models.grabClass(snapshot, "org.jruby.RubyObject");
-        arrayClass = Models.grabClass(snapshot, "org.jruby.RubyArray");
-        hashClass = Models.grabClass(snapshot, "org.jruby.RubyHash");
+        constantsClass = lookup.apply("org.jruby.runtime.Constants");
+        classClass = lookup.apply("org.jruby.RubyClass");
+        moduleWrapperClass = lookup.apply("org.jruby.IncludedModuleWrapper");
+        JavaClass basicObjectClass = lookup.apply("org.jruby.RubyBasicObject");
+        never = basicObjectClass.getStaticField("NEVER");
+        undef = basicObjectClass.getStaticField("UNDEF");
+
+        dispatchMap = new ImmutableMap.Builder<JavaClass, Function<JavaObject, Model>>()
+                .put(lookup.apply("org.jruby.MetaClass"), this::lookupClass)
+                .put(classClass, this::lookupClass)
+                .put(lookup.apply("org.jruby.RubyModule"), this::lookupClass)
+                .put(lookup.apply("org.jruby.RubyString"), this::makeString)
+                .put(lookup.apply("org.jruby.RubySymbol"), this::makeSymbol)
+                .put(lookup.apply("org.jruby.RubyNil"), this::makeNil)
+                .put(lookup.apply("org.jruby.RubyBoolean$False"), this::makeFalse)
+                .put(lookup.apply("org.jruby.RubyBoolean$True"), this::makeTrue)
+                .put(lookup.apply("org.jruby.RubyBoolean"), this::makeBoolean)
+                .put(basicObjectClass, this::makeBasicObject)
+                .put(lookup.apply("org.jruby.RubyFixnum"), this::makeFixnum)
+                .put(lookup.apply("org.jruby.RubyFloat"), this::makeFloat)
+                .put(lookup.apply("org.jruby.RubyObject"), this::makeObject)
+                .put(lookup.apply("org.jruby.RubyArray"), this::makeArray)
+                .put(lookup.apply("org.jruby.RubyHash"), this::makeHash)
+                // TODO Implement other JRuby types.
+                .build();
+    }
+
+    @Override
+    public Map<JavaClass, Function<JavaObject, Model>> getDispatchMap() {
+        return dispatchMap;
+    }
+
+    protected JRubyClass makeClassRaw(JavaObject obj) {
+        return new JRubyClass(this, obj);
+    }
+
+    public final JRubyClass lookupClass(JavaObject obj) {
+        return classCache.getUnchecked(obj);
+    }
+
+    protected JRubyString makeString(JavaObject obj) {
+        return JRubyString.make(this, obj);
+    }
+
+    protected JRubySymbol makeSymbol(JavaObject obj) {
+        return JRubySymbol.make(this, obj);
+    }
+
+    protected ScalarModel makeNil(JavaObject obj) {
+        return Specials.makeNil(this);
+    }
+
+    protected ScalarModel makeFalse(JavaObject obj) {
+        return Specials.makeFalse(this);
+    }
+
+    protected ScalarModel makeTrue(JavaObject obj) {
+        return Specials.makeTrue(this);
+    }
+
+    protected ScalarModel makeBoolean(JavaObject obj) {
+        return Specials.makeBoolean(this, obj);
+    }
+
+    protected ScalarModel makeBasicObject(JavaObject obj) {
+        return Specials.makeSpecial(this, obj);
+    }
+
+    protected JRubyFixnum makeFixnum(JavaObject obj) {
+        return JRubyFixnum.make(this, obj);
+    }
+
+    protected JRubyFloat makeFloat(JavaObject obj) {
+        return JRubyFloat.make(this, obj);
+    }
+
+    protected JRubyObject makeObject(JavaObject obj) {
+        return new JRubyObject(this, obj);
+    }
+
+    protected JRubyArray makeArray(JavaObject obj) {
+        return JRubyArray.make(this, obj);
+    }
+
+    protected JavaHash makeHash(JavaObject obj) {
+        return JavaHash.make(this, obj);
     }
 
     public JavaThing getNullThing() {
         return nullThing;
     }
 
-    public JavaClass getConstantsClass() {
-        return constantsClass;
+    public boolean isClassClass(JavaClass cls) {
+        return cls == classClass;
     }
 
-    public JavaClass getMetaclassClass() {
-        return metaclassClass;
+    public boolean isModuleWrapperClass(JavaClass cls) {
+        return cls == moduleWrapperClass;
     }
 
-    public JavaClass getClassClass() {
-        return classClass;
+    public boolean isNever(JavaThing thing) {
+        return thing == never;
     }
 
-    public JavaClass getModuleClass() {
-        return moduleClass;
-    }
-
-    public JavaClass getModuleWrapperClass() {
-        return moduleWrapperClass;
-    }
-
-    public JavaClass getStringClass() {
-        return stringClass;
-    }
-
-    public JavaClass getSymbolClass() {
-        return symbolClass;
-    }
-
-    public JavaClass getNilClass() {
-        return nilClass;
-    }
-
-    public JavaClass getBooleanClass() {
-        return booleanClass;
-    }
-
-    public JavaClass getBasicObjectClass() {
-        return basicObjectClass;
-    }
-
-    public JavaClass getFixnumClass() {
-        return fixnumClass;
-    }
-
-    public JavaClass getFloatClass() {
-        return floatClass;
-    }
-
-    public JavaClass getObjectClass() {
-        return objectClass;
-    }
-
-    public JavaClass getArrayClass() {
-        return arrayClass;
-    }
-
-    public JavaClass getHashClass() {
-        return hashClass;
+    public boolean isUndef(JavaThing thing) {
+        return thing == undef;
     }
 
     @Override
