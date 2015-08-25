@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2014 On-Site.com.
+ * Copyright © 2011, 2012, 2014 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -53,30 +54,10 @@ import com.sun.tools.hat.internal.model.Snapshot;
 /**
  * Model factory for JRuby 1.7.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 public class JRuby17 extends JRuby {
-    public enum Factory implements LanguageRuntime {
-        INSTANCE;
-
-        @Override
-        public boolean isSupported(Snapshot snapshot) {
-            /*
-             * BTW, feel free to relax this to enable other versions of
-             * JRuby to work, if you are sure the models here work for
-             * them too.
-             */
-            JavaClass constants = snapshot.findClass("org.jruby.runtime.Constants");
-            return Models.checkStaticString(constants, "VERSION", "1.7.");
-        }
-
-        @Override
-        public ModelFactory getFactory(Snapshot snapshot) {
-            return isSupported(snapshot) ? new JRuby17(snapshot) : null;
-        }
-    }
-
-    private JRuby17(Snapshot snapshot) {
+    JRuby17(Snapshot snapshot) {
         super(snapshot);
     }
 

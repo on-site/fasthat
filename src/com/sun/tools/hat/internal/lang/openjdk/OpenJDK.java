@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -39,9 +40,9 @@ import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
- * Model factory for OpenJDK 6.
+ * Model factory for OpenJDK.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 public abstract class OpenJDK implements ModelFactory {
     private final JavaThing nullThing;

@@ -34,12 +34,12 @@ package com.sun.tools.hat;
 import java.io.IOException;
 import java.io.File;
 
-import com.sun.tools.hat.internal.lang.guava.Guava;
-import com.sun.tools.hat.internal.lang.jruby12.JRuby12;
-import com.sun.tools.hat.internal.lang.jruby16.JRuby16;
-import com.sun.tools.hat.internal.lang.jruby17.JRuby17;
-import com.sun.tools.hat.internal.lang.openjdk6.OpenJDK6;
-import com.sun.tools.hat.internal.lang.openjdk7.OpenJDK7;
+import com.sun.tools.hat.internal.lang.guava.GuavaRuntime;
+import com.sun.tools.hat.internal.lang.jruby12.JRuby12Runtime;
+import com.sun.tools.hat.internal.lang.jruby16.JRuby16Runtime;
+import com.sun.tools.hat.internal.lang.jruby17.JRuby17Runtime;
+import com.sun.tools.hat.internal.lang.openjdk6.OpenJDK6Runtime;
+import com.sun.tools.hat.internal.lang.openjdk7.OpenJDK7Runtime;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.model.ReachableExcludesImpl;
 import com.sun.tools.hat.internal.parser.LoadProgress;
@@ -193,10 +193,10 @@ public class Main {
             model.markNewRelativeTo(baseline);
             baseline = null;    // Guard against conservative GC
         }
-        model.setUpModelFactories(OpenJDK6.Factory.INSTANCE,
-                OpenJDK7.Factory.INSTANCE, Guava.Factory.INSTANCE,
-                JRuby12.Factory.INSTANCE, JRuby16.Factory.INSTANCE,
-                JRuby17.Factory.INSTANCE);
+        model.setUpModelFactories(OpenJDK6Runtime.INSTANCE,
+                OpenJDK7Runtime.INSTANCE, GuavaRuntime.INSTANCE,
+                JRuby12Runtime.INSTANCE, JRuby16Runtime.INSTANCE,
+                JRuby17Runtime.INSTANCE);
         if ( debugLevel == 2 ) {
             System.out.println("No server, -debug 2 was used.");
             System.exit(0);

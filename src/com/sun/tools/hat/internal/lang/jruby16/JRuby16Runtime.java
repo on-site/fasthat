@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012, 2014 On-Site.com.
  * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,38 +31,35 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.guava;
+package com.sun.tools.hat.internal.lang.jruby16;
 
-import com.sun.tools.hat.internal.lang.Model;
-import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.LanguageRuntime;
+import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
- * Model factory for Guava objects.
+ * Language runtime for JRuby 1.6
  *
  * @author Chris Jester-Young
  */
-public class Guava implements ModelFactory {
-    private final JavaClass custConcHashClass;
+public enum JRuby16Runtime implements LanguageRuntime {
+    INSTANCE;
 
-    public Guava(Snapshot snapshot) {
-        custConcHashClass = Models.grabClass(snapshot, GuavaRuntime.CLASSES);
+    @Override
+    public boolean isSupported(Snapshot snapshot) {
+        /*
+         * BTW, feel free to relax this to enable other versions of
+         * JRuby to work, if you are sure the models here work for
+         * them too.
+         */
+        JavaClass constants = snapshot.findClass("org.jruby.runtime.Constants");
+        return Models.checkStaticString(constants, "VERSION", "1.6.");
     }
 
     @Override
-    public Model newModel(JavaThing thing) {
-        JavaObject obj = Models.safeCast(thing, JavaObject.class);
-        if (obj != null) {
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz == custConcHashClass)
-                return GuavaCustConcHash.make(this, obj);
-        }
-        return null;
+    public ModelFactory getFactory(Snapshot snapshot) {
+        return isSupported(snapshot) ? new JRuby16(snapshot) : null;
     }
 }

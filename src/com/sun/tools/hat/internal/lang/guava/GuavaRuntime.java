@@ -33,36 +33,31 @@
 
 package com.sun.tools.hat.internal.lang.guava;
 
-import com.sun.tools.hat.internal.lang.Model;
-import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.LanguageRuntime;
+import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
- * Model factory for Guava objects.
+ * "Language runtime" for Guava objects.
  *
  * @author Chris Jester-Young
  */
-public class Guava implements ModelFactory {
-    private final JavaClass custConcHashClass;
+public enum GuavaRuntime implements LanguageRuntime {
+    INSTANCE;
 
-    public Guava(Snapshot snapshot) {
-        custConcHashClass = Models.grabClass(snapshot, GuavaRuntime.CLASSES);
+    static final String[] CLASSES = {
+            "com.google.common.collect.MapMakerInternalMap",
+            "com.google.common.collect.CustomConcurrentHashMap"
+    };
+
+    @Override
+    public boolean isSupported(Snapshot snapshot) {
+        return Models.hasClass(snapshot, CLASSES);
     }
 
     @Override
-    public Model newModel(JavaThing thing) {
-        JavaObject obj = Models.safeCast(thing, JavaObject.class);
-        if (obj != null) {
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz == custConcHashClass)
-                return GuavaCustConcHash.make(this, obj);
-        }
-        return null;
+    public ModelFactory getFactory(Snapshot snapshot) {
+        return new Guava(snapshot);
     }
 }

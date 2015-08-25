@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -49,22 +50,13 @@ import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 import com.sun.tools.hat.internal.model.Snapshot;
 
+/**
+ * Model factory for OpenJDK 6.
+ *
+ * @author Chris Jester-Young
+ */
 public class OpenJDK6 extends OpenJDK {
-    public enum Factory implements LanguageRuntime {
-        INSTANCE;
-
-        @Override
-        public boolean isSupported(Snapshot snapshot) {
-            return checkVersion(snapshot, "1.6.0_");
-        }
-
-        @Override
-        public ModelFactory getFactory(Snapshot snapshot) {
-            return new OpenJDK6(snapshot);
-        }
-    }
-
-    private OpenJDK6(Snapshot snapshot) {
+    OpenJDK6(Snapshot snapshot) {
         super(snapshot);
     }
 
