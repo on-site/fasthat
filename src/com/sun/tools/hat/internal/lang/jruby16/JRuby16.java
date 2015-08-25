@@ -57,7 +57,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
  *
  * @author Chris Jester-Young
  */
-public class JRuby16 extends JRuby {
+class JRuby16 extends JRuby {
     JRuby16(Snapshot snapshot) {
         super(snapshot);
     }

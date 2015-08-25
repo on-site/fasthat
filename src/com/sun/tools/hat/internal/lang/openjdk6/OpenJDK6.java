@@ -55,7 +55,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
  *
  * @author Chris Jester-Young
  */
-public class OpenJDK6 extends OpenJDK {
+class OpenJDK6 extends OpenJDK {
     OpenJDK6(Snapshot snapshot) {
         super(snapshot);
     }

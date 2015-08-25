@@ -47,7 +47,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
  *
  * @author Chris Jester-Young
  */
-public class Guava implements ModelFactory {
+class Guava implements ModelFactory {
     private final JavaClass custConcHashClass;
 
     public Guava(Snapshot snapshot) {
