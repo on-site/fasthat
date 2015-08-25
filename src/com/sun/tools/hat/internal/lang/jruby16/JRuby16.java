@@ -34,7 +34,7 @@ package com.sun.tools.hat.internal.lang.jruby16;
 
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
+import com.sun.tools.hat.internal.lang.LanguageRuntime;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.jruby.JRuby;
 import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
@@ -57,7 +57,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
  * @author Chris K. Jester-Young
  */
 public class JRuby16 extends JRuby {
-    public enum Factory implements ModelFactoryFactory {
+    public enum Factory implements LanguageRuntime {
         INSTANCE;
 
         @Override
@@ -72,7 +72,7 @@ public class JRuby16 extends JRuby {
         }
 
         @Override
-        public ModelFactory newFactory(Snapshot snapshot) {
+        public ModelFactory getFactory(Snapshot snapshot) {
             return isSupported(snapshot) ? new JRuby16(snapshot) : null;
         }
     }

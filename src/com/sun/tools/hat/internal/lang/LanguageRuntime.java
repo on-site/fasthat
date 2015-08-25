@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -35,14 +36,19 @@ package com.sun.tools.hat.internal.lang;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
- * Factory for {@link ModelFactory}.
+ * Interface for language runtimes.
  *
- * @author Chris K. Jester-Young
+ * <p>A language runtime has its own object system that sits on top of Java
+ * objects. For example, JRuby has Java-side classes like {@code RubyObject}
+ * and {@code RubyClass} for representing Ruby-side objects and classes,
+ * respectively.
+ *
+ * @author Chris Jester-Young
  */
-public interface ModelFactoryFactory {
+public interface LanguageRuntime {
     /**
-     * Returns whether this model-factory-factory supports the given
-     * snapshot. For example, a model-factory-factory for JRuby 1.6
+     * Returns whether this language runtime supports the given
+     * snapshot. For example, a language runtime for JRuby 1.6
      * would only return true here if the snapshot contained objects
      * from JRuby 1.6.
      *
@@ -58,5 +64,5 @@ public interface ModelFactoryFactory {
      * @param snapshot the snapshot to create a factory for
      * @return a factory for the given snapshot, or null
      */
-    ModelFactory newFactory(Snapshot snapshot);
+    ModelFactory getFactory(Snapshot snapshot);
 }

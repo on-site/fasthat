@@ -34,7 +34,7 @@ package com.sun.tools.hat.internal.lang.openjdk6;
 
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
+import com.sun.tools.hat.internal.lang.LanguageRuntime;
 import com.sun.tools.hat.internal.lang.openjdk.JavaArray;
 import com.sun.tools.hat.internal.lang.openjdk.JavaConcHash;
 import com.sun.tools.hat.internal.lang.openjdk.JavaHash;
@@ -50,7 +50,7 @@ import com.sun.tools.hat.internal.model.JavaValueArray;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 public class OpenJDK6 extends OpenJDK {
-    public enum Factory implements ModelFactoryFactory {
+    public enum Factory implements LanguageRuntime {
         INSTANCE;
 
         @Override
@@ -59,7 +59,7 @@ public class OpenJDK6 extends OpenJDK {
         }
 
         @Override
-        public ModelFactory newFactory(Snapshot snapshot) {
+        public ModelFactory getFactory(Snapshot snapshot) {
             return new OpenJDK6(snapshot);
         }
     }

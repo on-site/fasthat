@@ -34,7 +34,7 @@ package com.sun.tools.hat.internal.lang.guava;
 
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
+import com.sun.tools.hat.internal.lang.LanguageRuntime;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
@@ -42,7 +42,7 @@ import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 public class Guava implements ModelFactory {
-    public enum Factory implements ModelFactoryFactory {
+    public enum Factory implements LanguageRuntime {
         INSTANCE;
 
         @Override
@@ -51,7 +51,7 @@ public class Guava implements ModelFactory {
         }
 
         @Override
-        public ModelFactory newFactory(Snapshot snapshot) {
+        public ModelFactory getFactory(Snapshot snapshot) {
             return new Guava(snapshot);
         }
     }
