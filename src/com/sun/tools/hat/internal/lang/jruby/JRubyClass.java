@@ -144,7 +144,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     private JRubyClass getRealClassImpl() {
         JRuby factory = (JRuby) getFactory();
         JavaObject cls = classObject;
-        while (cls != null && factory.isClassClass(cls.getClazz())) {
+        while (cls != null && !factory.isClassClass(cls.getClazz())) {
             cls = Models.getFieldObject(cls, "superClass");
         }
         return factory.lookupClass(cls);
