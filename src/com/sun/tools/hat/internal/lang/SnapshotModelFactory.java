@@ -1,5 +1,4 @@
 /*
- * Copyright © 2011 On-Site.com.
  * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,37 +35,18 @@ package com.sun.tools.hat.internal.lang;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
- * Interface for language runtimes.
- *
- * <p>A language runtime has its own object system that sits on top of Java
- * objects. For example, JRuby has Java-side classes like {@code RubyObject}
- * and {@code RubyClass} for representing Ruby-side objects and classes,
- * respectively.
- *
- * <p>Language runtime instances may optionally also implement the
- * {@link SnapshotModelFactory} interface if class and object instances
- * are enumerable.
+ * Factory interface for creating {@link SnapshotModel} instances. This
+ * interface is intended to be an addon to {@link LanguageRuntime}
+ * instances.
  *
  * @author Chris Jester-Young
  */
-public interface LanguageRuntime {
+public interface SnapshotModelFactory {
     /**
-     * Returns whether this language runtime supports the given
-     * snapshot. For example, a language runtime for JRuby 1.6
-     * would only return true here if the snapshot contained objects
-     * from JRuby 1.6.
+     * Returns a language-specific snapshot given a raw snapshot.
      *
-     * @param snapshot the snapshot to check for support
-     * @return whether the given snapshot is supported
+     * @param snapshot the raw snapshot to use
+     * @return a language-specific snapshot for the given raw snapshot
      */
-    boolean isSupported(Snapshot snapshot);
-
-    /**
-     * Returns a {@link ModelFactory} for the given snapshot, or null if
-     * the snapshot is not {@linkplain #isSupported supported}.
-     *
-     * @param snapshot the snapshot to create a factory for
-     * @return a factory for the given snapshot, or null
-     */
-    ModelFactory getFactory(Snapshot snapshot);
+    SnapshotModel getSnapshot(Snapshot snapshot);
 }
