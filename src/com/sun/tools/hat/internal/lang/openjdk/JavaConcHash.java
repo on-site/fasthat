@@ -46,42 +46,30 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 public class JavaConcHash extends AbstractMapModel {
-    private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
-        private final List<JavaObject> segments;
-
-        public MapSupplier(List<JavaObject> segments) {
-            this.segments = segments;
+    private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> segments) {
+        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+        for (JavaObject segment : segments) {
+            List<JavaObject> table = Models.getFieldObjectArray(segment, "table", JavaObject.class);
+            if (table != null)
+                HashCommon.walkHashTable(table, "key", "value", "next", builder::put);
         }
-
-        @Override
-        public ImmutableMap<JavaThing, JavaThing> get() {
-            final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-            for (JavaObject segment : segments) {
-                List<JavaObject> table = Models.getFieldObjectArray(segment, "table",
-                        JavaObject.class);
-                if (table != null)
-                    HashCommon.walkHashTable(table, "key", "value", "next", builder::put);
-            }
-            return builder.build();
-        }
+        return builder.build();
     }
 
-    private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
+    private final Supplier<ImmutableMap<JavaThing, JavaThing>> supplier;
 
-    private JavaConcHash(OpenJDK factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private JavaConcHash(OpenJDK factory, Iterable<JavaObject> segments) {
         super(factory);
-        this.map = map;
+        this.supplier = Suppliers.memoize(() -> getMapImpl(segments));
     }
 
     public static JavaConcHash make(OpenJDK factory, JavaObject chm) {
-        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
-                JavaObject.class);
-        return segments == null ? null
-                : new JavaConcHash(factory, Suppliers.memoize(new MapSupplier(segments)));
+        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments", JavaObject.class);
+        return segments == null ? null : new JavaConcHash(factory, segments);
     }
 
     @Override
     public Map<JavaThing, JavaThing> getMap() {
-        return map.get();
+        return supplier.get();
     }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -50,39 +51,16 @@ import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 public class JRubyArray extends AbstractCollectionModel {
-    private static class GetSafeArrayElements extends CacheLoader<SafeArray,
-            ImmutableList<JavaThing>> {
-        @Override
-        public ImmutableList<JavaThing> load(SafeArray arr) {
-            return ImmutableList.copyOf(arr.getElements());
-        }
-    }
-
     private static final LoadingCache<SafeArray, ImmutableList<JavaThing>> ELEMENT_CACHE
-            = CacheBuilder.newBuilder().softValues().build(new GetSafeArrayElements());
+            = CacheBuilder.newBuilder().softValues().build(
+                    CacheLoader.from(arr -> ImmutableList.copyOf(arr.getElements())));
 
-    private static class CollectionSupplier implements Supplier<List<JavaThing>> {
-        private final SafeArray arr;
-        private final int begin;
-        private final int length;
+    private final Supplier<List<JavaThing>> supplier;
 
-        public CollectionSupplier(SafeArray arr, int begin, int length) {
-            this.arr = arr;
-            this.begin = begin;
-            this.length = length;
-        }
-
-        @Override
-        public List<JavaThing> get() {
-            return ELEMENT_CACHE.getUnchecked(arr).subList(begin, begin + length);
-        }
-    }
-
-    private final Supplier<List<JavaThing>> value;
-
-    private JRubyArray(JRuby factory, Supplier<List<JavaThing>> value) {
+    private JRubyArray(JRuby factory, SafeArray arr, int begin, int length) {
         super(factory);
-        this.value = value;
+        this.supplier = Suppliers.memoize(() ->
+                ELEMENT_CACHE.getUnchecked(arr).subList(begin, begin + length));
     }
 
     public static JRubyArray make(JRuby factory, JavaObject obj) {
@@ -91,12 +69,12 @@ public class JRubyArray extends AbstractCollectionModel {
         JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
         if (arr == null || begin == null || length == null)
             return null;
-        return new JRubyArray(factory, Suppliers.memoize(new CollectionSupplier(
-                new SafeArray(arr, factory.getNullThing()), begin.value, length.value)));
+        return new JRubyArray(factory, new SafeArray(arr, factory.getNullThing()),
+                begin.value, length.value);
     }
 
     @Override
     public Collection<JavaThing> getCollection() {
-        return value.get();
+        return supplier.get();
     }
 }

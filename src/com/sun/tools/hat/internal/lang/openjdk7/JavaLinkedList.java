@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -43,38 +44,25 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 class JavaLinkedList extends AbstractCollectionModel {
-    private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
-        private final JavaObject first;
-
-        public ListSupplier(JavaObject first) {
-            this.first = first;
+    private static ImmutableList<JavaThing> getCollectionImpl(JavaObject first) {
+        ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
+        for (JavaObject entry = first; entry != null;
+                entry = Models.getFieldObject(entry, "next")) {
+            builder.add(entry.getField("item"));
         }
-
-        @Override
-        public ImmutableList<JavaThing> get() {
-            ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
-            for (JavaObject entry = first; entry != null;
-                    entry = Models.getFieldObject(entry, "next")) {
-                builder.add(entry.getField("item"));
-            }
-            return builder.build();
-        }
+        return builder.build();
     }
 
-    private final Supplier<ImmutableList<JavaThing>> items;
+    private final Supplier<ImmutableList<JavaThing>> supplier;
 
-    private JavaLinkedList(OpenJDK7 factory, Supplier<ImmutableList<JavaThing>> items) {
+    public JavaLinkedList(OpenJDK7 factory, JavaObject list) {
         super(factory);
-        this.items = items;
-    }
-
-    public static JavaLinkedList make(OpenJDK7 factory, JavaObject list) {
         JavaObject first = Models.getFieldObject(list, "first");
-        return new JavaLinkedList(factory, Suppliers.memoize(new ListSupplier(first)));
+        this.supplier = Suppliers.memoize(() -> getCollectionImpl(first));
     }
 
     @Override
     public Collection<JavaThing> getCollection() {
-        return items.get();
+        return supplier.get();
     }
 }

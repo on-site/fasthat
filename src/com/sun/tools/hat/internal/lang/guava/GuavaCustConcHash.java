@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -44,55 +45,42 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 class GuavaCustConcHash extends AbstractMapModel {
-    private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
-        private final Iterable<JavaObject> segments;
-
-        public MapSupplier(Iterable<JavaObject> segments) {
-            this.segments = segments;
-        }
-
-        @Override
-        public ImmutableMap<JavaThing, JavaThing> get() {
-            ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-            for (JavaObject segment : segments) {
-                JavaObject table = Models.getFieldObject(segment, "table");
-                List<JavaObject> array = Models.getFieldObjectArray(table, "array",
-                        JavaObject.class);
-                if (array != null) {
-                    for (JavaObject entry : array) {
-                        // Strong keys use the "key" field
-                        // Soft/weak keys use the "referent" field
-                        JavaThing key = entry.getField("key");
-                        if (key == null)
-                            key = entry.getField("referent");
-                        JavaObject valueReference = Models.getFieldObject(entry,
-                                "valueReference");
-                        JavaThing value = valueReference.getField("referent");
-                        if (key != null && value != null)
-                            builder.put(key, value);
-                    }
+    private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> segments) {
+        ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+        for (JavaObject segment : segments) {
+            JavaObject table = Models.getFieldObject(segment, "table");
+            List<JavaObject> array = Models.getFieldObjectArray(table, "array", JavaObject.class);
+            if (array != null) {
+                for (JavaObject entry : array) {
+                    // Strong keys use the "key" field
+                    // Soft/weak keys use the "referent" field
+                    JavaThing key = entry.getField("key");
+                    if (key == null)
+                        key = entry.getField("referent");
+                    JavaObject valueReference = Models.getFieldObject(entry, "valueReference");
+                    JavaThing value = valueReference.getField("referent");
+                    if (key != null && value != null)
+                        builder.put(key, value);
                 }
             }
-            return builder.build();
         }
+        return builder.build();
     }
 
-    private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
+    private final Supplier<ImmutableMap<JavaThing, JavaThing>> supplier;
 
-    private GuavaCustConcHash(Guava factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private GuavaCustConcHash(Guava factory, List<JavaObject> segments) {
         super(factory);
-        this.map = map;
+        this.supplier = Suppliers.memoize(() -> getMapImpl(segments));
     }
 
     public static GuavaCustConcHash make(Guava factory, JavaObject chm) {
-        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
-                JavaObject.class);
-        return segments == null ? null
-                : new GuavaCustConcHash(factory, Suppliers.memoize(new MapSupplier(segments)));
+        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments", JavaObject.class);
+        return segments == null ? null : new GuavaCustConcHash(factory, segments);
     }
 
     @Override
     public Map<JavaThing, JavaThing> getMap() {
-        return map.get();
+        return supplier.get();
     }
 }

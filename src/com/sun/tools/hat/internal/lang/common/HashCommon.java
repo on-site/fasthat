@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,8 +33,6 @@
 
 package com.sun.tools.hat.internal.lang.common;
 
-import java.util.List;
-
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
@@ -41,7 +40,7 @@ import com.sun.tools.hat.internal.model.JavaThing;
 /**
  * Common functions for dealing with hashes.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 public final class HashCommon {
     /**
@@ -76,7 +75,7 @@ public final class HashCommon {
      * @param nextField the name of the {@code next} field
      * @param visitor the visitor to call for each hash entry found
      */
-    public static void walkHashTable(List<JavaObject> table, String keyField,
+    public static void walkHashTable(Iterable<JavaObject> table, String keyField,
             String valueField, String nextField, KeyValueVisitor visitor) {
         for (JavaObject element : table) {
             for (JavaObject bucket = element; bucket != null;

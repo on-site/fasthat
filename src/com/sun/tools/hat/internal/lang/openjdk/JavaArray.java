@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -43,29 +44,16 @@ import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 public class JavaArray extends AbstractCollectionModel {
-    private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
-        private final SafeArray array;
-
-        public ListSupplier(SafeArray array) {
-            this.array = array;
-        }
-
-        @Override
-        public ImmutableList<JavaThing> get() {
-            return ImmutableList.copyOf(array.getElements());
-        }
-    }
-
-    private final Supplier<ImmutableList<JavaThing>> items;
+    private final Supplier<ImmutableList<JavaThing>> supplier;
 
     public JavaArray(OpenJDK factory, JavaObjectArray array) {
         super(factory);
-        items = Suppliers.memoize(new ListSupplier(new SafeArray(array,
-                factory.getNullThing())));
+        supplier = Suppliers.memoize(() ->
+                ImmutableList.copyOf(new SafeArray(array, factory.getNullThing()).getElements()));
     }
 
     @Override
     public Collection<JavaThing> getCollection() {
-        return items.get();
+        return supplier.get();
     }
 }

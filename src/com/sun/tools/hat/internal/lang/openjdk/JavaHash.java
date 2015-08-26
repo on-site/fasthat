@@ -47,36 +47,26 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 public class JavaHash extends AbstractMapModel {
-    private static class MapSupplier implements Supplier<ImmutableMap<JavaThing, JavaThing>> {
-        private final List<JavaObject> table;
-
-        public MapSupplier(List<JavaObject> table) {
-            this.table = table;
-        }
-
-        @Override
-        public ImmutableMap<JavaThing, JavaThing> get() {
-            final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-            HashCommon.walkHashTable(table, "key", "value", "next", builder::put);
-            return builder.build();
-        }
+    private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> table) {
+        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+        HashCommon.walkHashTable(table, "key", "value", "next", builder::put);
+        return builder.build();
     }
 
-    private final Supplier<ImmutableMap<JavaThing, JavaThing>> map;
+    private final Supplier<ImmutableMap<JavaThing, JavaThing>> supplier;
 
-    private JavaHash(ModelFactory factory, Supplier<ImmutableMap<JavaThing, JavaThing>> map) {
+    private JavaHash(ModelFactory factory, Iterable<JavaObject> table) {
         super(factory);
-        this.map = map;
+        this.supplier = Suppliers.memoize(() -> getMapImpl(table));
     }
 
     public static JavaHash make(ModelFactory factory, JavaObject hash) {
         List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
-        return table == null ? null
-                : new JavaHash(factory, Suppliers.memoize(new MapSupplier(table)));
+        return table == null ? null : new JavaHash(factory, table);
     }
 
     @Override
     public Map<JavaThing, JavaThing> getMap() {
-        return map.get();
+        return supplier.get();
     }
 }

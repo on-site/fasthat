@@ -49,6 +49,6 @@ class OpenJDK7 extends OpenJDK {
 
     @Override
     protected JavaLinkedList makeLinkedList(JavaObject obj) {
-        return JavaLinkedList.make(this, obj);
+        return new JavaLinkedList(this, obj);
     }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -42,29 +43,12 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 
 public class JRubyString extends AbstractScalarModel {
-    private static class StringSupplier implements Supplier<String> {
-        private final byte[] bytes;
-        private final int offset;
-        private final int length;
-
-        public StringSupplier(byte[] bytes, int offset, int length) {
-            this.bytes = bytes;
-            this.offset = offset;
-            this.length = length;
-        }
-
-        @Override
-        public String get() {
-            // All the world's a UTF-8....
-            return '"' + new String(bytes, offset, length, Charsets.UTF_8) + '"';
-        }
-    }
-
     private final Supplier<String> supplier;
 
     private JRubyString(JRuby factory, byte[] bytes, int offset, int length) {
         super(factory);
-        supplier = Suppliers.memoize(new StringSupplier(bytes, offset, length));
+        supplier = Suppliers.memoize(() ->
+                '"' + new String(bytes, offset, length, Charsets.UTF_8) + '"');
     }
 
     public static JRubyString make(JRuby factory, JavaObject obj) {

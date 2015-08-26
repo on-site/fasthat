@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -43,41 +44,31 @@ import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
 class JavaLinkedList extends AbstractCollectionModel {
-    private static class ListSupplier implements Supplier<ImmutableList<JavaThing>> {
-        private final JavaObject header;
-
-        public ListSupplier(JavaObject header) {
-            this.header = header;
+    private static ImmutableList<JavaThing> getCollectionImpl(JavaObject header) {
+        ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
+        for (JavaObject entry = Models.getFieldObject(header, "next");
+                entry != header; entry = Models.getFieldObject(entry, "next")) {
+            if (entry == null)
+                return null;
+            builder.add(entry.getField("element"));
         }
-
-        @Override
-        public ImmutableList<JavaThing> get() {
-            ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
-            for (JavaObject entry = Models.getFieldObject(header, "next");
-                    entry != header; entry = Models.getFieldObject(entry, "next")) {
-                if (entry == null)
-                    return null;
-                builder.add(entry.getField("element"));
-            }
-            return builder.build();
-        }
+        return builder.build();
     }
 
-    private final Supplier<ImmutableList<JavaThing>> items;
+    private final Supplier<ImmutableList<JavaThing>> supplier;
 
-    private JavaLinkedList(OpenJDK6 factory, Supplier<ImmutableList<JavaThing>> items) {
+    private JavaLinkedList(OpenJDK6 factory, JavaObject header) {
         super(factory);
-        this.items = items;
+        this.supplier = Suppliers.memoize(() -> getCollectionImpl(header));
     }
 
     public static JavaLinkedList make(OpenJDK6 factory, JavaObject list) {
         JavaObject header = Models.getFieldObject(list, "header");
-        return header == null ? null
-                : new JavaLinkedList(factory, Suppliers.memoize(new ListSupplier(header)));
+        return header == null ? null : new JavaLinkedList(factory, header);
     }
 
     @Override
     public Collection<JavaThing> getCollection() {
-        return items.get();
+        return supplier.get();
     }
 }
