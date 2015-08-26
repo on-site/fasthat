@@ -70,25 +70,6 @@ import com.sun.tools.hat.internal.util.Misc;
 
 
 abstract class QueryHandler implements Runnable {
-    protected static class ClassResolver implements Function<String, JavaClass> {
-        private final Snapshot snapshot;
-        private final boolean valueRequired;
-
-        public ClassResolver(Snapshot snapshot, boolean valueRequired) {
-            this.snapshot = snapshot;
-            this.valueRequired = valueRequired;
-        }
-
-        @Override
-        public JavaClass apply(String name) {
-            if (name == null && !valueRequired) {
-                return null;
-            }
-            return Preconditions.checkNotNull(snapshot.findClass(name),
-                    "class not found: %s", name);
-        }
-    }
-
     protected String path;
     protected String urlStart;
     protected String query;
@@ -585,5 +566,13 @@ abstract class QueryHandler implements Runnable {
 
     protected void println(String str) {
         out.println(Misc.encodeHtml(str));
+    }
+
+    protected JavaClass resolveClass(String name, boolean valueRequired) {
+        if (name == null && !valueRequired) {
+            return null;
+        }
+        return Preconditions.checkNotNull(snapshot.findClass(name),
+                "class not found: %s", name);
     }
 }

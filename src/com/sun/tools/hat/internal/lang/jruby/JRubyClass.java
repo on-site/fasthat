@@ -179,7 +179,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     protected ImmutableList<String> getPropertyNamesImpl() {
         return ImmutableList.copyOf(Lists.transform(
                 Models.getFieldObjectArray(getClassObject(), "variableNames", JavaObject.class),
-                Models.GetStringValue.INSTANCE));
+                Models::getStringValue));
     }
 
     @Override

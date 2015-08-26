@@ -55,6 +55,6 @@ public class JRubyClass extends com.sun.tools.hat.internal.lang.jruby.JRubyClass
                 Models.getFieldObjectArray(
                         Models.getFieldObject(getClassObject(), "variableTableManager"),
                         "variableNames", JavaObject.class),
-                Models.GetStringValue.INSTANCE));
+                Models::getStringValue));
     }
 }

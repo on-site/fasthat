@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -34,7 +35,6 @@ package com.sun.tools.hat.internal.lang;
 
 import java.util.Arrays;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.model.JavaClass;
@@ -48,7 +48,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 /**
  * Common functionality used by language-specific models.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 // I wish Java had package-and-subpackage private
 public final class Models {
@@ -111,27 +111,6 @@ public final class Models {
         return getClass(snapshot, classNames) != null;
     }
 
-    public enum GetStringValue implements Function<JavaObject, String> {
-        INSTANCE;
-
-        @Override
-        public String apply(JavaObject obj) {
-            if (obj != null && obj.getClazz().isString()) {
-                JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
-                JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
-                JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
-                if (value != null) {
-                    if (offset != null && count != null) {
-                        return new String((char[]) value.getElements(), offset.value, count.value);
-                    } else {
-                        return new String((char[]) value.getElements());
-                    }
-                }
-            }
-            return null;
-        }
-    }
-
     /**
      * Returns the value of string object {@code obj}, or null if
      * {@code obj} is not a string object.
@@ -140,7 +119,19 @@ public final class Models {
      * @return the string value of {@code obj}, or null
      */
     public static String getStringValue(JavaObject obj) {
-        return GetStringValue.INSTANCE.apply(obj);
+        if (obj != null && obj.getClazz().isString()) {
+            JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
+            JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
+            JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
+            if (value != null) {
+                if (offset != null && count != null) {
+                    return new String((char[]) value.getElements(), offset.value, count.value);
+                } else {
+                    return new String((char[]) value.getElements());
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -163,8 +154,7 @@ public final class Models {
                     builder.add(typeKey.cast(t));
                 }
             }
-            ImmutableList<T> result = builder.build();
-            return result;
+            return builder.build();
         }
         return null;
     }

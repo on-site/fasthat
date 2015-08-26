@@ -142,11 +142,10 @@ public class HistogramQuery extends QueryHandler {
 
     @Override
     public void run() {
-        ClassResolver resolver = new ClassResolver(snapshot, false);
-        JavaClass referee = resolver.apply(Iterables.getOnlyElement(
-                params.get("referee"), null));
+        JavaClass referee = resolveClass(Iterables.getOnlyElement(
+                params.get("referee"), null), false);
         Collection<JavaClass> referrers = Collections2.transform(
-                params.get("referrer"), resolver);
+                params.get("referrer"), referrer -> resolveClass(referrer, false));
         MetricsProvider metrics;
         if (referee == null) {
             metrics = new GlobalMetricsProvider(snapshot);
