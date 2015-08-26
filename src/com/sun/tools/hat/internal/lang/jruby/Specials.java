@@ -45,11 +45,11 @@ import com.sun.tools.hat.internal.model.JavaObject;
  * @author Chris Jester-Young
  */
 public final class Specials {
-    private static final Singletons.Key NIL = new Singletons.Key("nil");
-    private static final Singletons.Key FALSE = new Singletons.Key("false");
-    private static final Singletons.Key TRUE = new Singletons.Key("true");
-    private static final Singletons.Key NEVER = new Singletons.Key("<never>");
-    private static final Singletons.Key UNDEF = new Singletons.Key("<undef>");
+    private static final Singletons.Key NIL = Singletons.Key.create("nil");
+    private static final Singletons.Key FALSE = Singletons.Key.create("false");
+    private static final Singletons.Key TRUE = Singletons.Key.create("true");
+    private static final Singletons.Key NEVER = Singletons.Key.create("<never>");
+    private static final Singletons.Key UNDEF = Singletons.Key.create("<undef>");
 
     /**
      * Disables instantiation for static class.

@@ -55,9 +55,14 @@ public final class Singletons {
     public static class Key implements Function<ModelFactory, ScalarModel> {
         private final String value;
 
-        public Key(String value) {
+        private Key(String value) {
             this.value = value;
-            FACTORY_MAP.put(this, value);
+        }
+
+        public static Key create(String value) {
+            Key result = new Key(value);
+            FACTORY_MAP.put(result, value);
+            return result;
         }
 
         @Override
