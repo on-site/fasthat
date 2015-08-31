@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,31 +33,23 @@
 
 package com.sun.tools.hat.internal.lang.jruby;
 
-import com.sun.tools.hat.internal.lang.AbstractScalarModel;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaDouble;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
  * Model for Ruby flonums.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
-public class JRubyFloat extends AbstractScalarModel {
-    private final double value;
-
+public class JRubyFloat extends SimpleScalarModel {
     private JRubyFloat(JRuby factory, double value) {
-        super(factory);
-        this.value = value;
+        super(factory, () -> Double.toString(value));
     }
 
     public static JRubyFloat make(JRuby factory, JavaObject obj) {
         JavaDouble value = Models.getFieldThing(obj, "value", JavaDouble.class);
         return value == null ? null : new JRubyFloat(factory, value.value);
-    }
-
-    @Override
-    public String toString() {
-        return Double.toString(value);
     }
 }

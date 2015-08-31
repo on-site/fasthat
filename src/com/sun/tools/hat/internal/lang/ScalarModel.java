@@ -40,7 +40,22 @@ package com.sun.tools.hat.internal.lang;
  *
  * @author Chris K. Jester-Young
  */
-public interface ScalarModel extends Model {
+public interface ScalarModel extends Model, HasSimpleForm {
     @Override
     String toString();
+
+    @Override
+    default void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    default String getSimpleForm() {
+        return toString();
+    }
+
+    @Override
+    default ScalarModel getSimpleFormModel() {
+        return this;
+    }
 }

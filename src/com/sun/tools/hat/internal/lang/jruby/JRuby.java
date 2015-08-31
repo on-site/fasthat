@@ -33,22 +33,25 @@
 
 package com.sun.tools.hat.internal.lang.jruby;
 
+import java.util.Map;
+import java.util.function.Function;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
+
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.lang.openjdk.JavaHash;
 import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
-
-import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Common, version-independent components of version-specific JRuby
@@ -63,6 +66,13 @@ public abstract class JRuby implements ModelFactory {
     private final JavaClass moduleWrapperClass;
     private final JavaThing never;
     private final JavaThing undef;
+
+    private final ScalarModel nilScalar = new SimpleScalarModel(this, "nil");
+    private final ScalarModel falseScalar = new SimpleScalarModel(this, "false");
+    private final ScalarModel trueScalar = new SimpleScalarModel(this, "true");
+    private final ScalarModel neverScalar = new SimpleScalarModel(this, "<never>");
+    private final ScalarModel undefScalar = new SimpleScalarModel(this, "<undef>");
+
     private final Map<JavaClass, Function<JavaObject, Model>> dispatchMap;
     private final LoadingCache<JavaObject, JRubyClass> classCache
             = CacheBuilder.newBuilder().softValues().build(CacheLoader.from(this::makeClassRaw));
@@ -119,23 +129,27 @@ public abstract class JRuby implements ModelFactory {
     }
 
     protected ScalarModel makeNil(JavaObject obj) {
-        return Specials.makeNil(this);
+        return nilScalar;
     }
 
     protected ScalarModel makeFalse(JavaObject obj) {
-        return Specials.makeFalse(this);
+        return falseScalar;
     }
 
     protected ScalarModel makeTrue(JavaObject obj) {
-        return Specials.makeTrue(this);
+        return trueScalar;
     }
 
     protected ScalarModel makeBoolean(JavaObject obj) {
-        return Specials.makeBoolean(this, obj);
+        JavaInt flags = Models.getFieldThing(obj, "flags", JavaInt.class);
+        return flags == null ? null
+                : (flags.value & 1) != 0 ? falseScalar : trueScalar;
     }
 
     protected ScalarModel makeBasicObject(JavaObject obj) {
-        return Specials.makeSpecial(this, obj);
+        return obj == never ? neverScalar
+                : obj == undef ? undefScalar
+                : null;
     }
 
     protected JRubyFixnum makeFixnum(JavaObject obj) {
@@ -168,14 +182,6 @@ public abstract class JRuby implements ModelFactory {
 
     public boolean isModuleWrapperClass(JavaClass cls) {
         return cls == moduleWrapperClass;
-    }
-
-    public boolean isNever(JavaThing thing) {
-        return thing == never;
-    }
-
-    public boolean isUndef(JavaThing thing) {
-        return thing == undef;
     }
 
     @Override

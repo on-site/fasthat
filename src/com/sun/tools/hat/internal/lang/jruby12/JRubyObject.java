@@ -36,6 +36,7 @@ package com.sun.tools.hat.internal.lang.jruby12;
 import java.util.List;
 
 import com.google.common.collect.ImmutableMap;
+
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;

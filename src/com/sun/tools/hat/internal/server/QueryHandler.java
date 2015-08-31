@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.Formatter;
 import java.util.Map;
 
-import com.google.common.base.Function;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -50,16 +49,16 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import com.sun.tools.hat.internal.lang.AbstractScalarModel;
+
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.HasSimpleForm;
 import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ModelVisitor;
 import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.ScalarModel;
-import com.sun.tools.hat.internal.lang.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -150,27 +149,23 @@ abstract class QueryHandler implements Runnable {
         out.print("\">");
     }
 
-    protected void printObject(JavaObject obj) {
-        printThing(obj);
-    }
-
     protected void printThing(JavaThing thing) {
-        printImpl(thing, true, true, null);
-    }
-
-    protected void printDetailed(JavaThing thing) {
-        printImpl(thing, true, true, Integer.MAX_VALUE);
-    }
-
-    protected void printSimple(JavaThing thing) {
         printImpl(thing, false, true, null);
     }
 
-    protected void printSummary(JavaThing thing) {
-        printImpl(thing, true, false, null);
+    protected void printDetailed(JavaThing thing) {
+        printImpl(thing, false, true, Integer.MAX_VALUE);
     }
 
-    private void printImpl(JavaThing thing, boolean useNonScalarModel,
+    protected void printSimple(JavaThing thing) {
+        printImpl(thing, true, true, null);
+    }
+
+    protected void printSummary(JavaThing thing) {
+        printImpl(thing, false, false, null);
+    }
+
+    private void printImpl(JavaThing thing, boolean useSimpleForm,
             boolean showDetail, Integer limit) {
         if (thing == null) {
             out.print("null");
@@ -185,7 +180,7 @@ abstract class QueryHandler implements Runnable {
                 if (ho.isNew())
                     out.print("<strong>");
             }
-            Model model = getModelFor(thing, useNonScalarModel);
+            Model model = getModelFor(thing, useSimpleForm);
             printSummary(model, thing);
             if (id != -1) {
                 if (ho.isNew())
@@ -291,20 +286,18 @@ abstract class QueryHandler implements Runnable {
         out.print(Misc.encodeHtml(str));
     }
 
-    private Model getModelFor(JavaThing thing, boolean useNonScalarModel) {
+    private Model getModelFor(JavaThing thing, boolean useSimpleForm) {
         if (rawMode) {
             return null;
         }
         for (ModelFactory factory : snapshot.getModelFactories()) {
             Model model = factory.newModel(thing);
-            if (model != null && useNonScalarModel) {
+            if (model != null) {
+                if (useSimpleForm) {
+                    return model instanceof HasSimpleForm
+                            ? ((HasSimpleForm) model).getSimpleFormModel() : null;
+                }
                 return model;
-            }
-            if (model instanceof ScalarModel) {
-                final ScalarModel scalar = (ScalarModel) model;
-                // Ensures visit() visits with ScalarModel, not whatever
-                return scalar instanceof AbstractScalarModel ? scalar
-                        : new SimpleScalarModel(scalar.getFactory(), scalar.toString());
             }
         }
         return null;

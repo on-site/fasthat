@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,22 +32,20 @@
 
 package com.sun.tools.hat.internal.lang;
 
-/**
- * A scalar model models a single quantity. Scalar model objects should
- * provide a {@link #toString} method that formats the object for printing.
- * To ease implementation of {@link #toString}, its output is HTML-escaped
- * before sending to the browser.
- *
- * @author Chris K. Jester-Young
- */
-public abstract class AbstractScalarModel extends AbstractModel
-        implements ScalarModel {
-    public AbstractScalarModel(ModelFactory factory) {
-        super(factory);
-    }
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 
-    @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+/**
+ * An interface for models to implement if they have a simple form,
+ * which is how they are displayed <em>inside</em> of an existing
+ * structure (we don't display structures recursively, to avoid reference
+ * cycles).
+ *
+ * @author Chris Jester-Young
+ */
+public interface HasSimpleForm extends Model {
+    String getSimpleForm();
+
+    default ScalarModel getSimpleFormModel() {
+        return new SimpleScalarModel(getFactory(), this::getSimpleForm);
     }
 }

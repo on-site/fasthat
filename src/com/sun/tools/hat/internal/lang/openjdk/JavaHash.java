@@ -34,39 +34,30 @@
 package com.sun.tools.hat.internal.lang.openjdk;
 
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.AbstractMapModel;
+
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
+import com.sun.tools.hat.internal.lang.common.SimpleMapModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JavaHash extends AbstractMapModel {
+public class JavaHash extends SimpleMapModel {
     private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> table) {
         final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
         HashCommon.walkHashTable(table, "key", "value", "next", builder::put);
         return builder.build();
     }
 
-    private final Supplier<ImmutableMap<JavaThing, JavaThing>> supplier;
-
     private JavaHash(ModelFactory factory, Iterable<JavaObject> table) {
-        super(factory);
-        this.supplier = Suppliers.memoize(() -> getMapImpl(table));
+        super(factory, Suppliers.memoize(() -> getMapImpl(table)));
     }
 
     public static JavaHash make(ModelFactory factory, JavaObject hash) {
         List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
         return table == null ? null : new JavaHash(factory, table);
-    }
-
-    @Override
-    public Map<JavaThing, JavaThing> getMap() {
-        return supplier.get();
     }
 }

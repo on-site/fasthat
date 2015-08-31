@@ -33,19 +33,17 @@
 
 package com.sun.tools.hat.internal.lang.guava;
 
-import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.Model;
-import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.LanguageRuntime;
-import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
-import com.sun.tools.hat.internal.model.Snapshot;
-
 import java.util.Map;
 import java.util.function.Function;
+
+import com.google.common.collect.ImmutableMap;
+
+import com.sun.tools.hat.internal.lang.Model;
+import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
  * Model factory for Guava objects.

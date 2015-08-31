@@ -33,7 +33,11 @@
 
 package com.sun.tools.hat.internal.lang.openjdk;
 
+import java.util.Map;
+import java.util.function.Function;
+
 import com.google.common.collect.ImmutableMap;
+
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
@@ -44,9 +48,6 @@ import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 import com.sun.tools.hat.internal.model.Snapshot;
-
-import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Model factory for OpenJDK.

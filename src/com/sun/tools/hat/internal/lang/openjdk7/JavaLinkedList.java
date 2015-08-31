@@ -33,17 +33,15 @@
 
 package com.sun.tools.hat.internal.lang.openjdk7;
 
-import java.util.Collection;
-
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
+
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaLinkedList extends AbstractCollectionModel {
+class JavaLinkedList extends SimpleCollectionModel {
     private static ImmutableList<JavaThing> getCollectionImpl(JavaObject first) {
         ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
         for (JavaObject entry = first; entry != null;
@@ -53,16 +51,8 @@ class JavaLinkedList extends AbstractCollectionModel {
         return builder.build();
     }
 
-    private final Supplier<ImmutableList<JavaThing>> supplier;
-
     public JavaLinkedList(OpenJDK7 factory, JavaObject list) {
-        super(factory);
-        JavaObject first = Models.getFieldObject(list, "first");
-        this.supplier = Suppliers.memoize(() -> getCollectionImpl(first));
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return supplier.get();
+        super(factory, Suppliers.memoize(() -> getCollectionImpl(
+                Models.getFieldObject(list, "first"))));
     }
 }

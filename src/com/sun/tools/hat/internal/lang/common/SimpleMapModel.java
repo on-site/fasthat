@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,22 +30,38 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.common;
+
+import java.util.Map;
+
+import com.google.common.base.Supplier;
+
+import com.sun.tools.hat.internal.lang.MapModel;
+import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.model.JavaThing;
 
 /**
- * A collection model models multiple quantities. Collection model objects
- * should provide a {@link #getCollection} method.
+ * A simple implementation of {@link MapModel} where the required methods
+ * are specified by suppliers.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
-public abstract class AbstractCollectionModel extends AbstractModel
-        implements CollectionModel {
-    public AbstractCollectionModel(ModelFactory factory) {
-        super(factory);
+public class SimpleMapModel implements MapModel {
+    private final ModelFactory factory;
+    private final Supplier<Map<JavaThing, JavaThing>> supplier;
+
+    public SimpleMapModel(ModelFactory factory, Supplier<Map<JavaThing, JavaThing>> supplier) {
+        this.factory = factory;
+        this.supplier = supplier;
     }
 
     @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+    public ModelFactory getFactory() {
+        return factory;
+    }
+
+    @Override
+    public Map<JavaThing, JavaThing> getMap() {
+        return supplier.get();
     }
 }

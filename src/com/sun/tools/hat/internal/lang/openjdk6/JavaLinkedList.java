@@ -33,17 +33,15 @@
 
 package com.sun.tools.hat.internal.lang.openjdk6;
 
-import java.util.Collection;
-
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
+
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JavaLinkedList extends AbstractCollectionModel {
+class JavaLinkedList extends SimpleCollectionModel {
     private static ImmutableList<JavaThing> getCollectionImpl(JavaObject header) {
         ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
         for (JavaObject entry = Models.getFieldObject(header, "next");
@@ -55,20 +53,12 @@ class JavaLinkedList extends AbstractCollectionModel {
         return builder.build();
     }
 
-    private final Supplier<ImmutableList<JavaThing>> supplier;
-
     private JavaLinkedList(OpenJDK6 factory, JavaObject header) {
-        super(factory);
-        this.supplier = Suppliers.memoize(() -> getCollectionImpl(header));
+        super(factory, Suppliers.memoize(() -> getCollectionImpl(header)));
     }
 
     public static JavaLinkedList make(OpenJDK6 factory, JavaObject list) {
         JavaObject header = Models.getFieldObject(list, "header");
         return header == null ? null : new JavaLinkedList(factory, header);
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return supplier.get();
     }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -33,23 +34,21 @@
 package com.sun.tools.hat.internal.lang.openjdk;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
+
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JavaVector extends AbstractCollectionModel {
-    private final ImmutableList<JavaThing> items;
-
+public class JavaVector extends SimpleCollectionModel {
     private JavaVector(OpenJDK factory, List<JavaThing> items) {
-        super(factory);
-        this.items = ImmutableList.copyOf(items);
+        super(factory, Suppliers.ofInstance(ImmutableList.copyOf(items)));
     }
 
     public static JavaVector make(OpenJDK factory, JavaObject vec, String sizeField) {
@@ -58,10 +57,5 @@ public class JavaVector extends AbstractCollectionModel {
         JavaInt size = Models.getFieldThing(vec, sizeField, JavaInt.class);
         return data == null || size == null ? null
                 : new JavaVector(factory, Arrays.asList(data).subList(0, size.value));
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return items;
     }
 }

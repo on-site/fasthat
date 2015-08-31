@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,17 +33,19 @@
 
 package com.sun.tools.hat.internal.lang.openjdk;
 
+import java.nio.CharBuffer;
+
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.SimpleScalarModel;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 public class JavaString extends SimpleScalarModel {
-    private JavaString(OpenJDK factory, String value) {
-        super(factory, '"' + value + '"');
+    private JavaString(OpenJDK factory, CharBuffer value) {
+        super(factory, () -> "\"" + value + "\"");
     }
 
     public static JavaString make(OpenJDK factory, JavaObject obj) {
-        String value = Models.getStringValue(obj);
+        CharBuffer value = Models.getStringValueAsCharBuffer(obj);
         return value != null ? new JavaString(factory, value) : null;
     }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -33,12 +34,12 @@
 package com.sun.tools.hat.internal.lang.jruby;
 
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.SimpleScalarModel;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 public class JRubySymbol extends SimpleScalarModel {
-    private JRubySymbol(JRuby factory, String str) {
-        super(factory, ':' + str);
+    private JRubySymbol(JRuby factory, String value) {
+        super(factory, () -> ':' + value);
     }
 
     public static JRubySymbol make(JRuby factory, JavaObject obj) {

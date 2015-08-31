@@ -34,18 +34,17 @@
 package com.sun.tools.hat.internal.lang.openjdk;
 
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.AbstractMapModel;
+
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
+import com.sun.tools.hat.internal.lang.common.SimpleMapModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JavaConcHash extends AbstractMapModel {
+public class JavaConcHash extends SimpleMapModel {
     private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> segments) {
         final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
         for (JavaObject segment : segments) {
@@ -56,20 +55,12 @@ public class JavaConcHash extends AbstractMapModel {
         return builder.build();
     }
 
-    private final Supplier<ImmutableMap<JavaThing, JavaThing>> supplier;
-
     private JavaConcHash(OpenJDK factory, Iterable<JavaObject> segments) {
-        super(factory);
-        this.supplier = Suppliers.memoize(() -> getMapImpl(segments));
+        super(factory, Suppliers.memoize(() -> getMapImpl(segments)));
     }
 
     public static JavaConcHash make(OpenJDK factory, JavaObject chm) {
         List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments", JavaObject.class);
         return segments == null ? null : new JavaConcHash(factory, segments);
-    }
-
-    @Override
-    public Map<JavaThing, JavaThing> getMap() {
-        return supplier.get();
     }
 }

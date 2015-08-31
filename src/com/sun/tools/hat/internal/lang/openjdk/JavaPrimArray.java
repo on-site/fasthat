@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2013 On-Site.com.
+ * Copyright © 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,10 +33,18 @@
 
 package com.sun.tools.hat.internal.lang.openjdk;
 
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
+import com.google.common.base.Suppliers;
+import com.google.common.primitives.Booleans;
+import com.google.common.primitives.Bytes;
+import com.google.common.primitives.Chars;
+import com.google.common.primitives.Floats;
+import com.google.common.primitives.Shorts;
+
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaBoolean;
 import com.sun.tools.hat.internal.model.JavaByte;
 import com.sun.tools.hat.internal.model.JavaChar;
@@ -44,52 +53,32 @@ import com.sun.tools.hat.internal.model.JavaFloat;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaLong;
 import com.sun.tools.hat.internal.model.JavaShort;
-import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.model.JavaValue;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 
-public class JavaPrimArray extends AbstractCollectionModel {
-    private final Collection<JavaThing> collection;
-
+public class JavaPrimArray extends SimpleCollectionModel {
     public JavaPrimArray(OpenJDK factory, JavaValueArray array) {
-        super(factory);
-        collection = createBackingList(array);
+        super(factory, Suppliers.memoize(
+                () -> wrapElements(array.getElements()).collect(Collectors.toList())));
     }
 
-    private static ImmutableList<JavaThing> createBackingList(JavaValueArray array) {
-        ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
-        Object elements = array.getElements();
-        if (elements instanceof boolean[]) {
-            for (boolean element : (boolean[]) elements)
-                builder.add(new JavaBoolean(element));
-        } else if (elements instanceof byte[]) {
-            for (byte element : (byte[]) elements)
-                builder.add(new JavaByte(element));
-        } else if (elements instanceof char[]) {
-            for (char element : (char[]) elements)
-                builder.add(new JavaChar(element));
-        } else if (elements instanceof short[]) {
-            for (short element : (short[]) elements)
-                builder.add(new JavaShort(element));
-        } else if (elements instanceof int[]) {
-            for (int element : (int[]) elements)
-                builder.add(new JavaInt(element));
-        } else if (elements instanceof long[]) {
-            for (long element : (long[]) elements)
-                builder.add(new JavaLong(element));
-        } else if (elements instanceof float[]) {
-            for (float element : (float[]) elements)
-                builder.add(new JavaFloat(element));
-        } else if (elements instanceof double[]) {
-            for (double element : (double[]) elements)
-                builder.add(new JavaDouble(element));
-        } else {
-            throw new AssertionError();
-        }
-        return builder.build();
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return collection;
+    private static Stream<? extends JavaValue> wrapElements(Object elements) {
+        if (elements instanceof boolean[])
+            return Booleans.asList((boolean[]) elements).stream().map(JavaBoolean::new);
+        if (elements instanceof byte[])
+            return Bytes.asList((byte[]) elements).stream().map(JavaByte::new);
+        if (elements instanceof char[])
+            return Chars.asList((char[]) elements).stream().map(JavaChar::new);
+        if (elements instanceof short[])
+            return Shorts.asList((short[]) elements).stream().map(JavaShort::new);
+        if (elements instanceof int[])
+            return Arrays.stream((int[]) elements).mapToObj(JavaInt::new);
+        if (elements instanceof long[])
+            return Arrays.stream((long[]) elements).mapToObj(JavaLong::new);
+        if (elements instanceof float[])
+            return Floats.asList((float[]) elements).stream().map(JavaFloat::new);
+        if (elements instanceof double[])
+            return Arrays.stream((double[]) elements).mapToObj(JavaDouble::new);
+        throw new AssertionError();
     }
 }

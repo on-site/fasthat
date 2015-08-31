@@ -31,54 +31,39 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby;
+package com.sun.tools.hat.internal.lang.common;
 
-import com.sun.tools.hat.internal.lang.Models;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+
+import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ScalarModel;
-import com.sun.tools.hat.internal.lang.common.Singletons;
-import com.sun.tools.hat.internal.model.JavaInt;
-import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
- * Scalar models for special values in JRuby.
+ * A simple scalar model that just returns the given supplier's result.
  *
  * @author Chris Jester-Young
  */
-public final class Specials {
-    private static final Singletons.Key NIL = Singletons.Key.create("nil");
-    private static final Singletons.Key FALSE = Singletons.Key.create("false");
-    private static final Singletons.Key TRUE = Singletons.Key.create("true");
-    private static final Singletons.Key NEVER = Singletons.Key.create("<never>");
-    private static final Singletons.Key UNDEF = Singletons.Key.create("<undef>");
+public class SimpleScalarModel implements ScalarModel {
+    private final ModelFactory factory;
+    private final Supplier<String> supplier;
 
-    /**
-     * Disables instantiation for static class.
-     */
-    private Specials() {}
-
-    public static ScalarModel makeNil(JRuby factory) {
-        return NIL.apply(factory);
+    public SimpleScalarModel(ModelFactory factory, Supplier<String> supplier) {
+        this.factory = factory;
+        this.supplier = supplier;
     }
 
-    public static ScalarModel makeFalse(JRuby factory) {
-        return FALSE.apply(factory);
+    public SimpleScalarModel(ModelFactory factory, String str) {
+        this(factory, Suppliers.ofInstance(str));
     }
 
-    public static ScalarModel makeTrue(JRuby factory) {
-        return TRUE.apply(factory);
+    @Override
+    public ModelFactory getFactory() {
+        return factory;
     }
 
-    public static ScalarModel makeBoolean(JRuby factory, JavaObject value) {
-        JavaInt flags = Models.getFieldThing(value, "flags", JavaInt.class);
-        return flags == null ? null
-                : (flags.value & 1) != 0 ? makeFalse(factory) : makeTrue(factory);
-    }
-
-    public static ScalarModel makeSpecial(JRuby factory, JavaObject value) {
-        if (factory.isNever(value))
-            return NEVER.apply(factory);
-        if (factory.isUndef(value))
-            return UNDEF.apply(factory);
-        return null;
+    @Override
+    public String toString() {
+        return supplier.get();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,22 +30,57 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.common;
+
+import java.util.Map;
+
+import com.google.common.base.Supplier;
+
+import com.sun.tools.hat.internal.lang.ClassModel;
+import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.lang.ObjectModel;
+import com.sun.tools.hat.internal.model.JavaThing;
 
 /**
- * A class model models a single class, which has superclasses, properties
- * (fields/instance variables), and methods.
+ * A simple implementation of {@link ObjectModel} where the required methods
+ * are specified by suppliers.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
-public abstract class AbstractClassModel extends AbstractModel
-        implements ClassModel {
-    public AbstractClassModel(ModelFactory factory) {
-        super(factory);
+
+public class SimpleObjectModel implements ObjectModel {
+    private final ModelFactory factory;
+    private final Supplier<ClassModel> classModelSupplier;
+    private final Supplier<ClassModel> eigenclassModelSupplier;
+    private final Supplier<Map<String, JavaThing>> propertiesSupplier;
+
+    public SimpleObjectModel(ModelFactory factory,
+            Supplier<ClassModel> classModelSupplier,
+            Supplier<ClassModel> eigenclassModelSupplier,
+            Supplier<Map<String, JavaThing>> propertiesSupplier) {
+        this.factory = factory;
+        this.classModelSupplier = classModelSupplier;
+        this.eigenclassModelSupplier = eigenclassModelSupplier;
+        this.propertiesSupplier = propertiesSupplier;
     }
 
     @Override
-    public void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+    public ModelFactory getFactory() {
+        return factory;
+    }
+
+    @Override
+    public ClassModel getClassModel() {
+        return classModelSupplier.get();
+    }
+
+    @Override
+    public ClassModel getEigenclassModel() {
+        return eigenclassModelSupplier.get();
+    }
+
+    @Override
+    public Map<String, JavaThing> getProperties() {
+        return propertiesSupplier.get();
     }
 }

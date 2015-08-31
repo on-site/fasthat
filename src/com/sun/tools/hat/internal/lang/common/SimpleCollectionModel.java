@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,23 +30,38 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.common;
+
+import java.util.Collection;
+
+import com.google.common.base.Supplier;
+
+import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.model.JavaThing;
 
 /**
- * A simple scalar model that simply returns the given string.
+ * A simple implementation of {@link CollectionModel} where the required
+ * methods are specified by suppliers.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
-public class SimpleScalarModel extends AbstractScalarModel {
-    private final String str;
+public class SimpleCollectionModel implements CollectionModel {
+    private final ModelFactory factory;
+    private final Supplier<Collection<JavaThing>> supplier;
 
-    public SimpleScalarModel(ModelFactory factory, String str) {
-        super(factory);
-        this.str = str;
+    public SimpleCollectionModel(ModelFactory factory, Supplier<Collection<JavaThing>> supplier) {
+        this.factory = factory;
+        this.supplier = supplier;
     }
 
     @Override
-    public String toString() {
-        return str;
+    public ModelFactory getFactory() {
+        return factory;
+    }
+
+    @Override
+    public Collection<JavaThing> getCollection() {
+        return supplier.get();
     }
 }

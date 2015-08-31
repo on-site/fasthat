@@ -42,10 +42,9 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.sun.tools.hat.internal.lang.AbstractClassModel;
 import com.sun.tools.hat.internal.lang.ClassModel;
+import com.sun.tools.hat.internal.lang.HasSimpleForm;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
@@ -54,13 +53,14 @@ import com.sun.tools.hat.internal.model.JavaObject;
  *
  * @author Chris Jester-Young
  */
-public class JRubyClass extends AbstractClassModel implements ScalarModel {
+public class JRubyClass implements ClassModel, HasSimpleForm {
     private static final String[] BASE_NAME_FIELDS = {"baseName", "classId"};
     private static final String[] CACHED_NAME_FIELDS = {"cachedName",
         "calculatedName", "fullName"};
     private static final String[] ANONYMOUS_NAME_FIELDS = {"anonymousName",
         "bareName"};
 
+    private final JRuby factory;
     private final JavaObject classObject;
     private final String baseNameField;
     private final String cachedNameField;
@@ -77,11 +77,16 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
             = Suppliers.memoize(this::getPropertyNamesImpl);
 
     protected JRubyClass(JRuby factory, JavaObject classObject) {
-        super(factory);
+        this.factory = factory;
         this.classObject = classObject;
         baseNameField = Models.findField(classObject, BASE_NAME_FIELDS);
         cachedNameField = Models.findField(classObject, CACHED_NAME_FIELDS);
         anonymousNameField = Models.findField(classObject, ANONYMOUS_NAME_FIELDS);
+    }
+
+    @Override
+    public JRuby getFactory() {
+        return factory;
     }
 
     private boolean isAnonymous() {
@@ -94,7 +99,6 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     }
 
     private boolean isClass() {
-        JRuby factory = (JRuby) getFactory();
         return factory.isClassClass(classObject.getClazz());
     }
 
@@ -103,7 +107,6 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         JavaObject eigenclass = Models.getFieldObject(classObject, "metaClass");
         JavaObject runtime = Models.getFieldObject(eigenclass, "runtime");
         JavaObject objectClassObject = Models.getFieldObject(runtime, "objectClass");
-        JRuby factory = (JRuby) getFactory();
 
         Deque<String> names = new ArrayDeque<>();
         for (JavaObject cls = classObject; cls != null && cls != objectClassObject;
@@ -142,7 +145,6 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
 
     // Based on MetaClass.getRealClass()
     private JRubyClass getRealClassImpl() {
-        JRuby factory = (JRuby) getFactory();
         JavaObject cls = classObject;
         while (cls != null && !factory.isClassClass(cls.getClazz())) {
             cls = Models.getFieldObject(cls, "superClass");
@@ -158,7 +160,6 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
         ImmutableList.Builder<ClassModel> builder = ImmutableList.builder();
         JavaObject cls = Models.getFieldObject(classObject, "superClass");
         while (cls != null) {
-            JRuby factory = (JRuby) getFactory();
             if (factory.isClassClass(cls.getClazz())) {
                 builder.add(factory.lookupClass(cls));
                 break;
@@ -192,7 +193,7 @@ public class JRubyClass extends AbstractClassModel implements ScalarModel {
     }
 
     @Override
-    public String toString() {
+    public String getSimpleForm() {
         return '<' + (isClass() ? "class" : "module") + ':' + getSimpleName() + '>';
     }
 }

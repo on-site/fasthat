@@ -34,21 +34,17 @@
 package com.sun.tools.hat.internal.lang.jruby;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.AbstractScalarModel;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 
-public class JRubyString extends AbstractScalarModel {
-    private final Supplier<String> supplier;
+import java.nio.ByteBuffer;
 
-    private JRubyString(JRuby factory, byte[] bytes, int offset, int length) {
-        super(factory);
-        supplier = Suppliers.memoize(() ->
-                '"' + new String(bytes, offset, length, Charsets.UTF_8) + '"');
+public class JRubyString extends SimpleScalarModel {
+    private JRubyString(JRuby factory, ByteBuffer value) {
+        super(factory, () -> "\"" + Charsets.UTF_8.decode(value) + "\"");
     }
 
     public static JRubyString make(JRuby factory, JavaObject obj) {
@@ -58,15 +54,10 @@ public class JRubyString extends AbstractScalarModel {
             JavaInt begin = Models.safeCast(value.getField("begin"), JavaInt.class);
             JavaInt realSize = Models.safeCast(value.getField("realSize"), JavaInt.class);
             if (bytes != null && begin != null && realSize != null) {
-                return new JRubyString(factory, (byte[]) bytes.getElements(),
-                        begin.value, realSize.value);
+                return new JRubyString(factory, ByteBuffer.wrap((byte[]) bytes.getElements(),
+                        begin.value, realSize.value));
             }
         }
         return null;
-    }
-
-    @Override
-    public String toString() {
-        return supplier.get();
     }
 }

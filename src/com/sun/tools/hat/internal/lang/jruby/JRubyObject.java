@@ -42,14 +42,14 @@ import java.util.Map;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.ClassModel;
+
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.AbstractObjectModel;
+import com.sun.tools.hat.internal.lang.common.SimpleObjectModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JRubyObject extends AbstractObjectModel {
+public class JRubyObject extends SimpleObjectModel {
     private static ImmutableMap<String, JavaThing> getProperties(JRuby factory, JavaObject obj) {
         Collection<String> names = getClassModel(factory, obj).getPropertyNames();
         if (names.isEmpty())
@@ -69,13 +69,10 @@ public class JRubyObject extends AbstractObjectModel {
         return builder.build();
     }
 
-    private final JavaObject obj;
-    private final Supplier<ImmutableMap<String, JavaThing>> properties;
-
-    protected JRubyObject(JRuby factory, JavaObject obj, Supplier<ImmutableMap<String, JavaThing>> supplier) {
-        super(factory);
-        this.obj = obj;
-        this.properties = Suppliers.memoize(supplier);
+    protected JRubyObject(JRuby factory, JavaObject obj, Supplier<Map<String, JavaThing>> supplier) {
+        super(factory, () -> getClassModel(factory, obj),
+                () -> getEigenclassModel(factory, obj),
+                Suppliers.memoize(supplier));
     }
 
     public JRubyObject(JRuby factory, JavaObject obj) {
@@ -86,21 +83,7 @@ public class JRubyObject extends AbstractObjectModel {
         return getEigenclassModel(factory, obj).getRealClass();
     }
 
-    @Override
-    public JRubyClass getClassModel() {
-        return getClassModel(getFactory(), obj);
-    }
-
     private static JRubyClass getEigenclassModel(ModelFactory factory, JavaObject obj) {
         return (JRubyClass) factory.newModel(Models.getFieldObject(obj, "metaClass"));
-    }
-    @Override
-    public JRubyClass getEigenclassModel() {
-        return getEigenclassModel(getFactory(), obj);
-    }
-
-    @Override
-    public Map<String, JavaThing> getProperties() {
-        return properties.get();
     }
 }

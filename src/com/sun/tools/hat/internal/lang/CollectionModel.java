@@ -44,4 +44,9 @@ import com.sun.tools.hat.internal.model.JavaThing;
  */
 public interface CollectionModel extends Model {
     Collection<JavaThing> getCollection();
+
+    @Override
+    default void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
 }

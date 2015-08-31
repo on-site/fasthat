@@ -33,6 +33,7 @@
 
 package com.sun.tools.hat.internal.lang;
 
+import java.nio.CharBuffer;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
@@ -112,6 +113,29 @@ public final class Models {
     }
 
     /**
+     * Returns the value of string object {@code obj} as a {@link CharBuffer},
+     * or null if {@code obj} is not a string object.
+     *
+     * @param obj the object to get the string value of
+     * @return the string value of {@code obj} as a {@link CharBuffer}
+     */
+    public static CharBuffer getStringValueAsCharBuffer(JavaObject obj) {
+        if (obj != null && obj.getClazz().isString()) {
+            JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
+            JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
+            JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
+            if (value != null) {
+                if (offset != null && count != null) {
+                    return CharBuffer.wrap((char[]) value.getElements(), offset.value, count.value);
+                } else {
+                    return CharBuffer.wrap((char[]) value.getElements());
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns the value of string object {@code obj}, or null if
      * {@code obj} is not a string object.
      *
@@ -119,19 +143,8 @@ public final class Models {
      * @return the string value of {@code obj}, or null
      */
     public static String getStringValue(JavaObject obj) {
-        if (obj != null && obj.getClazz().isString()) {
-            JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
-            JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
-            JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
-            if (value != null) {
-                if (offset != null && count != null) {
-                    return new String((char[]) value.getElements(), offset.value, count.value);
-                } else {
-                    return new String((char[]) value.getElements());
-                }
-            }
-        }
-        return null;
+        CharBuffer value = getStringValueAsCharBuffer(obj);
+        return value != null ? value.toString() : null;
     }
 
     /**

@@ -68,4 +68,9 @@ public interface ObjectModel extends Model {
      * @return properties attached to this object
      */
     Map<String, JavaThing> getProperties();
+
+    @Override
+    default void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
 }

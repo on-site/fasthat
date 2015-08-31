@@ -33,27 +33,16 @@
 
 package com.sun.tools.hat.internal.lang.openjdk;
 
-import java.util.Collection;
-
-import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
+
 import com.sun.tools.hat.internal.lang.common.SafeArray;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JavaArray extends AbstractCollectionModel {
-    private final Supplier<ImmutableList<JavaThing>> supplier;
-
+public class JavaArray extends SimpleCollectionModel {
     public JavaArray(OpenJDK factory, JavaObjectArray array) {
-        super(factory);
-        supplier = Suppliers.memoize(() ->
-                ImmutableList.copyOf(new SafeArray(array, factory.getNullThing()).getElements()));
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return supplier.get();
+        super(factory, Suppliers.memoize(() ->
+                ImmutableList.copyOf(new SafeArray(array, factory.getNullThing()).getElements())));
     }
 }

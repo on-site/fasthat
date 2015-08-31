@@ -82,4 +82,9 @@ public interface ClassModel extends Model {
      * @return the property names of this class
      */
     Collection<String> getPropertyNames();
+
+    @Override
+    default void visit(ModelVisitor visitor) {
+        visitor.visit(this);
+    }
 }

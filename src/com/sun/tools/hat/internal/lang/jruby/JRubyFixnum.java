@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 On-Site.com.
+ * Copyright © 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,31 +33,23 @@
 
 package com.sun.tools.hat.internal.lang.jruby;
 
-import com.sun.tools.hat.internal.lang.AbstractScalarModel;
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaLong;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 /**
  * Model for Ruby fixnums.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
-public class JRubyFixnum extends AbstractScalarModel {
-    private final long value;
-
+public class JRubyFixnum extends SimpleScalarModel {
     private JRubyFixnum(JRuby factory, long value) {
-        super(factory);
-        this.value = value;
+        super(factory, () -> Long.toString(value));
     }
 
     public static JRubyFixnum make(JRuby factory, JavaObject obj) {
         JavaLong value = Models.getFieldThing(obj, "value", JavaLong.class);
         return value == null ? null : new JRubyFixnum(factory, value.value);
-    }
-
-    @Override
-    public String toString() {
-        return Long.toString(value);
     }
 }

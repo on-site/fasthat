@@ -33,34 +33,26 @@
 
 package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Collection;
-import java.util.List;
-
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.AbstractCollectionModel;
+
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.SafeArray;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JRubyArray extends AbstractCollectionModel {
+public class JRubyArray extends SimpleCollectionModel {
     private static final LoadingCache<SafeArray, ImmutableList<JavaThing>> ELEMENT_CACHE
             = CacheBuilder.newBuilder().softValues().build(
                     CacheLoader.from(arr -> ImmutableList.copyOf(arr.getElements())));
 
-    private final Supplier<List<JavaThing>> supplier;
-
     private JRubyArray(JRuby factory, SafeArray arr, int begin, int length) {
-        super(factory);
-        this.supplier = Suppliers.memoize(() ->
-                ELEMENT_CACHE.getUnchecked(arr).subList(begin, begin + length));
+        super(factory, () -> ELEMENT_CACHE.getUnchecked(arr).subList(begin, begin + length));
     }
 
     public static JRubyArray make(JRuby factory, JavaObject obj) {
@@ -71,10 +63,5 @@ public class JRubyArray extends AbstractCollectionModel {
             return null;
         return new JRubyArray(factory, new SafeArray(arr, factory.getNullThing()),
                 begin.value, length.value);
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return supplier.get();
     }
 }
