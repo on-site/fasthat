@@ -42,7 +42,6 @@ import java.util.Map;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 
-import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.SimpleObjectModel;
 import com.sun.tools.hat.internal.model.JavaObject;
@@ -79,11 +78,11 @@ public class JRubyObject extends SimpleObjectModel {
         this(factory, obj, () -> getProperties(factory, obj));
     }
 
-    private static JRubyClass getClassModel(ModelFactory factory, JavaObject obj) {
+    static JRubyClass getClassModel(JRuby factory, JavaObject obj) {
         return getEigenclassModel(factory, obj).getRealClass();
     }
 
-    private static JRubyClass getEigenclassModel(ModelFactory factory, JavaObject obj) {
-        return (JRubyClass) factory.newModel(Models.getFieldObject(obj, "metaClass"));
+    static JRubyClass getEigenclassModel(JRuby factory, JavaObject obj) {
+        return factory.lookupClass(Models.getFieldObject(obj, "metaClass"));
     }
 }
