@@ -38,12 +38,19 @@ import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 
 public class JRubySymbol extends SimpleScalarModel {
+    private final String value;
+
     private JRubySymbol(JRuby factory, String value) {
         super(factory, () -> ':' + value);
+        this.value = value;
     }
 
     public static JRubySymbol make(JRuby factory, JavaObject obj) {
         String str = Models.getFieldString(obj, "symbol");
         return str == null ? null : new JRubySymbol(factory, str);
+    }
+
+    public String getValue() {
+        return value;
     }
 }

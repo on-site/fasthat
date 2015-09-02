@@ -101,6 +101,7 @@ public abstract class JRuby implements ModelFactory {
                 .put(lookup.apply("org.jruby.RubyFixnum"), this::makeFixnum)
                 .put(lookup.apply("org.jruby.RubyFloat"), this::makeFloat)
                 .put(lookup.apply("org.jruby.RubyObject"), this::makeObject)
+                .put(lookup.apply("org.jruby.RubyStruct"), this::makeStruct)
                 .put(lookup.apply("org.jruby.RubyArray"), this::makeArray)
                 .put(lookup.apply("org.jruby.RubyHash"), this::makeHash)
                 // TODO Implement other JRuby types.
@@ -162,6 +163,10 @@ public abstract class JRuby implements ModelFactory {
 
     protected JRubyObject makeObject(JavaObject obj) {
         return new JRubyObject(this, obj);
+    }
+
+    protected JRubyStruct makeStruct(JavaObject obj) {
+        return new JRubyStruct(this, obj);
     }
 
     protected JRubyArray makeArray(JavaObject obj) {
