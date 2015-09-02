@@ -46,7 +46,6 @@ import com.google.common.cache.LoadingCache;
  *
  * @author Chris Jester-Young
  */
-@SuppressWarnings("unchecked")
 public class Suppliers {
     private static final Class<?> MEMOIZING_SUPPLIER_CLASS = getMemoizingSupplierClass();
     private static final Field INITIALIZED_FIELD = getField("initialized");
@@ -76,6 +75,7 @@ public class Suppliers {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> Supplier<T> memoize(Supplier<T> supplier) {
         return (Supplier<T>) MEMOIZERS.getUnchecked(supplier);
     }
