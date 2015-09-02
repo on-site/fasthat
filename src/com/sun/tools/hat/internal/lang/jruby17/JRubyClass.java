@@ -50,6 +50,12 @@ public class JRubyClass extends com.sun.tools.hat.internal.lang.jruby.JRubyClass
     }
 
     @Override
+    public JRubyClass getRealClass() {
+        return (JRubyClass) getFactory().lookupClass(
+                Models.getFieldObject(getClassObject(), "realClass"));
+    }
+
+    @Override
     protected ImmutableList<String> getPropertyNamesImpl() {
         return ImmutableList.copyOf(Lists.transform(
                 Models.getFieldObjectArray(
