@@ -37,7 +37,6 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.base.Suppliers;
 import com.google.common.primitives.Booleans;
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Chars;
@@ -55,6 +54,7 @@ import com.sun.tools.hat.internal.model.JavaLong;
 import com.sun.tools.hat.internal.model.JavaShort;
 import com.sun.tools.hat.internal.model.JavaValue;
 import com.sun.tools.hat.internal.model.JavaValueArray;
+import com.sun.tools.hat.internal.util.Suppliers;
 
 public class JavaPrimArray extends SimpleCollectionModel {
     public JavaPrimArray(OpenJDK factory, JavaValueArray array) {

@@ -33,6 +33,7 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.util.Suppliers;
 
 /**
  * A query for setting breakpoints in, to debug models and the like.
@@ -42,9 +43,22 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 class DebugQuery extends QueryHandler {
     @Override
     public void run() {
-        JavaHeapObject thing = snapshot.findThing(query);
+        if (query.startsWith("0x"))
+            printObject(query);
+        else if (query.equals("unmemoize"))
+            unmemoize();
+    }
+
+    private void printObject(String id) {
+        JavaHeapObject thing = snapshot.findThing(id);
         startHtml("Object at %s", thing.getIdString());
         printDetailed(thing);
+        endHtml();
+    }
+
+    private void unmemoize() {
+        Suppliers.unmemoizeAll();
+        startHtml("Unmemoized all suppliers");
         endHtml();
     }
 }
