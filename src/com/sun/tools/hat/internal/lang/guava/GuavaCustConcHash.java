@@ -56,8 +56,7 @@ class GuavaCustConcHash extends SimpleMapModel {
                     JavaThing key = entry.getField("key");
                     if (key == null)
                         key = entry.getField("referent");
-                    JavaObject valueReference = Models.getFieldObject(entry, "valueReference");
-                    JavaThing value = valueReference.getField("referent");
+                    JavaObject value = Models.getFieldObjectChain(entry, "valueReference", "referent");
                     if (key != null && value != null)
                         builder.put(key, value);
                 }

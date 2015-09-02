@@ -254,6 +254,23 @@ public final class Models {
     }
 
     /**
+     * Convenience method for chaining a bunch of field accesses, as if
+     * doing {@code foo.bar.baz.qux}.
+     *
+     * @param obj the object to use
+     * @param fields the fields to chain with
+     * @return the value of the chained accesses, or null
+     */
+    public static JavaObject getFieldObjectChain(JavaObject obj, String... fields) {
+        for (String field : fields) {
+            if (obj == null)
+                return null;
+            obj = getFieldObject(obj, field);
+        }
+        return obj;
+    }
+
+    /**
      * Convenience method for getting the given field from the given
      * object as a {@code T}.
      *

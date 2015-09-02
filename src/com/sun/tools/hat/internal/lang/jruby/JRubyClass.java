@@ -104,9 +104,8 @@ public class JRubyClass implements ClassModel, HasSimpleForm {
 
     // Based on RubyModule.calculateName()
     private String getNameImpl() {
-        JavaObject eigenclass = Models.getFieldObject(classObject, "metaClass");
-        JavaObject runtime = Models.getFieldObject(eigenclass, "runtime");
-        JavaObject objectClassObject = Models.getFieldObject(runtime, "objectClass");
+        JavaObject objectClassObject = Models.getFieldObjectChain(classObject,
+                "metaClass", "runtime", "objectClass");
 
         Deque<String> names = new ArrayDeque<>();
         for (JavaObject cls = classObject; cls != null && cls != objectClassObject;
