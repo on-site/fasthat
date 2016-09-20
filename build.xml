@@ -1,13 +1,32 @@
 <project name="fasthat" default="dist" basedir=".">
-  <property name="src" value="src"/>
   <property name="base.build" value="build"/>
+
+  <!-- Build targets used by this build -->
+  <property name="ant.ext.src" value="ant-ext-src"/>
+  <property name="ant.ext.build" value="${base.build}/ant-ext"/>
+
+  <path id="ant.ext.classpath">
+    <pathelement path="${ant.ext.build}"/>
+  </path>
+
+  <target name="init-ant-ext">
+    <mkdir dir="${ant.ext.build}"/>
+  </target>
+
+  <target name="compile-ant-ext" depends="init-ant-ext">
+    <javac srcdir="${ant.ext.src}" destdir="${ant.ext.build}" debug="true"/>
+  </target>
+
+  <target name="define-ant-ext-tasks" depends="compile-ant-ext">
+    <taskdef name="each-pom-dependency" classname="com.on_site.fasthat.ant.EachPomDependencyTask" classpathref="ant.ext.classpath" />
+  </target>
+
+  <!-- The actual build -->
+  <property name="src" value="src"/>
   <property name="build" value="${base.build}/java"/>
   <property name="lib" value="lib"/>
   <property name="bin" value="bin"/>
   <property name="jar" value="${base.build}/jar/fasthat.jar"/>
-  <property name="tmp" value="tmp"/>
-  <property name="guava.ver" value="18.0"/>
-  <property name="guava.jar" value="guava-${guava.ver}.jar"/>
 
   <path id="classpath">
     <fileset dir="${lib}">
@@ -15,41 +34,52 @@
     </fileset>
   </path>
 
-  <available file="${lib}/${guava.jar}" property="guava.exists"/>
-
   <target name="clean">
     <delete dir="${base.build}"/>
     <delete dir="${bin}"/>
   </target>
 
-  <target name="make-lib-dir">
+  <target name="init">
+    <mkdir dir="${build}"/>
+    <mkdir dir="${bin}"/>
     <mkdir dir="${lib}"/>
   </target>
 
-  <target name="get-guava" unless="guava.exists">
-    <get src="http://central.maven.org/maven2/com/google/guava/guava/${guava.ver}/${guava.jar}" dest="${lib}"/>
+  <target name="get-dependencies" depends="init, define-ant-ext-tasks">
+    <each-pom-dependency>
+      <sequential>
+        <get src="@{dep-maven-url}" dest="${lib}/@{dep-jar}" skipexisting="true"/>
+      </sequential>
+    </each-pom-dependency>
   </target>
 
-  <target name="check-lib" depends="make-lib-dir, get-guava"/>
-
-  <target name="init" depends="check-lib">
-    <mkdir dir="${build}"/>
-    <mkdir dir="${bin}"/>
-  </target>
-
-  <target name="compile" depends="init">
+  <target name="compile" depends="init, get-dependencies">
     <javac srcdir="${src}" destdir="${build}" classpathref="classpath" debug="true"/>
   </target>
 
-  <target name="jar" depends="compile">
+  <target name="copy-resources" depends="init">
     <copy todir="${build}/com/sun/tools/hat/resources">
       <fileset dir="${src}/com/sun/tools/hat/resources"/>
     </copy>
+  </target>
+
+  <target name="unzip-dependencies" depends="get-dependencies">
+    <each-pom-dependency>
+      <sequential>
+        <unzip src="${lib}/@{dep-jar}" dest="${build}">
+          <patternset>
+            <exclude name="META-INF/MANIFEST.MF"/>
+          </patternset>
+        </unzip>
+      </sequential>
+    </each-pom-dependency>
+  </target>
+
+  <target name="jar" depends="compile, copy-resources, unzip-dependencies">
     <jar jarfile="${jar}" basedir="${build}">
       <manifest>
         <attribute name="Main-Class" value="com.sun.tools.hat.Main"/>
       </manifest>
-      <zipfileset src="${lib}/${guava.jar}"/>
     </jar>
   </target>
 

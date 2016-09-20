@@ -8,10 +8,6 @@ fasthat is a fork of OpenJDK 8's [jhat][jhat] that enhances our ability
 to analyse large heap dumps (typically 4 to 8 GB) that we frequently
 work with at On-Site.
 
-Since leaving On-Site, I've had occasion to continue using fasthat. This
-fork is my continuation of the work I continue to do. I plan to sync up
-with the [On-Site fasthat repo][osmfasthat] once in a while.
-
 Features
 --------
 
@@ -45,9 +41,12 @@ I always try to keep up-to-date with the latest released versions. At
 the time of current writing, I'm using Guava 18.0.
 
 I develop and build using Eclipse. [Mike Virata-Stone][smellsblue] has created
-an Ant `build.xml` that you may find useful, but I have not tested it.
-In particular, you may need to update it to work with the latest Guava
-jars.
+an Ant `build.xml` that you may find useful. If you are set up with ant and JDK
+8, you can run `ant` to build the jar, and then run via the following command
+(make sure to adjust your max heap to allow for the size of your heap dump):
+```
+$ java -Xmx8g -jar bin/fasthat.jar path/to/your/heap.dump
+```
 
 Future directions
 -----------------
@@ -87,15 +86,13 @@ to improve on that I haven't yet got around to:
 Contact and licensing
 ---------------------
 
-fasthat is maintained by [Mike Virata-Stone][smellsblue]. _This fork_ of
-fasthat is maintained by [Chris Jester-Young][cky].
+fasthat is maintained by [Chris Jester-Young][cky] and [Mike Virata-Stone][smellsblue].
 
 All of the code from OpenJDK are licensed under GPLv2 with Classpath
 Exception. All of the new code (not originating from OpenJDK) are
 licensed under GPLv2 or later, with Classpath Exception.
 
 [jhat]: http://docs.oracle.com/javase/6/docs/technotes/tools/share/jhat.html
-[osmfasthat]: https://github.com/on-site/fasthat
 [guava]: https://github.com/google/guava
 [smellsblue]: https://github.com/smellsblue
 [guava-ver]: http://stackoverflow.com/q/7694468/13
