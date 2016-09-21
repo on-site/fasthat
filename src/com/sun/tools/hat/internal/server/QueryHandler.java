@@ -113,9 +113,9 @@ abstract class QueryHandler implements Runnable {
     }
 
     protected void startHtml(String title) {
-        out.print("<html><title>");
+        out.print("<html><head><link rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\" /><title>");
         print(title);
-        out.println("</title>");
+        out.println("</title></head>");
         out.println("<body bgcolor=\"#ffffff\"><center><h1>");
         print(title);
         out.println("</h1></center>");

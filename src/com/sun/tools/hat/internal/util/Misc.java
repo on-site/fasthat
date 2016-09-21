@@ -33,6 +33,8 @@
 
 package com.sun.tools.hat.internal.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.IntConsumer;
 
 import com.google.common.base.Predicate;
@@ -168,5 +170,19 @@ public class Misc {
             }
         }
         return ImmutableSet.copyOf(instances);
+    }
+
+    private static final long ONE_SECOND = 1000L;
+    private static final long ONE_MINUTE = ONE_SECOND * 60L;
+    private static final long ONE_HOUR = ONE_MINUTE * 60L;
+
+    public static String formatTime(long millis) {
+        long hours = millis / ONE_HOUR;
+        millis %= ONE_HOUR;
+        long minutes = millis / ONE_MINUTE;
+        millis %= ONE_MINUTE;
+        long seconds = millis / ONE_SECOND;
+        millis %= ONE_SECOND;
+        return String.format("%d:%02d:%02d.%03d", hours, minutes, seconds, millis);
     }
 }
