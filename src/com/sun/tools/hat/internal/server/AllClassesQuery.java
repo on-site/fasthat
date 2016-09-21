@@ -34,115 +34,79 @@ package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author      Bill Foote
  */
-
-
-class AllClassesQuery extends QueryHandler {
-
+class AllClassesQuery extends MustacheQueryHandler {
     private final boolean excludePlatform;
     private final boolean oqlSupported;
+    private List<JavaPackage> packages;
 
     public AllClassesQuery(boolean excludePlatform, boolean oqlSupported) {
         this.excludePlatform = excludePlatform;
         this.oqlSupported = oqlSupported;
     }
 
-    @Override
-    public void run() {
+    public String getTitle() {
         if (excludePlatform) {
-            startHtml("All Classes (excluding platform)");
+            return "All Classes (excluding platform)";
         } else {
-            startHtml("All Classes (including platform)");
+            return "All Classes (including platform)";
         }
-
-        String lastPackage = null;
-        for (JavaClass clazz : snapshot.getClasses()) {
-            if (excludePlatform && PlatformClasses.isPlatformClass(clazz)) {
-                // skip this..
-                continue;
-            }
-            String name = clazz.getName();
-            int pos = name.lastIndexOf(".");
-            String pkg;
-            if (name.startsWith("[")) {         // Only in ancient heap dumps
-                pkg = "<Arrays>";
-            } else if (pos == -1) {
-                pkg = "<Default Package>";
-            } else {
-                pkg = name.substring(0, pos);
-            }
-            if (!pkg.equals(lastPackage)) {
-                out.print("<h2>Package ");
-                print(pkg);
-                out.println("</h2>");
-            }
-            lastPackage = pkg;
-            printClass(clazz);
-            if (clazz.getId() != -1) {
-                print(" [" + clazz.getIdString() + "]");
-            }
-            out.println("<br>");
-        }
-
-        out.println("<h2>Other Queries</h2>");
-        out.println("<ul>");
-
-        out.println("<li>");
-        printAnchorStart();
-        if (excludePlatform) {
-            out.print("allClassesWithPlatform/\">");
-            print("All classes including platform");
-        } else {
-            out.print("\">");
-            print("All classes excluding platform");
-        }
-        out.println("</a>");
-
-        out.println("<li>");
-        printAnchorStart();
-        out.print("showRoots/\">");
-        print("Show all members of the rootset");
-        out.println("</a>");
-
-        out.println("<li>");
-        printAnchorStart();
-        out.print("showInstanceCounts/includePlatform/\">");
-        print("Show instance counts for all classes (including platform)");
-        out.println("</a>");
-
-        out.println("<li>");
-        printAnchorStart();
-        out.print("showInstanceCounts/\">");
-        print("Show instance counts for all classes (excluding platform)");
-        out.println("</a>");
-
-        out.println("<li>");
-        printAnchorStart();
-        out.print("histo/\">");
-        print("Show heap histogram");
-        out.println("</a>");
-
-        out.println("<li>");
-        printAnchorStart();
-        out.print("finalizerSummary/\">");
-        print("Show finalizer summary");
-        out.println("</a>");
-
-        if (oqlSupported) {
-            out.println("<li>");
-            printAnchorStart();
-            out.print("oql/\">");
-            print("Execute Object Query Language (OQL) query");
-            out.println("</a>");
-        }
-
-        out.println("</ul>");
-
-        endHtml();
     }
 
+    public boolean getExcludePlatform() {
+        return excludePlatform;
+    }
 
+    public boolean getOqlSupported() {
+        return oqlSupported;
+    }
+
+    public List<JavaPackage> getPackages() {
+        if (packages != null) {
+            return packages;
+        }
+
+        packages = new ArrayList<>();
+        JavaPackage lastPackage = null;
+
+        for (JavaClass clazz : snapshot.getClasses()) {
+            if (excludePlatform && PlatformClasses.isPlatformClass(clazz)) {
+                continue;
+            }
+
+            String pkg = clazz.getPackageName();
+
+            if (lastPackage == null || !pkg.equals(lastPackage.getName())) {
+                lastPackage = new JavaPackage(pkg);
+                packages.add(lastPackage);
+            }
+
+            lastPackage.getClasses().add(clazz);
+        }
+
+        return packages;
+    }
+
+    public static class JavaPackage {
+        private final String name;
+        private final List<JavaClass> classes = new ArrayList<>();
+
+        public JavaPackage(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public List<JavaClass> getClasses() {
+            return classes;
+        }
+    }
 }

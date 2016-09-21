@@ -1,0 +1,38 @@
+{{<layout}}
+  {{$title}}{{title}}{{/title}}
+  {{$content}}
+    {{#packages}}
+      <h2>{{name}}</h2>
+
+      {{#classes}}
+        {{#validId}}
+          <a href="/class/{{idString}}">class {{name}}</a> [{{idString}}]
+        {{/validId}}
+        {{^validId}}
+          <a href="/class/{{#urlEncode}}{{{name}}}{{/urlEncode}}">class {{name}}</a>
+        {{/validId}}
+
+        <br />
+      {{/classes}}
+    {{/packages}}
+
+    <h2>Other Queries</h2>
+
+    <ul>
+      {{#excludePlatform}}
+        <li><a href="/allClassesWithPlatform/">All classes including platform</a></li>
+      {{/excludePlatform}}
+      {{^excludePlatform}}
+        <li><a href="/allClasses/">All classes excluding platform</a></li>
+      {{/excludePlatform}}
+      <li><a href="/showRoots/">Show all members of the rootset</a></li>
+      <li><a href="/showInstanceCounts/includePlatform/">Show instance counts for all classes (including platform)</a></li>
+      <li><a href="/showInstanceCounts/">Show instance counts for all classes (excluding platform)</a></li>
+      <li><a href="/histo/">Show heap histogram</a></li>
+      <li><a href="/finalizerSummary/">Show finalizer summary</a></li>
+      {{#oqlSupported}}
+        <li><a href="/oql/">Execute Object Query Language (OQL) query</a></li>
+      {{/oqlSupported}}
+    </ul>
+  {{/content}}
+{{/layout}}

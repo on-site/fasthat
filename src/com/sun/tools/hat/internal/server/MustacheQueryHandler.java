@@ -51,6 +51,8 @@ import com.google.common.cache.LoadingCache;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import java.util.function.Function;
+
 abstract class MustacheQueryHandler extends QueryHandler {
     private static final MustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory(new MustacheResolver() {
         @Override
@@ -70,6 +72,9 @@ abstract class MustacheQueryHandler extends QueryHandler {
     private static Reader getReader(String resourceName) {
         return new InputStreamReader(MustacheQueryHandler.class.getResourceAsStream("/com/sun/tools/hat/resources/" + resourceName + ".mustache"));
     }
+
+    // Functions for templates to use
+    public static final Function<String, String> urlEncode = MustacheQueryHandler::encodeForURL;
 
     @Override
     public void run() {

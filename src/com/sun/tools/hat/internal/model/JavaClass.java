@@ -100,6 +100,10 @@ public class JavaClass extends JavaHeapObject {
              protDomainId, fields, statics, instanceSize);
     }
 
+    public boolean isValidId() {
+        return getId() != -1;
+    }
+
     @Override
     public final JavaClass getClazz() {
         return mySnapshot.getJavaLangClass();
@@ -441,6 +445,18 @@ public class JavaClass extends JavaHeapObject {
                     v.visit((JavaHeapObject) other);
                 }
             }
+        }
+    }
+
+    public String getPackageName() {
+        int pos = name.lastIndexOf(".");
+
+        if (name.startsWith("[")) {         // Only in ancient heap dumps
+            return "<Arrays>";
+        } else if (pos == -1) {
+            return "<Default Package>";
+        } else {
+            return name.substring(0, pos);
         }
     }
 
