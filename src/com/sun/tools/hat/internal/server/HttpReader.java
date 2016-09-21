@@ -143,7 +143,8 @@ public class HttpReader extends HttpHandler {
             builder.add(new HandlerRoute("/oql/", () -> new OQLQuery(engine)),
                         new HandlerRoute("/oqlhelp/", OQLHelp::new));
         }
-        builder.add(new HandlerRoute("/", () -> new AllClassesQuery(true, isOQLSupported)),
+        builder.add(new HandlerRoute("/", IndexQuery::new),
+                    new HandlerRoute("/allClasses/", () -> new AllClassesQuery(true, isOQLSupported)),
                     new HandlerRoute("/allClassesWithPlatform/", () -> new AllClassesQuery(false, isOQLSupported)),
                     new HandlerRoute("/showRoots/", AllRootsQuery::new),
                     new HandlerRoute("/showInstanceCounts/", () -> new InstancesCountQuery(true)),

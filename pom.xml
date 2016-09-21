@@ -30,5 +30,10 @@
       <artifactId>guava</artifactId>
       <version>18.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.spullara.mustache.java</groupId>
+      <artifactId>compiler</artifactId>
+      <version>0.9.2</version>
+    </dependency>
   </dependencies>
 </project>

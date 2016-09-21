@@ -53,7 +53,7 @@ class OQLQuery extends QueryHandler {
         String oql = Iterables.getOnlyElement(params.get("query"), null);
         out.println("<p align='center'><table>");
         out.println("<tr><td><b>");
-        out.println("<a href='/'>All Classes (excluding platform)</a>");
+        out.println("<a href='/allClasses/'>All Classes (excluding platform)</a>");
         out.println("</b></td>");
         out.println("<td><b><a href='/oqlhelp/'>OQL Help</a></b></td></tr>");
         out.println("</table></p>");

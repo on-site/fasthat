@@ -157,7 +157,7 @@ public class HistogramQuery extends QueryHandler {
 
         printBreadcrumbs(query, referee, referrers);
         out.println("<p align='center'>");
-        out.println("<b><a href='/'>All Classes (excluding platform)</a></b>");
+        out.println("<b><a href='/allClasses/'>All Classes (excluding platform)</a></b>");
         out.println("</p>");
 
         out.println("<table align=center border=1>");

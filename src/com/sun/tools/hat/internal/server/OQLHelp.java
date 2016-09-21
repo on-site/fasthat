@@ -40,22 +40,5 @@ import java.io.*;
  * @author A. Sundararajan
  */
 
-class OQLHelp extends QueryHandler {
-
-    public OQLHelp() {
-    }
-
-    @Override
-    public void run() {
-        InputStream is = getClass().getResourceAsStream("/com/sun/tools/hat/resources/oqlhelp.html");
-        int ch = -1;
-        try {
-            is = new BufferedInputStream(is);
-            while ( (ch = is.read()) != -1) {
-                out.print((char)ch);
-            }
-        } catch (Exception exp) {
-            printException(exp);
-        }
-    }
+class OQLHelp extends MustacheQueryHandler {
 }

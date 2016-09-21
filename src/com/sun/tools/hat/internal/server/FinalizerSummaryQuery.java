@@ -44,7 +44,7 @@ public class FinalizerSummaryQuery extends QueryHandler {
         startHtml("Finalizer Summary");
 
         out.println("<p align='center'>");
-        out.println("<b><a href='/'>All Classes (excluding platform)</a></b>");
+        out.println("<b><a href='/allClasses/'>All Classes (excluding platform)</a></b>");
         out.println("</p>");
 
         printFinalizerSummary(snapshot.getFinalizerObjects());
