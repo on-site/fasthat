@@ -1,5 +1,11 @@
 {{<layout}}
   {{$content}}
+    {{#memoryUsage}}
+      <p>
+        <b>Heap Utilization:</b> {{usedMemory}} / {{totalMemory}} ({{percentMemoryUsed}})
+      </p>
+    {{/memoryUsage}}
+
     <h1>Available Queries</h1>
 
     <ul>

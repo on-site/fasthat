@@ -37,10 +37,11 @@ import com.sun.tools.hat.internal.util.Misc;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class LoadProgress {
+public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
     private List<ProgressElement> elements = Collections.synchronizedList(new ArrayList<>());
 
     public void startLoadingStream(String heapFile, PositionDataInputStream stream) {
@@ -57,6 +58,11 @@ public class LoadProgress {
         synchronized (elements) {
             elements.get(elements.size() - 1).end();
         }
+    }
+
+    @Override
+    public Iterator<ProgressElement> iterator() {
+        return elements.iterator();
     }
 
     public void each(Consumer<ProgressElement> callback) {

@@ -32,10 +32,44 @@
 
 package com.sun.tools.hat.internal.server;
 
-class IndexQuery extends MustacheQueryHandler {
-    private MemoryUsageDetails memoryUsage = new MemoryUsageDetails();
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryUsage;
 
-    public MemoryUsageDetails getMemoryUsage() {
-        return memoryUsage;
+class MemoryUsageDetails {
+    private static final String MB = "MB";
+    private static final String GB = "GB";
+
+    private final String memUsed;
+    private final String memTotal;
+    private final String memPercent;
+
+    public MemoryUsageDetails() {
+        MemoryUsage memory = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
+        String size = MB;
+        double used = (double) memory.getUsed() / 1024.0 / 1024.0;
+        double total = (double) memory.getMax() / 1024.0 / 1024.0;
+        double percentUsed = 100.0 * used / total;
+
+        if (total >= 1024.0) {
+            size = GB;
+            used /= 1024.0;
+            total /= 1024.0;
+        }
+
+        memUsed = String.format("%1.2f%s", used, size);
+        memTotal = String.format("%1.2f%s", total, size);
+        memPercent = String.format("%1.1f%%", percentUsed);
+    }
+
+    public String getUsedMemory() {
+        return memUsed;
+    }
+
+    public String getTotalMemory() {
+        return memTotal;
+    }
+
+    public String getPercentMemoryUsed() {
+        return memPercent;
     }
 }

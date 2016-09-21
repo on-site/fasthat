@@ -1,0 +1,19 @@
+{{<layout}}
+  {{$title}}Server Not Ready{{/title}}
+
+  {{$content}}
+    {{#memoryUsage}}
+      <p>
+        <b>Heap Utilization:</b> {{usedMemory}} / {{totalMemory}} ({{percentMemoryUsed}})
+      </p>
+    {{/memoryUsage}}
+
+    {{#loadProgress}}
+      <p>
+        {{loadString}}
+      </p>
+    {{/loadProgress}}
+
+    <meta http-equiv="refresh" content="1" />
+  {{/content}}
+{{/layout}}
