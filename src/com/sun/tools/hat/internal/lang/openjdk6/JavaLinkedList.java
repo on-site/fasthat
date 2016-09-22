@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,25 +33,16 @@
 
 package com.sun.tools.hat.internal.lang.openjdk6;
 
-import java.util.Collection;
-
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.util.Suppliers;
 
-class JavaLinkedList extends CollectionModel {
-    private final ImmutableList<JavaThing> items;
-
-    private JavaLinkedList(ImmutableList<JavaThing> items) {
-        this.items = items;
-    }
-
-    public static JavaLinkedList make(JavaObject list) {
-        JavaObject header = Models.getFieldObject(list, "header");
-        if (header == null)
-            return null;
+class JavaLinkedList extends SimpleCollectionModel {
+    private static ImmutableList<JavaThing> getCollectionImpl(JavaObject header) {
         ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
         for (JavaObject entry = Models.getFieldObject(header, "next");
                 entry != header; entry = Models.getFieldObject(entry, "next")) {
@@ -58,11 +50,15 @@ class JavaLinkedList extends CollectionModel {
                 return null;
             builder.add(entry.getField("element"));
         }
-        return new JavaLinkedList(builder.build());
+        return builder.build();
     }
 
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return items;
+    private JavaLinkedList(OpenJDK6 factory, JavaObject header) {
+        super(factory, Suppliers.memoize(() -> getCollectionImpl(header)));
+    }
+
+    public static JavaLinkedList make(OpenJDK6 factory, JavaObject list) {
+        JavaObject header = Models.getFieldObject(list, "header");
+        return header == null ? null : new JavaLinkedList(factory, header);
     }
 }

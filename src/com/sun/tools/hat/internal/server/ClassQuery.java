@@ -49,10 +49,10 @@ class ClassQuery extends QueryHandler {
 
     @Override
     public void run() {
-        startHtml("Class " + query);
+        startHtml("Class %s", query);
         JavaClass clazz = snapshot.findClass(query);
         if (clazz == null) {
-            error("class not found: " + query);
+            error("class not found: %s", query);
         } else {
             printFullClass(clazz);
         }

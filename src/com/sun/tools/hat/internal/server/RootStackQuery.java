@@ -52,15 +52,15 @@ class RootStackQuery extends QueryHandler {
         int index = (int) parseHex(query);
         Root root = snapshot.getRootAt(index);
         if (root == null) {
-            error("Root at " + index + " not found");
+            error("Root at %d not found", index);
             return;
         }
         StackTrace st = root.getStackTrace();
         if (st == null || st.getFrames().length == 0) {
-            error("No stack trace for " + root.getDescription());
+            error("No stack trace for %s", root.getDescription());
             return;
         }
-        startHtml("Stack Trace for " + root.getDescription());
+        startHtml("Stack Trace for %s", root.getDescription());
         out.println("<p>");
         printStackTrace(st);
         out.println("</p>");

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -33,32 +34,21 @@
 package com.sun.tools.hat.internal.lang.guava;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.MapModel;
+
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleMapModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.util.Suppliers;
 
-class GuavaCustConcHash extends MapModel {
-    private final ImmutableMap<JavaThing, JavaThing> map;
-
-    private GuavaCustConcHash(ImmutableMap<JavaThing, JavaThing> map) {
-        this.map = map;
-    }
-
-    public static GuavaCustConcHash make(JavaObject chm) {
-        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
-                JavaObject.class);
-        if (segments == null)
-            return null;
-
-        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
+class GuavaCustConcHash extends SimpleMapModel {
+    private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> segments) {
+        ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
         for (JavaObject segment : segments) {
             JavaObject table = Models.getFieldObject(segment, "table");
-            List<JavaObject> array = Models.getFieldObjectArray(table, "array",
-                    JavaObject.class);
+            List<JavaObject> array = Models.getFieldObjectArray(table, "array", JavaObject.class);
             if (array != null) {
                 for (JavaObject entry : array) {
                     // Strong keys use the "key" field
@@ -66,19 +56,21 @@ class GuavaCustConcHash extends MapModel {
                     JavaThing key = entry.getField("key");
                     if (key == null)
                         key = entry.getField("referent");
-                    JavaObject valueReference = Models.getFieldObject(entry,
-                            "valueReference");
-                    JavaThing value = valueReference.getField("referent");
+                    JavaObject value = Models.getFieldObjectChain(entry, "valueReference", "referent");
                     if (key != null && value != null)
                         builder.put(key, value);
                 }
             }
         }
-        return new GuavaCustConcHash(builder.build());
+        return builder.build();
     }
 
-    @Override
-    public Map<JavaThing, JavaThing> getMap() {
-        return map;
+    private GuavaCustConcHash(Guava factory, List<JavaObject> segments) {
+        super(factory, Suppliers.memoize(() -> getMapImpl(segments)));
+    }
+
+    public static GuavaCustConcHash make(Guava factory, JavaObject chm) {
+        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments", JavaObject.class);
+        return segments == null ? null : new GuavaCustConcHash(factory, segments);
     }
 }

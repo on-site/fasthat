@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,50 +33,34 @@
 
 package com.sun.tools.hat.internal.lang.guava;
 
+import java.util.Map;
+import java.util.function.Function;
+
+import com.google.common.collect.ImmutableMap;
+
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
-public class Guava implements ModelFactory {
-    public enum Factory implements ModelFactoryFactory {
-        INSTANCE;
-
-        @Override
-        public boolean isSupported(Snapshot snapshot) {
-            return Models.hasClass(snapshot, CLASSES);
-        }
-
-        @Override
-        public ModelFactory newFactory(Snapshot snapshot) {
-            return new Guava(snapshot);
-        }
-    }
-
-    private static final String[] CLASSES = {
-        "com.google.common.collect.MapMakerInternalMap",
-        "com.google.common.collect.CustomConcurrentHashMap"
-    };
-
-    private final JavaClass custConcHashClass;
+/**
+ * Model factory for Guava objects.
+ *
+ * @author Chris Jester-Young
+ */
+class Guava implements ModelFactory {
+    private final Map<JavaClass, Function<JavaObject, Model>> dispatchMap;
 
     public Guava(Snapshot snapshot) {
-        custConcHashClass = Models.grabClass(snapshot, CLASSES);
+        dispatchMap = ImmutableMap.of(
+                Models.grabClass(snapshot, GuavaRuntime.CLASSES),
+                obj -> GuavaCustConcHash.make(this, obj));
     }
 
     @Override
-    public Model newModel(JavaThing thing) {
-        JavaObject obj = Models.safeCast(thing, JavaObject.class);
-        if (obj != null) {
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz == custConcHashClass)
-                return GuavaCustConcHash.make(obj);
-        }
-        return null;
+    public Map<JavaClass, Function<JavaObject, Model>> getDispatchMap() {
+        return dispatchMap;
     }
 }

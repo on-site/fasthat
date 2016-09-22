@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012, 2014 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,79 +31,58 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.jruby16;
+package com.sun.tools.hat.internal.lang.jruby;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Function;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
+
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ObjectModel;
+import com.sun.tools.hat.internal.lang.common.SimpleObjectModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.util.Suppliers;
 
-class JRubyObject extends ObjectModel {
-    private enum GetVariableNames implements Function<JavaObject, ImmutableList<String>> {
-        INSTANCE;
-
-        @Override
-        public ImmutableList<String> apply(JavaObject rubyClass) {
-            ImmutableList<JavaObject> names = Models.getFieldObjectArray(rubyClass,
-                    "variableNames", JavaObject.class);
-            return ImmutableList.copyOf(Lists.transform(names,
-                    Models.GetStringValue.INSTANCE));
-        }
-    }
-
-    private static final LoadingCache<JavaObject, ImmutableList<String>> VARIABLE_NAME_CACHE
-            = CacheBuilder.newBuilder().softValues().build(
-                    CacheLoader.from(GetVariableNames.INSTANCE));
-
-    private final JavaObject obj;
-    private final ImmutableMap<String, JavaThing> properties;
-
-    public JRubyObject(JavaObject obj) {
-        this.obj = obj;
-        this.properties = makeProperties(obj, getClassObject());
-    }
-
-    private static ImmutableMap<String, JavaThing> makeProperties(JavaObject obj,
-            JavaObject rubyClass) {
-        List<String> names = VARIABLE_NAME_CACHE.getUnchecked(rubyClass);
+public class JRubyObject extends SimpleObjectModel {
+    private static ImmutableMap<String, JavaThing> getProperties(JRuby factory, JavaObject obj) {
+        Collection<String> names = getClassModel(factory, obj).getPropertyNames();
         if (names.isEmpty())
             return ImmutableMap.of();
         List<JavaThing> values = Models.getFieldObjectArray(obj, "varTable", JavaThing.class);
+        if (values == null)
+            values = Collections.emptyList();
         ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
         Iterator<JavaThing> iter = values.iterator();
         for (String name : names) {
             if (!iter.hasNext())
                 break;
-            builder.put(name, iter.next());
+            JavaThing thing = iter.next();
+            if (thing != null)
+                builder.put(name, thing);
         }
         return builder.build();
     }
 
-    @Override
-    public String getClassName() {
-        JavaObject cls = getClassObject();
-        String name = Models.getFieldString(cls, "classId");
-        return name != null ? name : "#<Class:" + cls.getIdString() + ">";
+    protected JRubyObject(JRuby factory, JavaObject obj, Supplier<Map<String, JavaThing>> supplier) {
+        super(factory, () -> getClassModel(factory, obj),
+                () -> getEigenclassModel(factory, obj),
+                Suppliers.memoize(supplier));
     }
 
-    @Override
-    public JavaObject getClassObject() {
-        return Models.getFieldObject(obj, "metaClass");
+    public JRubyObject(JRuby factory, JavaObject obj) {
+        this(factory, obj, () -> getProperties(factory, obj));
     }
 
-    @Override
-    public Map<String, JavaThing> getProperties() {
-        return properties;
+    static JRubyClass getClassModel(JRuby factory, JavaObject obj) {
+        return getEigenclassModel(factory, obj).getRealClass();
+    }
+
+    static JRubyClass getEigenclassModel(JRuby factory, JavaObject obj) {
+        return factory.lookupClass(Models.getFieldObject(obj, "metaClass"));
     }
 }

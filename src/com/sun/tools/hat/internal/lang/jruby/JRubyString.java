@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -34,40 +35,29 @@ package com.sun.tools.hat.internal.lang.jruby;
 
 import com.google.common.base.Charsets;
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaValueArray;
 
-public class JRubyString extends ScalarModel {
-    private final String value;
+import java.nio.ByteBuffer;
 
-    private JRubyString(String value) {
-        this.value = value;
+public class JRubyString extends SimpleScalarModel {
+    private JRubyString(JRuby factory, ByteBuffer value) {
+        super(factory, () -> "\"" + Charsets.UTF_8.decode(value) + "\"");
     }
 
-    public static JRubyString make(JavaObject obj) {
-        String value = getRubyStringValue(obj);
-        return value != null ? new JRubyString(value) : null;
-    }
-
-    private static String getRubyStringValue(JavaObject obj) {
+    public static JRubyString make(JRuby factory, JavaObject obj) {
         JavaObject value = Models.getFieldObject(obj, "value");
         if (value != null) {
             JavaValueArray bytes = Models.safeCast(value.getField("bytes"), JavaValueArray.class);
             JavaInt begin = Models.safeCast(value.getField("begin"), JavaInt.class);
             JavaInt realSize = Models.safeCast(value.getField("realSize"), JavaInt.class);
             if (bytes != null && begin != null && realSize != null) {
-                // All the world's a UTF-8....
-                return new String((byte[]) bytes.getElements(), begin.value,
-                        realSize.value, Charsets.UTF_8);
+                return new JRubyString(factory, ByteBuffer.wrap((byte[]) bytes.getElements(),
+                        begin.value, realSize.value));
             }
         }
         return null;
-    }
-
-    @Override
-    public String toString() {
-        return value;
     }
 }

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,42 +31,18 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.openjdk;
 
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.ImmutableList;
 
-import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.MapModel;
-import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.common.HashCommon;
-import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.lang.common.SafeArray;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
+import com.sun.tools.hat.internal.model.JavaObjectArray;
+import com.sun.tools.hat.internal.util.Suppliers;
 
-public class JavaHash extends MapModel {
-    private final ImmutableMap<JavaThing, JavaThing> map;
-
-    private JavaHash(ImmutableMap<JavaThing, JavaThing> map) {
-        this.map = map;
-    }
-
-    public static JavaHash make(JavaObject hash) {
-        List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
-        if (table == null)
-            return null;
-        final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-        HashCommon.walkHashTable(table, "key", "value", "next",
-                new HashCommon.KeyValueVisitor() {
-            @Override
-            public void visit(JavaThing key, JavaThing value) {
-                builder.put(key, value);
-            }
-        });
-        return new JavaHash(builder.build());
-    }
-
-    @Override
-    public Map<JavaThing, JavaThing> getMap() {
-        return map;
+public class JavaArray extends SimpleCollectionModel {
+    public JavaArray(OpenJDK factory, JavaObjectArray array) {
+        super(factory, Suppliers.memoize(() ->
+                ImmutableList.copyOf(new SafeArray(array, factory.getNullThing()).getElements())));
     }
 }

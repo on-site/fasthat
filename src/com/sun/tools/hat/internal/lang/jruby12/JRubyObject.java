@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -33,25 +34,20 @@
 package com.sun.tools.hat.internal.lang.jruby12;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
+
 import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-class JRubyObject extends ObjectModel {
-    private final JavaObject obj;
-    private final ImmutableMap<String, JavaThing> properties;
-
-    public JRubyObject(JavaObject obj) {
-        this.obj = obj;
-        this.properties = makeProperties(obj);
+class JRubyObject extends com.sun.tools.hat.internal.lang.jruby.JRubyObject {
+    public JRubyObject(JRuby12 factory, JavaObject obj) {
+        super(factory, obj, () -> getProperties(obj));
     }
 
-    private static ImmutableMap<String, JavaThing> makeProperties(JavaObject obj) {
+    private static ImmutableMap<String, JavaThing> getProperties(JavaObject obj) {
         final ImmutableMap.Builder<String, JavaThing> builder = ImmutableMap.builder();
         JavaObject variables = Models.getFieldObject(obj, "variables");
         if (variables != null) {
@@ -68,12 +64,7 @@ class JRubyObject extends ObjectModel {
                     "vTable", JavaObject.class);
             if (vTable != null) {
                 HashCommon.walkHashTable(vTable, "name", "value", "next",
-                        new HashCommon.KeyValueVisitor() {
-                    @Override
-                    public void visit(JavaThing key, JavaThing value) {
-                        builder.put(Models.getStringValue((JavaObject) key), value);
-                    }
-                });
+                        (key, value) -> builder.put(Models.getStringValue((JavaObject) key), value));
             }
         }
         return builder.build();
@@ -100,22 +91,5 @@ class JRubyObject extends ObjectModel {
             }
             builder.put(name, packedVTable.get(i + midway));
         }
-    }
-
-    @Override
-    public String getClassName() {
-        JavaObject cls = getClassObject();
-        String name = Models.getFieldString(cls, "classId");
-        return name != null ? name : "#<Class:" + cls.getIdString() + ">";
-    }
-
-    @Override
-    public JavaObject getClassObject() {
-        return Models.getFieldObject(obj, "metaClass");
-    }
-
-    @Override
-    public Map<String, JavaThing> getProperties() {
-        return properties;
     }
 }

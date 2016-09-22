@@ -50,7 +50,7 @@ class ServerNotReadyQuery extends QueryHandler {
     public void run() {
         startHtml("Server Not Ready");
         printMemoryUsage();
-        loadProgress.each(p -> printProgress(p));
+        loadProgress.each(this::printProgress);
         out.println("<meta http-equiv=\"refresh\" content=\"1\" />");
         endHtml();
     }

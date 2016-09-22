@@ -38,12 +38,15 @@ fasthat uses the following libraries:
 + [Guava][guava]
 
 I always try to keep up-to-date with the latest released versions. At
-the time of current writing, I'm using Guava 17.0.
+the time of current writing, I'm using Guava 18.0.
 
-I develop and build using Eclipse. [Mike Virata-Stone][mjvs] has created
-an Ant `build.xml` that you may find useful, but I have not tested it.
-In particular, you may need to update it to work with the latest Guava
-jars.
+I develop and build using Eclipse. [Mike Virata-Stone][smellsblue] has created
+an Ant `build.xml` that you may find useful. If you are set up with ant and JDK
+8, you can run `ant` to build the jar, and then run via the following command
+(make sure to adjust your max heap to allow for the size of your heap dump):
+```
+$ java -Xmx8g -jar bin/fasthat.jar path/to/your/heap.dump
+```
 
 Future directions
 -----------------
@@ -83,15 +86,15 @@ to improve on that I haven't yet got around to:
 Contact and licensing
 ---------------------
 
-fasthat is maintained by [Chris Jester-Young][cky].
+fasthat is maintained by [Chris Jester-Young][cky] and [Mike Virata-Stone][smellsblue].
 
 All of the code from OpenJDK are licensed under GPLv2 with Classpath
 Exception. All of the new code (not originating from OpenJDK) are
 licensed under GPLv2 or later, with Classpath Exception.
 
 [jhat]: http://docs.oracle.com/javase/6/docs/technotes/tools/share/jhat.html
-[guava]: http://code.google.com/p/guava-libraries/
-[mjvs]: http://github.com/mikestone
+[guava]: https://github.com/google/guava
+[smellsblue]: https://github.com/smellsblue
 [guava-ver]: http://stackoverflow.com/q/7694468/13
 [jsr-223]: http://www.jcp.org/en/jsr/detail?id=223
-[cky]: http://github.com/cky
+[cky]: https://github.com/cky

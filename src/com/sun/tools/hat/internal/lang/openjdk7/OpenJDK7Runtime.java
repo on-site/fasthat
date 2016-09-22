@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,37 +31,28 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.openjdk7;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import com.sun.tools.hat.internal.lang.LanguageRuntime;
+import com.sun.tools.hat.internal.lang.ModelFactory;
+import com.sun.tools.hat.internal.lang.openjdk.OpenJDK;
+import com.sun.tools.hat.internal.model.Snapshot;
 
-import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
-import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.model.JavaInt;
-import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
+/**
+ * "Language runtime" for OpenJDK 7.
+ *
+ * @author Chris Jester-Young
+ */
+public enum OpenJDK7Runtime implements LanguageRuntime {
+    INSTANCE;
 
-class JavaVector extends CollectionModel {
-    private final ImmutableList<JavaThing> items;
-
-    private JavaVector(List<JavaThing> items) {
-        this.items = ImmutableList.copyOf(items);
-    }
-
-    public static JavaVector make(JavaObject vec, String sizeField) {
-        JavaThing[] data = Models.getFieldThing(vec, "elementData",
-                JavaObjectArray.class).getElements();
-        JavaInt size = Models.getFieldThing(vec, sizeField, JavaInt.class);
-        return data == null || size == null ? null
-                : new JavaVector(Arrays.asList(data).subList(0, size.value));
+    @Override
+    public boolean isSupported(Snapshot snapshot) {
+        return OpenJDK.checkVersion(snapshot, "1.7.0_");
     }
 
     @Override
-    public Collection<JavaThing> getCollection() {
-        return items;
+    public ModelFactory getFactory(Snapshot snapshot) {
+        return new OpenJDK7(snapshot);
     }
 }

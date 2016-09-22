@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,31 +31,25 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleScalarModel;
+import com.sun.tools.hat.internal.model.JavaLong;
+import com.sun.tools.hat.internal.model.JavaObject;
 
-import com.sun.tools.hat.internal.lang.CollectionModel;
-import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.model.JavaThing;
-
-class JavaArray extends CollectionModel {
-    private final List<JavaThing> items;
-
-    public JavaArray(JavaObjectArray array) {
-        /*
-         * JavaObjectArray.getElements() returns null elements as null,
-         * not as Snapshot.getNullThing(). So, without doing a lot of
-         * extra work, it's not possible to just use ImmutableList.
-         */
-        items = Collections.unmodifiableList(Arrays.asList(array.getElements()));
+/**
+ * Model for Ruby fixnums.
+ *
+ * @author Chris Jester-Young
+ */
+public class JRubyFixnum extends SimpleScalarModel {
+    private JRubyFixnum(JRuby factory, long value) {
+        super(factory, () -> Long.toString(value));
     }
 
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return items;
+    public static JRubyFixnum make(JRuby factory, JavaObject obj) {
+        JavaLong value = Models.getFieldThing(obj, "value", JavaLong.class);
+        return value == null ? null : new JRubyFixnum(factory, value.value);
     }
 }

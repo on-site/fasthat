@@ -49,10 +49,9 @@ import java.util.*;
 public class RefsByTypeQuery extends QueryHandler {
     @Override
     public void run() {
-        ClassResolver resolver = new ClassResolver(snapshot, true);
-        JavaClass clazz = resolver.apply(query);
+        JavaClass clazz = resolveClass(query, true);
         Collection<JavaClass> referrers = Collections2.transform(
-                params.get("referrer"), resolver);
+                params.get("referrer"), referrer -> resolveClass(referrer, false));
         ImmutableSetMultimap.Builder<JavaClass, JavaHeapObject> rfrBuilder
                 = ImmutableSetMultimap.builder();
         final ImmutableSetMultimap.Builder<JavaClass, JavaHeapObject> rfeBuilder
@@ -101,7 +100,7 @@ public class RefsByTypeQuery extends QueryHandler {
         out.println("<table border='1' align='center'>");
         out.println("<tr><th>Class</th><th>Count</th></tr>");
         multiset.entrySet().stream().sorted(Ordering.natural().reverse()
-                .onResultOf(entry -> entry.getCount())).forEach(entry -> {
+                .onResultOf(Multiset.Entry::getCount)).forEach(entry -> {
             out.println("<tr><td>");
             JavaClass clazz = entry.getElement();
             printClass(clazz);

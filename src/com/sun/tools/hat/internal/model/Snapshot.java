@@ -37,7 +37,7 @@ import java.util.*;
 
 import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
+import com.sun.tools.hat.internal.lang.LanguageRuntime;
 import com.sun.tools.hat.internal.parser.LoadProgress;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 import com.sun.tools.hat.internal.util.Misc;
@@ -588,11 +588,11 @@ public class Snapshot {
         return modelFactories;
     }
 
-    public void setUpModelFactories(ModelFactoryFactory... factoryFactories) {
+    public void setUpModelFactories(LanguageRuntime... runtimes) {
         ImmutableList.Builder<ModelFactory> builder = ImmutableList.builder();
-        for (ModelFactoryFactory factoryFactory : factoryFactories) {
-            if (factoryFactory.isSupported(this)) {
-                builder.add(factoryFactory.newFactory(this));
+        for (LanguageRuntime runtime : runtimes) {
+            if (runtime.isSupported(this)) {
+                builder.add(runtime.getFactory(this));
             }
         }
         modelFactories = builder.build();

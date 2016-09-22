@@ -161,7 +161,8 @@ public class HttpReader extends HttpHandler {
                     new HandlerRoute("/histo/*", HistogramQuery::new),
                     new HandlerRoute("/refsByType/*", RefsByTypeQuery::new),
                     new HandlerRoute("/finalizerSummary/", FinalizerSummaryQuery::new),
-                    new HandlerRoute("/finalizerObjects/", FinalizerObjectsQuery::new));
+                    new HandlerRoute("/finalizerObjects/", FinalizerObjectsQuery::new),
+                    new HandlerRoute("/debug/*", DebugQuery::new));
         return builder.build();
     }
 

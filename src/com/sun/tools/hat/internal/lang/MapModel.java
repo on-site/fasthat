@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright (c) 2011, 2012 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -42,11 +42,11 @@ import com.sun.tools.hat.internal.model.JavaThing;
  *
  * @author Chris K. Jester-Young
  */
-public abstract class MapModel implements Model {
+public interface MapModel extends Model {
+    Map<JavaThing, JavaThing> getMap();
+
     @Override
-    public void visit(ModelVisitor visitor) {
+    default void visit(ModelVisitor visitor) {
         visitor.visit(this);
     }
-
-    public abstract Map<JavaThing, JavaThing> getMap();
 }

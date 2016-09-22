@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,81 +33,22 @@
 
 package com.sun.tools.hat.internal.lang.jruby12;
 
-import com.sun.tools.hat.internal.lang.Model;
-import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelFactoryFactory;
-import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.jruby.JRubyArray;
-import com.sun.tools.hat.internal.lang.jruby.JRubyString;
-import com.sun.tools.hat.internal.lang.openjdk6.JavaHash;
-import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.lang.jruby.JRuby;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 /**
  * Model factory for JRuby 1.2.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
-public class JRuby12 implements ModelFactory {
-    public enum Factory implements ModelFactoryFactory {
-        INSTANCE;
-
-        @Override
-        public boolean isSupported(Snapshot snapshot) {
-            /*
-             * BTW, feel free to relax this to enable other versions of
-             * JRuby to work, if you are sure the models here work for
-             * them too.
-             */
-            JavaClass constants = snapshot.findClass("org.jruby.runtime.Constants");
-            return Models.checkStaticString(constants, "VERSION", "1.2.");
-        }
-
-        @Override
-        public ModelFactory newFactory(Snapshot snapshot) {
-            return isSupported(snapshot) ? new JRuby12(snapshot) : null;
-        }
-    }
-
-    private final JavaClass constantsClass;
-    private final JavaClass stringClass;
-    private final JavaClass objectClass;
-    private final JavaClass arrayClass;
-    private final JavaClass hashClass;
-
-    private JRuby12(Snapshot snapshot) {
-        constantsClass = Models.grabClass(snapshot, "org.jruby.runtime.Constants");
-        stringClass = Models.grabClass(snapshot, "org.jruby.RubyString");
-        objectClass = Models.grabClass(snapshot, "org.jruby.RubyObject");
-        arrayClass = Models.grabClass(snapshot, "org.jruby.RubyArray");
-        hashClass = Models.grabClass(snapshot, "org.jruby.RubyHash");
+class JRuby12 extends JRuby {
+    JRuby12(Snapshot snapshot) {
+        super(snapshot);
     }
 
     @Override
-    public Model newModel(JavaThing thing) {
-        JavaObject obj = Models.safeCast(thing, JavaObject.class);
-        if (obj != null) {
-            // XXX The factory dispatch mechanism needs real improvement.
-            JavaClass clazz = obj.getClazz();
-            if (clazz == stringClass)
-                return JRubyString.make(obj);
-            else if (clazz == objectClass)
-                return new JRubyObject(obj);
-            else if (clazz == arrayClass)
-                return JRubyArray.make(obj);
-            else if (clazz == hashClass)
-                return JavaHash.make(obj);
-            // TODO Implement other JRuby types.
-        }
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("JRuby %s (%s)",
-                Models.getStaticString(constantsClass, "VERSION"),
-                Models.getStaticString(constantsClass, "REVISION"));
+    protected JRubyObject makeObject(JavaObject obj) {
+        return new JRubyObject(this, obj);
     }
 }

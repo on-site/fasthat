@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,33 +31,28 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang;
+package com.sun.tools.hat.internal.lang.openjdk7;
 
-import com.sun.tools.hat.internal.model.Snapshot;
+import com.google.common.collect.ImmutableList;
 
-/**
- * Factory for {@link ModelFactory}.
- *
- * @author Chris K. Jester-Young
- */
-public interface ModelFactoryFactory {
-    /**
-     * Returns whether this model-factory-factory supports the given
-     * snapshot. For example, a model-factory-factory for JRuby 1.6
-     * would only return true here if the snapshot contained objects
-     * from JRuby 1.6.
-     *
-     * @param snapshot the snapshot to check for support
-     * @return whether the given snapshot is supported
-     */
-    boolean isSupported(Snapshot snapshot);
+import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
+import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.util.Suppliers;
 
-    /**
-     * Returns a {@link ModelFactory} for the given snapshot, or null if
-     * the snapshot is not {@linkplain #isSupported supported}.
-     *
-     * @param snapshot the snapshot to create a factory for
-     * @return a factory for the given snapshot, or null
-     */
-    ModelFactory newFactory(Snapshot snapshot);
+class JavaLinkedList extends SimpleCollectionModel {
+    private static ImmutableList<JavaThing> getCollectionImpl(JavaObject first) {
+        ImmutableList.Builder<JavaThing> builder = ImmutableList.builder();
+        for (JavaObject entry = first; entry != null;
+                entry = Models.getFieldObject(entry, "next")) {
+            builder.add(entry.getField("item"));
+        }
+        return builder.build();
+    }
+
+    public JavaLinkedList(OpenJDK7 factory, JavaObject list) {
+        super(factory, Suppliers.memoize(() -> getCollectionImpl(
+                Models.getFieldObject(list, "first"))));
+    }
 }

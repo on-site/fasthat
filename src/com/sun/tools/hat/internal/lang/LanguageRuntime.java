@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,26 +31,42 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang;
 
-import com.sun.tools.hat.internal.lang.Models;
-import com.sun.tools.hat.internal.lang.ScalarModel;
-import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.Snapshot;
 
-class JavaString extends ScalarModel {
-    private final String value;
+/**
+ * Interface for language runtimes.
+ *
+ * <p>A language runtime has its own object system that sits on top of Java
+ * objects. For example, JRuby has Java-side classes like {@code RubyObject}
+ * and {@code RubyClass} for representing Ruby-side objects and classes,
+ * respectively.
+ *
+ * <p>Language runtime instances may optionally also implement the
+ * {@link SnapshotModelFactory} interface if class and object instances
+ * are enumerable.
+ *
+ * @author Chris Jester-Young
+ */
+public interface LanguageRuntime {
+    /**
+     * Returns whether this language runtime supports the given
+     * snapshot. For example, a language runtime for JRuby 1.6
+     * would only return true here if the snapshot contained objects
+     * from JRuby 1.6.
+     *
+     * @param snapshot the snapshot to check for support
+     * @return whether the given snapshot is supported
+     */
+    boolean isSupported(Snapshot snapshot);
 
-    private JavaString(String value) {
-        this.value = value;
-    }
-
-    public static JavaString make(JavaObject obj) {
-        String value = Models.getStringValue(obj);
-        return value != null ? new JavaString(value) : null;
-    }
-
-    @Override
-    public String toString() {
-        return value;
-    }
+    /**
+     * Returns a {@link ModelFactory} for the given snapshot, or null if
+     * the snapshot is not {@linkplain #isSupported supported}.
+     *
+     * @param snapshot the snapshot to create a factory for
+     * @return a factory for the given snapshot, or null
+     */
+    ModelFactory getFactory(Snapshot snapshot);
 }

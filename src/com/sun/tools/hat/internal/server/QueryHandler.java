@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1997, 2008, Oracle and/or its affiliates. All rights reserved.
- * Copyright (c) 2010, 2011 On-Site.com.
+ * Copyright (c) 2010, 2011, 2012 On-Site.com.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -41,7 +41,7 @@ import java.util.Collection;
 import java.util.Formatter;
 import java.util.Map;
 
-import com.google.common.base.Function;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
@@ -49,7 +49,10 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+
+import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
+import com.sun.tools.hat.internal.lang.HasSimpleForm;
 import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.lang.Model;
 import com.sun.tools.hat.internal.lang.ModelFactory;
@@ -66,31 +69,13 @@ import com.sun.tools.hat.internal.util.Misc;
 
 
 abstract class QueryHandler implements Runnable {
-    protected static class ClassResolver implements Function<String, JavaClass> {
-        private final Snapshot snapshot;
-        private final boolean valueRequired;
-
-        public ClassResolver(Snapshot snapshot, boolean valueRequired) {
-            this.snapshot = snapshot;
-            this.valueRequired = valueRequired;
-        }
-
-        @Override
-        public JavaClass apply(String name) {
-            if (name == null && !valueRequired) {
-                return null;
-            }
-            return Preconditions.checkNotNull(snapshot.findClass(name),
-                    "class not found: %s", name);
-        }
-    }
-
     protected String path;
     protected String urlStart;
     protected String query;
     protected PrintWriter out;
     protected Snapshot snapshot;
     protected ImmutableListMultimap<String, String> params;
+    protected boolean rawMode;
 
     void setPath(String s) {
         path = s;
@@ -114,6 +99,7 @@ abstract class QueryHandler implements Runnable {
 
     void setParams(ImmutableListMultimap<String, String> params) {
         this.params = params;
+        rawMode = params.containsKey("raw");
     }
 
     protected static String encodeForURL(String s) {
@@ -135,12 +121,20 @@ abstract class QueryHandler implements Runnable {
         out.println("</h1></center>");
     }
 
+    protected void startHtml(String format, Object... args) {
+        startHtml(String.format(format, args));
+    }
+
     protected void endHtml() {
         out.println("</body></html>");
     }
 
     protected void error(String msg) {
         println(msg);
+    }
+
+    protected void error(String format, Object... args) {
+        error(String.format(format, args));
     }
 
     protected void printAnchorStart() {
@@ -155,15 +149,24 @@ abstract class QueryHandler implements Runnable {
         out.print("\">");
     }
 
-    protected void printObject(JavaObject obj) {
-        printThing(obj);
-    }
-
     protected void printThing(JavaThing thing) {
-        printThing(thing, false);
+        printImpl(thing, false, true, null);
     }
 
-    protected void printThing(JavaThing thing, boolean simple) {
+    protected void printDetailed(JavaThing thing) {
+        printImpl(thing, false, true, Integer.MAX_VALUE);
+    }
+
+    protected void printSimple(JavaThing thing) {
+        printImpl(thing, true, true, null);
+    }
+
+    protected void printSummary(JavaThing thing) {
+        printImpl(thing, false, false, null);
+    }
+
+    private void printImpl(JavaThing thing, boolean useSimpleForm,
+            boolean showDetail, Integer limit) {
         if (thing == null) {
             out.print("null");
             return;
@@ -175,15 +178,17 @@ abstract class QueryHandler implements Runnable {
             if (id != -1L) {
                 printThingAnchorTag(id);
                 if (ho.isNew())
-                    out.println("<strong>");
+                    out.print("<strong>");
             }
-            Model model = simple ? null : getModelFor(thing);
+            Model model = getModelFor(thing, useSimpleForm);
             printSummary(model, thing);
             if (id != -1) {
                 if (ho.isNew())
-                    out.println("[new]</strong>");
-                out.println("</a>");
-                printDetail(model, ho.getSize());
+                    out.print("[new]</strong>");
+                out.print("</a>");
+                if (showDetail) {
+                    printDetail(model, ho.getSize(), limit);
+                }
             }
         } else {
             print(thing.toString());
@@ -281,17 +286,24 @@ abstract class QueryHandler implements Runnable {
         out.print(Misc.encodeHtml(str));
     }
 
-    protected Model getModelFor(JavaThing thing) {
+    private Model getModelFor(JavaThing thing, boolean useSimpleForm) {
+        if (rawMode) {
+            return null;
+        }
         for (ModelFactory factory : snapshot.getModelFactories()) {
             Model model = factory.newModel(thing);
             if (model != null) {
+                if (useSimpleForm) {
+                    return model instanceof HasSimpleForm
+                            ? ((HasSimpleForm) model).getSimpleFormModel() : null;
+                }
                 return model;
             }
         }
         return null;
     }
 
-    protected void printSummary(Model model, final JavaThing thing) {
+    private void printSummary(Model model, final JavaThing thing) {
         if (model != null) {
             model.visit(new ModelVisitor() {
                 @Override
@@ -311,7 +323,12 @@ abstract class QueryHandler implements Runnable {
 
                 @Override
                 public void visit(ObjectModel model) {
-                    print(model.getClassName());
+                    print(model.getClassModel().getName());
+                }
+
+                @Override
+                public void visit(ClassModel model) {
+                    print(model.getName());
                 }
             });
         } else {
@@ -319,9 +336,11 @@ abstract class QueryHandler implements Runnable {
         }
     }
 
-    private void printDetail(Model model, int size) {
+    private void printDetail(Model model, int size, final Integer limit) {
         if (model != null) {
             model.visit(new ModelVisitor() {
+                private final int lim = MoreObjects.firstNonNull(limit, 10);
+
                 @Override
                 public void visit(ScalarModel model) {
                 }
@@ -331,16 +350,15 @@ abstract class QueryHandler implements Runnable {
                     out.print(" [");
                     Collection<JavaThing> collection = model.getCollection();
                     boolean first = true;
-                    for (JavaThing thing : Iterables.limit(collection, 10)) {
-                        if (first) {
+                    for (JavaThing thing : Iterables.limit(collection, lim)) {
+                        if (first)
                             first = false;
-                        } else {
+                        else
                             out.print(", ");
-                        }
-                        printThing(thing, true);
+                        printSimple(thing);
                     }
-                    if (collection.size() > 10) {
-                        out.printf(", &hellip;%d more", collection.size() - 10);
+                    if (collection.size() > lim) {
+                        out.printf(", &hellip;%d more", collection.size() - lim);
                     }
                     out.print("]");
                 }
@@ -351,18 +369,17 @@ abstract class QueryHandler implements Runnable {
                     Map<JavaThing, JavaThing> map = model.getMap();
                     boolean first = true;
                     for (Map.Entry<JavaThing, JavaThing> entry
-                            : Iterables.limit(map.entrySet(), 10)) {
-                        if (first) {
+                            : Iterables.limit(map.entrySet(), lim)) {
+                        if (first)
                             first = false;
-                        } else {
+                        else
                             out.print(", ");
-                        }
-                        printThing(entry.getKey(), true);
+                        printSimple(entry.getKey());
                         out.print(" &rArr; ");
-                        printThing(entry.getValue(), true);
+                        printSimple(entry.getValue());
                     }
-                    if (map.size() > 10) {
-                        out.printf(", &hellip;%d more", map.size() - 10);
+                    if (map.size() > lim) {
+                        out.printf(", &hellip;%d more", map.size() - lim);
                     }
                     out.print("}");
                 }
@@ -373,16 +390,35 @@ abstract class QueryHandler implements Runnable {
                     Map<String, JavaThing> map = model.getProperties();
                     boolean first = true;
                     for (Map.Entry<String, JavaThing> entry : map.entrySet()) {
-                        if (first) {
+                        if (first)
                             first = false;
-                        } else {
+                        else
                             out.print(", ");
-                        }
-                        out.print(entry.getKey());
+                        String key = entry.getKey();
+                        JavaThing value = entry.getValue();
+                        print(key);
                         out.print(": ");
-                        printThing(entry.getValue(), true);
+                        if ("@attributes".equals(key))
+                            printDetailed(value);
+                        else
+                            printSimple(value);
                     }
                     out.print("}");
+                }
+
+                @Override
+                public void visit(ClassModel model) {
+                    out.print(" (");
+                    Collection<ClassModel> supers = model.getSuperclasses();
+                    boolean first = true;
+                    for (ClassModel cls : supers) {
+                        if (first)
+                            first = false;
+                        else
+                            out.print(", ");
+                        printSummary(cls.getClassObject());
+                    }
+                    out.print(")");
                 }
             });
         } else {
@@ -523,5 +559,13 @@ abstract class QueryHandler implements Runnable {
 
     protected void println(String str) {
         out.println(Misc.encodeHtml(str));
+    }
+
+    protected JavaClass resolveClass(String name, boolean valueRequired) {
+        if (name == null && !valueRequired) {
+            return null;
+        }
+        return Preconditions.checkNotNull(snapshot.findClass(name),
+                "class not found: %s", name);
     }
 }

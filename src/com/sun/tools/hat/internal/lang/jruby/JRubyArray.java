@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,54 +33,35 @@
 
 package com.sun.tools.hat.internal.lang.jruby;
 
-import java.util.Collection;
-import java.util.List;
-
-import com.google.common.base.Function;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.sun.tools.hat.internal.lang.CollectionModel;
+
 import com.sun.tools.hat.internal.lang.Models;
+import com.sun.tools.hat.internal.lang.common.SafeArray;
+import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaInt;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
-public class JRubyArray extends CollectionModel {
-    private enum GetObjectArrayElements implements Function<JavaObjectArray,
-            ImmutableList<JavaThing>> {
-        INSTANCE;
-
-        @Override
-        public ImmutableList<JavaThing> apply(JavaObjectArray arr) {
-            return ImmutableList.copyOf(arr.getElements());
-        }
-    }
-
-    private static final LoadingCache<JavaObjectArray, ImmutableList<JavaThing>> ELEMENT_CACHE
+public class JRubyArray extends SimpleCollectionModel {
+    private static final LoadingCache<SafeArray, ImmutableList<JavaThing>> ELEMENT_CACHE
             = CacheBuilder.newBuilder().softValues().build(
-                    CacheLoader.from(GetObjectArrayElements.INSTANCE));
+                    CacheLoader.from(arr -> ImmutableList.copyOf(arr.getElements())));
 
-    private final Collection<JavaThing> value;
-
-    private JRubyArray(Collection<JavaThing> value) {
-        this.value = value;
+    private JRubyArray(JRuby factory, SafeArray arr, int begin, int length) {
+        super(factory, () -> ELEMENT_CACHE.getUnchecked(arr).subList(begin, begin + length));
     }
 
-    public static JRubyArray make(JavaObject obj) {
+    public static JRubyArray make(JRuby factory, JavaObject obj) {
         JavaObjectArray arr = Models.getFieldThing(obj, "values", JavaObjectArray.class);
         JavaInt begin = Models.getFieldThing(obj, "begin", JavaInt.class);
         JavaInt length = Models.getFieldThing(obj, "realLength", JavaInt.class);
         if (arr == null || begin == null || length == null)
             return null;
-        List<JavaThing> elements = ELEMENT_CACHE.getUnchecked(arr);
-        return new JRubyArray(elements.subList(begin.value, begin.value + length.value));
-    }
-
-    @Override
-    public Collection<JavaThing> getCollection() {
-        return value;
+        return new JRubyArray(factory, new SafeArray(arr, factory.getNullThing()),
+                begin.value, length.value);
     }
 }

@@ -51,10 +51,6 @@ class InstancesQuery extends QueryHandler {
     private final boolean includeSubclasses;
     private final boolean newObjects;
 
-    public InstancesQuery(boolean includeSubclasses) {
-        this(includeSubclasses, false);
-    }
-
     public InstancesQuery(boolean includeSubclasses, boolean newObjects) {
         this.includeSubclasses = includeSubclasses;
         this.newObjects = newObjects;
@@ -62,10 +58,9 @@ class InstancesQuery extends QueryHandler {
 
     @Override
     public void run() {
-        ClassResolver resolver = new ClassResolver(snapshot, true);
-        JavaClass clazz = resolver.apply(query);
+        JavaClass clazz = resolveClass(query, true);
         List<JavaClass> referrers = Lists.transform(
-                params.get("referrer"), resolver);
+                params.get("referrer"), referrer -> resolveClass(referrer, false));
         boolean referee = Boolean.parseBoolean(Iterables.getOnlyElement(
                 params.get("referee"), "false"));
         String instancesOf;
@@ -73,8 +68,8 @@ class InstancesQuery extends QueryHandler {
             instancesOf = referee ? "New referees" : "New instances";
         else
             instancesOf = referee ? "Referees" : "Instances";
-        startHtml(String.format("%s of %s%s", instancesOf, clazz.getName(),
-                includeSubclasses ? " (including subclasses)" : ""));
+        startHtml("%s of %s%s", instancesOf, clazz.getName(),
+                includeSubclasses ? " (including subclasses)" : "");
         if (referrers.isEmpty()) {
             out.print("<strong>");
             printClass(clazz);
@@ -99,7 +94,7 @@ class InstancesQuery extends QueryHandler {
             totalSize += obj.getSize();
             instances++;
         }
-        out.println("<h2>Total of " + instances + " instances occupying " + totalSize + " bytes.</h2>");
+        out.printf("<h2>Total of %d instances occupying %d bytes.</h2>", instances, totalSize);
         endHtml();
     }
 }

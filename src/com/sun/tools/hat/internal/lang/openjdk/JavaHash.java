@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011 On-Site.com.
+ * Copyright © 2011, 2012 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -30,50 +31,33 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.lang.openjdk6;
+package com.sun.tools.hat.internal.lang.openjdk;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
-import com.sun.tools.hat.internal.lang.MapModel;
+
+import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.HashCommon;
+import com.sun.tools.hat.internal.lang.common.SimpleMapModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.util.Suppliers;
 
-class JavaConcHash extends MapModel {
-    private final ImmutableMap<JavaThing, JavaThing> map;
-
-    private JavaConcHash(ImmutableMap<JavaThing, JavaThing> map) {
-        this.map = map;
-    }
-
-    public static JavaConcHash make(JavaObject chm) {
-        List<JavaObject> segments = Models.getFieldObjectArray(chm, "segments",
-                JavaObject.class);
-        if (segments == null)
-            return null;
-
+public class JavaHash extends SimpleMapModel {
+    private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> table) {
         final ImmutableMap.Builder<JavaThing, JavaThing> builder = ImmutableMap.builder();
-        HashCommon.KeyValueVisitor visitor = new HashCommon.KeyValueVisitor() {
-            @Override
-            public void visit(JavaThing key, JavaThing value) {
-                builder.put(key, value);
-            }
-        };
-
-        for (JavaObject segment : segments) {
-            List<JavaObject> table = Models.getFieldObjectArray(segment, "table",
-                    JavaObject.class);
-            if (table != null)
-                HashCommon.walkHashTable(table, "key", "value", "next", visitor);
-        }
-        return new JavaConcHash(builder.build());
+        HashCommon.walkHashTable(table, "key", "value", "next", builder::put);
+        return builder.build();
     }
 
-    @Override
-    public Map<JavaThing, JavaThing> getMap() {
-        return map;
+    private JavaHash(ModelFactory factory, Iterable<JavaObject> table) {
+        super(factory, Suppliers.memoize(() -> getMapImpl(table)));
+    }
+
+    public static JavaHash make(ModelFactory factory, JavaObject hash) {
+        List<JavaObject> table = Models.getFieldObjectArray(hash, "table", JavaObject.class);
+        return table == null ? null : new JavaHash(factory, table);
     }
 }

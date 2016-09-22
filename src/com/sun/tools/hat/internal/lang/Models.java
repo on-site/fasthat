@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2011, 2012 On-Site.com.
+ * Copyright © 2011, 2012, 2013 On-Site.com.
+ * Copyright © 2015 Chris Jester-Young.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -32,9 +33,9 @@
 
 package com.sun.tools.hat.internal.lang;
 
+import java.nio.CharBuffer;
 import java.util.Arrays;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.model.JavaClass;
@@ -48,7 +49,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 /**
  * Common functionality used by language-specific models.
  *
- * @author Chris K. Jester-Young
+ * @author Chris Jester-Young
  */
 // I wish Java had package-and-subpackage private
 public final class Models {
@@ -111,21 +112,27 @@ public final class Models {
         return getClass(snapshot, classNames) != null;
     }
 
-    public enum GetStringValue implements Function<JavaObject, String> {
-        INSTANCE;
-
-        @Override
-        public String apply(JavaObject obj) {
-            if (obj != null && obj.getClazz().isString()) {
-                JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
-                JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
-                JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
-                if (value != null && offset != null && count != null) {
-                    return new String((char[]) value.getElements(), offset.value, count.value);
+    /**
+     * Returns the value of string object {@code obj} as a {@link CharBuffer},
+     * or null if {@code obj} is not a string object.
+     *
+     * @param obj the object to get the string value of
+     * @return the string value of {@code obj} as a {@link CharBuffer}
+     */
+    public static CharBuffer getStringValueAsCharBuffer(JavaObject obj) {
+        if (obj != null && obj.getClazz().isString()) {
+            JavaValueArray value = safeCast(obj.getField("value"), JavaValueArray.class);
+            JavaInt offset = safeCast(obj.getField("offset"), JavaInt.class);
+            JavaInt count = safeCast(obj.getField("count"), JavaInt.class);
+            if (value != null) {
+                if (offset != null && count != null) {
+                    return CharBuffer.wrap((char[]) value.getElements(), offset.value, count.value);
+                } else {
+                    return CharBuffer.wrap((char[]) value.getElements());
                 }
             }
-            return null;
         }
+        return null;
     }
 
     /**
@@ -136,7 +143,8 @@ public final class Models {
      * @return the string value of {@code obj}, or null
      */
     public static String getStringValue(JavaObject obj) {
-        return GetStringValue.INSTANCE.apply(obj);
+        CharBuffer value = getStringValueAsCharBuffer(obj);
+        return value != null ? value.toString() : null;
     }
 
     /**
@@ -159,8 +167,7 @@ public final class Models {
                     builder.add(typeKey.cast(t));
                 }
             }
-            ImmutableList<T> result = builder.build();
-            return result;
+            return builder.build();
         }
         return null;
     }
@@ -201,6 +208,40 @@ public final class Models {
     }
 
     /**
+     * Returns whether the given object has a field with the given
+     * name. This will return true as long as the field exists, even
+     * if its value is null.
+     *
+     * @param obj the object to check
+     * @param field the field name to look for
+     * @return true iff {@code obj} has a field of the given name
+     */
+    public static boolean hasField(JavaObject obj, String field) {
+        /*
+         * JavaObject.getField() returns null if the field doesn't
+         * exist, and returns Snapshot.getNullThing() if the field
+         * exists but has a null value.
+         */
+        return obj.getField(field) != null;
+    }
+
+    /**
+     * Returns the first given field found (in the sense of
+     * {@link #hasField}) in the given object.
+     *
+     * @param obj the object to search
+     * @param fields the field names to look for
+     * @return the first field that exists in {@code obj}, or null
+     */
+    public static String findField(JavaObject obj, String... fields) {
+        for (String field : fields) {
+            if (hasField(obj, field))
+                return field;
+        }
+        return null;
+    }
+
+    /**
      * Convenience method for getting the given field from the given
      * object as a Java object.
      *
@@ -210,6 +251,23 @@ public final class Models {
      */
     public static JavaObject getFieldObject(JavaObject obj, String field) {
         return getFieldThing(obj, field, JavaObject.class);
+    }
+
+    /**
+     * Convenience method for chaining a bunch of field accesses, as if
+     * doing {@code foo.bar.baz.qux}.
+     *
+     * @param obj the object to use
+     * @param fields the fields to chain with
+     * @return the value of the chained accesses, or null
+     */
+    public static JavaObject getFieldObjectChain(JavaObject obj, String... fields) {
+        for (String field : fields) {
+            if (obj == null)
+                return null;
+            obj = getFieldObject(obj, field);
+        }
+        return obj;
     }
 
     /**

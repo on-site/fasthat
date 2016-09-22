@@ -56,16 +56,14 @@ class RootsQuery extends QueryHandler {
         JavaHeapObject target = snapshot.findThing(id);
         if (target == null) {
             startHtml("Object not found for rootset");
-            error("object not found");
+            error("object not found: %#x", id);
             endHtml();
             return;
         }
         if (includeWeak) {
-            startHtml("Rootset references to " + target
-                        + " (includes weak refs)");
+            startHtml("Rootset references to %s (includes weak refs)", target);
         } else {
-            startHtml("Rootset references to " + target
-                        + " (excludes weak refs)");
+            startHtml("Rootset references to %s (excludes weak refs)", target);
         }
         out.flush();
 
