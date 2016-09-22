@@ -29,10 +29,7 @@ public class EachPomDependencyTask extends Task {
         addAttribute("dep-version");
         addAttribute("dep-jar");
         addAttribute("dep-maven-url");
-
-        for (Dependency dependency : parsePom()) {
-            iterate(dependency);
-        }
+        parsePom().forEach(this::iterate);
     }
 
     public Object createSequential() {
@@ -104,7 +101,7 @@ public class EachPomDependencyTask extends Task {
                 Element node = (Element) xpath.evaluate(query, element, XPathConstants.NODE);
                 return node.getTextContent().trim();
             } catch (Exception e) {
-                throw new BuildException("Error running XPath query: " + query);
+                throw new BuildException("Error running XPath query: " + query, e);
             }
         }
 
@@ -125,7 +122,7 @@ public class EachPomDependencyTask extends Task {
         }
 
         public String getMavenUrl() {
-            return "http://central.maven.org/maven2/" + getGroupId().replaceAll("\\.", "/") + "/" + getArtifactId() + "/" + getVersion() + "/" + getJar();
+            return "http://central.maven.org/maven2/" + getGroupId().replace('.', '/') + "/" + getArtifactId() + "/" + getVersion() + "/" + getJar();
         }
     }
 }
