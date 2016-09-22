@@ -51,7 +51,7 @@ class ErrorQuery extends QueryHandler {
 
     public static void output(PrintWriter out, String message) {
         out.println();
-        out.println("<html><body bgcolor=\"#ffffff\">");
+        out.println("<html><head><link rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\" /></head><body bgcolor=\"#ffffff\">");
         out.println(Misc.encodeHtml(Strings.nullToEmpty(message)));
         out.println("</body></html>");
     }

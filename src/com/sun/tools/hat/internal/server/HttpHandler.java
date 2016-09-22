@@ -40,6 +40,8 @@ package com.sun.tools.hat.internal.server;
  */
 
 
+import com.sun.tools.hat.internal.util.Misc;
+
 import java.net.Socket;
 
 import java.io.InputStream;
@@ -49,8 +51,12 @@ import java.io.BufferedWriter;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public abstract class HttpHandler implements Runnable {
+    private static final AtomicInteger nextRequestId = new AtomicInteger();
     private final Socket socket;
+    private final int requestId = nextRequestId.incrementAndGet();
     protected PrintWriter out;
 
     public HttpHandler (Socket s) {
@@ -89,19 +95,36 @@ public abstract class HttpHandler implements Runnable {
                 queryBuf.append(ch);
             }
             String query = queryBuf.toString();
-            QueryHandler handler = requestHandler(query);
-            if (handler != null) {
-                handler.setOutput(out);
-                try {
-                    handler.run();
-                } catch (RuntimeException ex) {
-                    ex.printStackTrace();
-                    outputError(ex.getMessage());
-                }
-            } else {
-                outputError("Query '" + query + "' not implemented");
+
+            log("Incoming request: " + query);
+            long startTime = System.currentTimeMillis();
+
+            try {
+                processQuery(query);
+            } finally {
+                long endTime = System.currentTimeMillis();
+                log("Request finished in: " + Misc.formatTime(endTime - startTime));
             }
         }
+    }
+
+    private void processQuery(String query) {
+        QueryHandler handler = requestHandler(query);
+        if (handler != null) {
+            handler.setOutput(out);
+            try {
+                handler.run();
+            } catch (RuntimeException ex) {
+                ex.printStackTrace();
+                outputError(ex.getMessage());
+            }
+        } else {
+            outputError("Query '" + query + "' not implemented");
+        }
+    }
+
+    protected void log(String message) {
+        System.out.println("[" + requestId + "] " + message);
     }
 
     private void outputError(String msg) {

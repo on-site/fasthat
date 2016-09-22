@@ -32,6 +32,8 @@
 
 package com.sun.tools.hat.internal.parser;
 
+import com.sun.tools.hat.internal.util.Misc;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,12 +85,7 @@ public class LoadProgress {
 
             if (elapsed > 0 && percentDone > 0.0) {
                 double totalExpectedMillis = (elapsed / (percentDone / 100.0)) - elapsed;
-
-                if (totalExpectedMillis > 60000.0) {
-                    loadTime = String.format("%1.1f minutes", totalExpectedMillis / 60000.0);
-                } else {
-                    loadTime = String.format("%1.1f seconds", totalExpectedMillis / 1000.0);
-                }
+                loadTime = Misc.formatTime((long) totalExpectedMillis);
             }
 
             return String.format("%s: %1.1f%%, estimated remaining load time: %s", getLoadDescription(), percentDone, loadTime);
