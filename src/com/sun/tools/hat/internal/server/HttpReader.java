@@ -136,16 +136,15 @@ public class HttpReader extends HttpHandler {
     private final ImmutableList<HandlerRoute> routes = makeHandlerRoutes();
 
     private ImmutableList<HandlerRoute> makeHandlerRoutes() {
-        final boolean isOQLSupported = OQLEngine.isOQLSupported();
         ImmutableList.Builder<HandlerRoute> builder = ImmutableList.builder();
 
-        if (isOQLSupported) {
+        if (OQLEngine.isOQLSupported()) {
             builder.add(new HandlerRoute("/oql/", () -> new OQLQuery(engine)),
                         new HandlerRoute("/oqlhelp/", OQLHelp::new));
         }
         builder.add(new HandlerRoute("/", IndexQuery::new),
-                    new HandlerRoute("/allClasses/", () -> new AllClassesQuery(true, isOQLSupported)),
-                    new HandlerRoute("/allClassesWithPlatform/", () -> new AllClassesQuery(false, isOQLSupported)),
+                    new HandlerRoute("/allClasses/", () -> new AllClassesQuery(true)),
+                    new HandlerRoute("/allClassesWithPlatform/", () -> new AllClassesQuery(false)),
                     new HandlerRoute("/showRoots/", AllRootsQuery::new),
                     new HandlerRoute("/showInstanceCounts/", () -> new InstancesCountQuery(true)),
                     new HandlerRoute("/showInstanceCounts/includePlatform/", () -> new InstancesCountQuery(false)),

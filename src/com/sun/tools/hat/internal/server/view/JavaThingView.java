@@ -40,6 +40,7 @@ import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.ModelVisitor;
 import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.ScalarModel;
+import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -97,8 +98,45 @@ public class JavaThingView extends ViewModel {
         return (JavaHeapObject) thing;
     }
 
+    public boolean isJavaClass() {
+        return (thing instanceof JavaClass);
+    }
+
+    public JavaClass toJavaClass() {
+        return (JavaClass) thing;
+    }
+
+    public String getPackageName() {
+        if (isJavaClass()) {
+            String name = toJavaClass().getName();
+            int pos = name.lastIndexOf(".");
+
+            if (name.startsWith("[")) {         // Only in ancient heap dumps
+                return "<Arrays>";
+            } else if (pos == -1) {
+                return "<Default Package>";
+            } else {
+                return name.substring(0, pos);
+            }
+        }
+
+        return null;
+    }
+
+    public String getName() {
+        if (isJavaClass()) {
+            return toJavaClass().getName();
+        }
+
+        return null;
+    }
+
     public long getId() {
         return toJavaHeapObject().getId();
+    }
+
+    public String getIdString() {
+        return toJavaHeapObject().getIdString();
     }
 
     public String getHexId() {

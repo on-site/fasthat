@@ -33,8 +33,9 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.oql.OQLEngine;
+import com.sun.tools.hat.internal.server.view.JavaPackage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,12 +44,10 @@ import java.util.List;
  */
 class AllClassesQuery extends MustacheQueryHandler {
     private final boolean excludePlatform;
-    private final boolean oqlSupported;
     private List<JavaPackage> packages;
 
-    public AllClassesQuery(boolean excludePlatform, boolean oqlSupported) {
+    public AllClassesQuery(boolean excludePlatform) {
         this.excludePlatform = excludePlatform;
-        this.oqlSupported = oqlSupported;
     }
 
     public String getTitle() {
@@ -63,8 +62,8 @@ class AllClassesQuery extends MustacheQueryHandler {
         return excludePlatform;
     }
 
-    public boolean getOqlSupported() {
-        return oqlSupported;
+    public boolean isOqlSupported() {
+        return OQLEngine.isOQLSupported();
     }
 
     public List<JavaPackage> getPackages() {
@@ -72,41 +71,7 @@ class AllClassesQuery extends MustacheQueryHandler {
             return packages;
         }
 
-        packages = new ArrayList<>();
-        JavaPackage lastPackage = null;
-
-        for (JavaClass clazz : snapshot.getClasses()) {
-            if (excludePlatform && PlatformClasses.isPlatformClass(clazz)) {
-                continue;
-            }
-
-            String pkg = clazz.getPackageName();
-
-            if (lastPackage == null || !pkg.equals(lastPackage.getName())) {
-                lastPackage = new JavaPackage(pkg);
-                packages.add(lastPackage);
-            }
-
-            lastPackage.getClasses().add(clazz);
-        }
-
+        packages = JavaPackage.getAll(this, excludePlatform);
         return packages;
-    }
-
-    public static class JavaPackage {
-        private final String name;
-        private final List<JavaClass> classes = new ArrayList<>();
-
-        public JavaPackage(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public List<JavaClass> getClasses() {
-            return classes;
-        }
     }
 }
