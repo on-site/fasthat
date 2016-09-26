@@ -1,0 +1,32 @@
+{{<layout}}
+  {{$title}}All Members of the Rootset{{/title}}
+  {{$content}}
+    {{#rootSets}}
+      <h2>{{typeName}} References</h2>
+
+      {{#roots}}
+        {{#stackTraceAvailable}}
+          <a href="/rootStack/{{hexIndex}}">{{description}}</a>
+        {{/stackTraceAvailable}}
+        {{^stackTraceAvailable}}
+          {{description}}
+        {{/stackTraceAvailable}}
+
+        {{#referer}}
+          <small> (from <a href="/object/{{hexId}}">{{toString}}</a>)</small>
+        {{/referer}}
+        :<br />
+        {{#javaThing}}
+          --&gt;
+          {{>javaThing}}
+          <br />
+        {{/javaThing}}
+      {{/roots}}
+    {{/rootSets}}
+
+    <h2>Other Queries</h2>
+    <ul>
+      <li><a href="/">Show All Classes</a></li>
+    </ul>
+  {{/content}}
+{{/layout}}

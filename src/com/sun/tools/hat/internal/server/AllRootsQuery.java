@@ -32,10 +32,13 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.server.view.RootSet;
+import com.sun.tools.hat.internal.util.StreamIterable;
+
+import java.util.stream.Stream;
 
 /**
  *
@@ -43,50 +46,11 @@ import com.sun.tools.hat.internal.model.*;
  */
 
 
-class AllRootsQuery extends QueryHandler {
-    public AllRootsQuery() {
-    }
-
-    @Override
-    public void run() {
-        startHtml("All Members of the Rootset");
-
+class AllRootsQuery extends MustacheQueryHandler {
+    public Iterable<RootSet> getRootSets() {
         // More interesting values are *higher*
-        Multimap<Integer, Root> roots = Multimaps.index(snapshot.getRoots(), Root::getType);
-        roots.asMap().entrySet().stream().sorted(Ordering.natural().reverse()
-                .onResultOf(entry -> entry.getKey())).forEach(entry -> {
-            out.print("<h2>");
-            print(Root.getTypeName(entry.getKey()) + " References");
-            out.println("</h2>");
-            entry.getValue().stream().sorted(Ordering.natural()
-                    .onResultOf(Root::getDescription)).forEach(root -> {
-                printRoot(root);
-                if (root.getReferer() != null) {
-                    out.print("<small> (from ");
-                    printThingAnchorTag(root.getReferer().getId());
-                    print(root.getReferer().toString());
-                    out.print(")</a></small>");
-                }
-                out.print(" :<br>");
-
-                JavaThing t = snapshot.findThing(root.getId());
-                if (t != null) {    // It should always be
-                    print("--> ");
-                    printThing(t);
-                    out.println("<br>");
-                }
-            });
-        });
-
-        out.println("<h2>Other Queries</h2>");
-        out.println("<ul>");
-        out.println("<li>");
-        printAnchorStart();
-        out.print("\">");
-        print("Show All Classes");
-        out.println("</a>");
-        out.println("</ul>");
-
-        endHtml();
+        return new StreamIterable<>(Multimaps.index(snapshot.getRoots(), Root::getType).asMap().entrySet().stream()
+                .sorted(Ordering.natural().reverse().onResultOf(entry -> entry.getKey()))
+                .map(entry -> new RootSet(this, entry)));
     }
 }

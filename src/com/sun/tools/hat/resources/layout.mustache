@@ -2,10 +2,20 @@
   <head>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
     <title>{{$title}}fasthat{{/title}}</title>
-    {{$head}}{{/head}}
+    <style>
+      .key { color: red; font-weight: bold }
+      .array-collection:before { content: "["; }
+      .array-collection:after { content: "]"; }
+      .map-collection:before { content: "{"; }
+      .map-collection:after { content: "}"; }
+      .tuple-collection:before { content: "("; }
+      .tuple-collection:after { content: ")"; }
+      .collection > .collection-element:not(:last-of-type)::after { content: ", "; }
+    </style>
   </head>
 
   <body>
+    <center><h1>{{$title}}{{/title}}</h1></center>
     {{$content}}{{/content}}
   </body>
 </html>

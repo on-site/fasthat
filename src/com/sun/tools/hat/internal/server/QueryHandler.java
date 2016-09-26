@@ -68,7 +68,7 @@ import com.sun.tools.hat.internal.util.Misc;
  */
 
 
-abstract class QueryHandler implements Runnable {
+public abstract class QueryHandler implements Runnable {
     protected String path;
     protected String urlStart;
     protected String query;
@@ -76,6 +76,14 @@ abstract class QueryHandler implements Runnable {
     protected Snapshot snapshot;
     protected ImmutableListMultimap<String, String> params;
     protected boolean rawMode;
+
+    public boolean isRawMode() {
+        return rawMode;
+    }
+
+    public Snapshot getSnapshot() {
+        return snapshot;
+    }
 
     void setPath(String s) {
         path = s;
