@@ -30,12 +30,19 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
-package com.sun.tools.hat.internal.server;
+package com.sun.tools.hat.internal.server.view;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 
-class MemoryUsageDetails {
+import com.sun.tools.hat.internal.server.QueryHandler;
+
+/**
+ * View model for memory usage information.
+ *
+ * @author Mike Virata-Stone
+ */
+public class MemoryUsageView extends ViewModel {
     private static final String MB = "MB";
     private static final String GB = "GB";
 
@@ -43,7 +50,8 @@ class MemoryUsageDetails {
     private final String memTotal;
     private final String memPercent;
 
-    public MemoryUsageDetails() {
+    public MemoryUsageView(QueryHandler handler) {
+        super(handler);
         MemoryUsage memory = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage();
         String size = MB;
         double used = (double) memory.getUsed() / 1024.0 / 1024.0;

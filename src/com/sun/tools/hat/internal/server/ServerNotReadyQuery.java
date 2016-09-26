@@ -33,10 +33,11 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.parser.LoadProgress;
+import com.sun.tools.hat.internal.server.view.MemoryUsageView;
 
 class ServerNotReadyQuery extends MustacheQueryHandler {
     private final LoadProgress loadProgress;
-    private MemoryUsageDetails memoryUsage = new MemoryUsageDetails();
+    private final MemoryUsageView memoryUsage = new MemoryUsageView(this);
 
     public ServerNotReadyQuery(LoadProgress loadProgress) {
         this.loadProgress = loadProgress;
@@ -46,7 +47,7 @@ class ServerNotReadyQuery extends MustacheQueryHandler {
         return loadProgress;
     }
 
-    public MemoryUsageDetails getMemoryUsage() {
+    public MemoryUsageView getMemoryUsage() {
         return memoryUsage;
     }
 }

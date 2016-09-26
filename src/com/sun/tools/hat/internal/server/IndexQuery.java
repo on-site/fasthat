@@ -32,10 +32,12 @@
 
 package com.sun.tools.hat.internal.server;
 
-class IndexQuery extends MustacheQueryHandler {
-    private MemoryUsageDetails memoryUsage = new MemoryUsageDetails();
+import com.sun.tools.hat.internal.server.view.MemoryUsageView;
 
-    public MemoryUsageDetails getMemoryUsage() {
+class IndexQuery extends MustacheQueryHandler {
+    private final MemoryUsageView memoryUsage = new MemoryUsageView(this);
+
+    public MemoryUsageView getMemoryUsage() {
         return memoryUsage;
     }
 }
