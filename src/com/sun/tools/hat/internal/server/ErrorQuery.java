@@ -45,11 +45,12 @@ class ErrorQuery extends QueryHandler {
     }
 
     @Override
-    public void run() {
-        output(out, message);
+    public String getHttpStatus() {
+        return "500 Internal Server Error";
     }
 
-    public static void output(PrintWriter out, String message) {
+    @Override
+    public void run() {
         out.println();
         out.println("<html><head><link rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\" /></head><body bgcolor=\"#ffffff\">");
         out.println(Misc.encodeHtml(Strings.nullToEmpty(message)));

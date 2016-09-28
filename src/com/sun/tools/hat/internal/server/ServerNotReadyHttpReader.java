@@ -32,20 +32,35 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.parser.LoadProgress;
 
 import java.net.Socket;
 
 public class ServerNotReadyHttpReader extends HttpHandler {
-    private final LoadProgress loadProgress;
+    private final Server server;
+    private final ImmutableList<HandlerRoute> routes = makeHandlerRoutes();
 
-    public ServerNotReadyHttpReader(Socket s, LoadProgress loadProgress) {
+    private ImmutableList<HandlerRoute> makeHandlerRoutes() {
+        ImmutableList.Builder<HandlerRoute> builder = ImmutableList.builder();
+        builder.add(new HandlerRoute("/loadDump/", HttpHandler.Method.POST, LoadDumpQuery::new));
+        return builder.build();
+    }
+
+    public ServerNotReadyHttpReader(Socket s, Server server) {
         super(s);
-        this.loadProgress = loadProgress;
+        this.server = server;
     }
 
     @Override
-    protected QueryHandler requestHandler(String query) {
-        return new ServerNotReadyQuery(loadProgress);
+    protected QueryHandler requestHandler(HttpHandler.Method method, String query) {
+        QueryHandler handler = HandlerRoute.requestHandler(routes, method, query);
+
+        if (handler == null) {
+            handler = new ServerNotReadyQuery();
+        }
+
+        handler.setServer(server);
+        return handler;
     }
 }

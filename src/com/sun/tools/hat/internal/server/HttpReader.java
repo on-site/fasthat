@@ -41,14 +41,8 @@ package com.sun.tools.hat.internal.server;
 
 
 import java.net.Socket;
-import java.net.URLDecoder;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
-
-import java.io.UnsupportedEncodingException;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableListMultimap;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 
@@ -60,77 +54,7 @@ public class HttpReader extends HttpHandler {
         }
     }
 
-    private static class HandlerRoute {
-        private static final Pattern SLASH = Pattern.compile("/");
-        private static final Pattern AMPER = Pattern.compile("[&;]");
-
-        private final String name;
-        private final String[] parts;
-        private final Supplier<QueryHandler> handlerFactory;
-
-        public HandlerRoute(String name, Supplier<QueryHandler> handlerFactory) {
-            this.name = name;
-            this.parts = SLASH.split(name, -1);
-            this.handlerFactory = handlerFactory;
-        }
-
-        private static String decode(String str) {
-            try {
-                return URLDecoder.decode(str, "UTF-8");
-            } catch (UnsupportedEncodingException exc) {
-                // UTF-8 is always supported
-                throw new AssertionError(exc);
-            }
-        }
-
-        public QueryHandler parse(String queryString) {
-            int qpos = queryString.indexOf('?');
-            String query = qpos == -1 ? queryString : queryString.substring(0, qpos);
-            String[] qparts = SLASH.split(query, -1);
-            if (qparts.length != parts.length) {
-                return null;
-            }
-            StringBuilder path = new StringBuilder();
-            String pathInfo = null;
-            StringBuilder urlStart = new StringBuilder();
-            for (int i = 0; i < parts.length; ++i) {
-                if (parts[i].equals("*")) {
-                    pathInfo = decode(qparts[i]);
-                } else if (parts[i].equals(qparts[i])) {
-                    path.append('/').append(parts[i]);
-                } else {
-                    return null;
-                }
-                if (i > 1) {
-                    urlStart.append("../");
-                }
-            }
-
-            ImmutableListMultimap.Builder<String, String> params = ImmutableListMultimap.builder();
-            if (qpos != -1) {
-                for (String item : AMPER.split(queryString.substring(qpos + 1))) {
-                    int epos = item.indexOf('=');
-                    if (epos != -1) {
-                        params.put(decode(item.substring(0, epos)),
-                                   decode(item.substring(epos + 1)));
-                    }
-                }
-            }
-
-            QueryHandler handler = handlerFactory.get();
-            handler.setPath(path.substring(2));
-            handler.setUrlStart(urlStart.toString());
-            handler.setQuery(pathInfo);
-            handler.setParams(params.build());
-            return handler;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    }
-
+    private final Server server;
     private final Snapshot snapshot;
     private final EngineThreadLocal engine = new EngineThreadLocal();
     private final ImmutableList<HandlerRoute> routes = makeHandlerRoutes();
@@ -162,30 +86,27 @@ public class HttpReader extends HttpHandler {
                     new HandlerRoute("/refsByType/*", RefsByTypeQuery::new),
                     new HandlerRoute("/finalizerSummary/", FinalizerSummaryQuery::new),
                     new HandlerRoute("/finalizerObjects/", FinalizerObjectsQuery::new),
+                    new HandlerRoute("/loadDump/", HttpHandler.Method.POST, LoadDumpQuery::new),
                     new HandlerRoute("/debug/*", DebugQuery::new));
         return builder.build();
     }
 
-    public HttpReader (Socket s, Snapshot snapshot) {
+    public HttpReader (Socket s, Server server) {
         super(s);
-        this.snapshot = snapshot;
+        this.server = server;
+        this.snapshot = server.getSnapshot();
     }
 
     @Override
-    protected QueryHandler requestHandler(String query) {
+    protected QueryHandler requestHandler(HttpHandler.Method method, String query) {
         if (snapshot == null) {
             return new ErrorQuery("The heap snapshot is still being read.");
         }
 
-        QueryHandler handler = null;
-        for (HandlerRoute route : routes) {
-            handler = route.parse(query);
-            if (handler != null) {
-                break;
-            }
-        }
+        QueryHandler handler = HandlerRoute.requestHandler(routes, method, query);
 
         if (handler != null) {
+            handler.setServer(server);
             handler.setSnapshot(snapshot);
         }
 

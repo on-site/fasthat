@@ -74,9 +74,9 @@ public class QueryListener implements Runnable {
                 Snapshot snapshot = server.getSnapshot();
 
                 if (snapshot == null) {
-                    executor.execute(new ServerNotReadyHttpReader(s, server.getLoadProgress()));
+                    executor.execute(new ServerNotReadyHttpReader(s, server));
                 } else {
-                    executor.execute(new HttpReader(s, snapshot));
+                    executor.execute(new HttpReader(s, server));
                 }
             }
         }

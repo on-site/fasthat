@@ -44,16 +44,19 @@ import com.sun.tools.hat.internal.util.Misc;
 
 import java.net.Socket;
 
-import java.io.InputStream;
 import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.io.BufferedWriter;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class HttpHandler implements Runnable {
+    public enum Method { INVALID, GET, POST; }
+
     private static final AtomicInteger nextRequestId = new AtomicInteger();
     private final Socket socket;
     private final int requestId = nextRequestId.incrementAndGet();
@@ -72,22 +75,35 @@ public abstract class HttpHandler implements Runnable {
         }
     }
 
-    protected abstract QueryHandler requestHandler(String query);
+    protected abstract QueryHandler requestHandler(Method method, String query);
 
     private void handleRequest() throws IOException {
         try (InputStream in = new BufferedInputStream(socket.getInputStream());
              PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
                 socket.getOutputStream(), "UTF-8")))) {
             this.out = out;
-            out.println("HTTP/1.0 200 OK");
-            out.println("Content-Type: text/html; charset=UTF-8");
-            out.println("Cache-Control: no-cache");
-            out.println("Pragma: no-cache");
-            out.println();
-            if (in.read() != 'G' || in.read() != 'E'
-                    || in.read() != 'T' || in.read() != ' ') {
-                outputError("Protocol error");
+            boolean isProtocolError = false;
+            Method method = Method.INVALID;
+
+            switch (in.read()) {
+            case 'G':
+                if (in.read() != 'E' || in.read() != 'T' || in.read() != ' ') {
+                    isProtocolError = true;
+                } else {
+                    method = Method.GET;
+                }
+                break;
+            case 'P':
+                if (in.read() != 'O' || in.read() != 'S' || in.read() != 'T' || in.read() != ' ') {
+                    isProtocolError = true;
+                } else {
+                    method = Method.POST;
+                }
+                break;
+            default:
+                isProtocolError = true;
             }
+
             int data;
             StringBuilder queryBuf = new StringBuilder();
             while ((data = in.read()) != -1 && data != ' ') {
@@ -96,11 +112,16 @@ public abstract class HttpHandler implements Runnable {
             }
             String query = queryBuf.toString();
 
-            log("Incoming request: " + query);
+            log("Incoming request: " + method + " " + query);
             long startTime = System.currentTimeMillis();
 
             try {
-                processQuery(query);
+                if (isProtocolError) {
+                    log("Protocol error");
+                    processQuery(new ErrorQuery("Protocol error"));
+                } else {
+                    processQuery(method, query);
+                }
             } finally {
                 long endTime = System.currentTimeMillis();
                 log("Request finished in: " + Misc.formatTime(endTime - startTime));
@@ -108,27 +129,45 @@ public abstract class HttpHandler implements Runnable {
         }
     }
 
-    private void processQuery(String query) {
-        QueryHandler handler = requestHandler(query);
-        if (handler != null) {
-            handler.setOutput(out);
-            try {
-                handler.run();
-            } catch (RuntimeException ex) {
-                ex.printStackTrace();
-                outputError(ex.getMessage());
-            }
+    private void processQuery(Method method, String query) {
+        QueryHandler handler = requestHandler(method, query);
+
+        if (handler == null) {
+            processQuery(new ErrorQuery("Query '" + query + "' not implemented"));
         } else {
-            outputError("Query '" + query + "' not implemented");
+            processQuery(handler);
         }
+    }
+
+    private void processQuery(QueryHandler handler) {
+        out.println("HTTP/1.0 " + handler.getHttpStatus());
+
+        for (String header : handler.getHeaders()) {
+            out.println(header);
+        }
+
+        out.println();
+        handler.setOutput(out);
+
+        try {
+            handler.run();
+        } catch (RuntimeException ex) {
+            log(ex);
+            handler = new ErrorQuery(ex.getMessage());
+            handler.setOutput(out);
+            handler.run();
+        }
+    }
+
+    protected void log(Exception e) {
+        StringWriter stack = new StringWriter();
+        PrintWriter writer = new PrintWriter(stack);
+        writer.println("Error handling request");
+        e.printStackTrace(writer);
+        log(stack.toString());
     }
 
     protected void log(String message) {
         System.out.println("[" + requestId + "] " + message);
     }
-
-    private void outputError(String msg) {
-        ErrorQuery.output(out, msg);
-    }
-
 }

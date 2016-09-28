@@ -46,12 +46,14 @@ import com.sun.tools.hat.internal.server.QueryListener;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class Server {
     private Thread serverThread;
     private QueryListener listener;
     private final LoadProgress loadProgress = new LoadProgress();
     private volatile Snapshot snapshot;
+    private volatile boolean loadingSnapshot = false;
 
     private boolean parseOnly = false;
     private int port = 7000;
@@ -65,6 +67,10 @@ public class Server {
 
     public LoadProgress getLoadProgress() {
         return loadProgress;
+    }
+
+    public boolean isLoadingSnapshot() {
+        return loadingSnapshot;
     }
 
     public Snapshot getSnapshot() {
@@ -89,6 +95,10 @@ public class Server {
 
     public String getHeapsDir() {
         return heapsDir;
+    }
+
+    public Path getHeapsPath() {
+        return new File(heapsDir).toPath();
     }
 
     public String getDump() {
@@ -135,41 +145,66 @@ public class Server {
         heapsDir = value;
     }
 
-    public void setDump(String dump, String baselineDump) throws IOException {
-        this.dump = dump;
-        this.baselineDump = baselineDump;
-        this.snapshot = null;
-
-        if (dump == null) {
-            System.out.println("Cleared snapshot.");
+    public void setDumpParallel(final String dump, final String baselineDump) {
+        if (isLoadingSnapshot()) {
             return;
         }
 
-        System.out.println("Reading from " + dump + "...");
-        Snapshot snapshot = Reader.readFile(loadProgress, dump, callStack, debugLevel);
-        System.out.println("Snapshot read, resolving...");
-        snapshot.resolve(loadProgress, calculateRefs);
-        System.out.println("Snapshot resolved.");
+        serverThread = new Thread(() -> {
+            try {
+                setDump(dump, baselineDump);
+            } catch (IOException e) {
+                System.err.println("Error while loading dump!");
+                e.printStackTrace(System.err);
+            }
+        });
+        serverThread.setName("fasthat-dump-loader");
+        serverThread.setDaemon(true);
+        serverThread.start();
+    }
 
-        File excludeFile = getExcludeFile();
-        if (excludeFile != null) {
-            snapshot.setReachableExcludes(new ReachableExcludesImpl(excludeFile));
+    public void setDump(String dump, String baselineDump) throws IOException {
+        this.dump = dump;
+        this.baselineDump = baselineDump;
+
+        if (dump == null) {
+            this.snapshot = null;
+            System.out.println("Cleared snapshot.");
+            return;
+        } else {
+            this.loadingSnapshot = true;
+            this.snapshot = null;
         }
 
-        if (baselineDump != null) {
-            System.out.println("Reading baseline snapshot...");
-            Snapshot baseline = Reader.readFile(loadProgress, baselineDump, false, debugLevel);
-            baseline.resolve(loadProgress, false);
-            System.out.println("Discovering new objects...");
-            snapshot.markNewRelativeTo(baseline);
-            baseline = null;    // Guard against conservative GC
-        }
+        try {
+            System.out.println("Reading from " + dump + "...");
+            Snapshot snapshot = Reader.readFile(loadProgress, dump, callStack, debugLevel);
+            System.out.println("Snapshot read, resolving...");
+            snapshot.resolve(loadProgress, calculateRefs);
+            System.out.println("Snapshot resolved.");
 
-        snapshot.setUpModelFactories(OpenJDK6Runtime.INSTANCE,
-                OpenJDK7Runtime.INSTANCE, GuavaRuntime.INSTANCE,
-                JRuby12Runtime.INSTANCE, JRuby16Runtime.INSTANCE,
-                JRuby17Runtime.INSTANCE);
-        this.snapshot = snapshot;
+            File excludeFile = getExcludeFile();
+            if (excludeFile != null) {
+                snapshot.setReachableExcludes(new ReachableExcludesImpl(excludeFile));
+            }
+
+            if (baselineDump != null) {
+                System.out.println("Reading baseline snapshot...");
+                Snapshot baseline = Reader.readFile(loadProgress, baselineDump, false, debugLevel);
+                baseline.resolve(loadProgress, false);
+                System.out.println("Discovering new objects...");
+                snapshot.markNewRelativeTo(baseline);
+                baseline = null;    // Guard against conservative GC
+            }
+
+            snapshot.setUpModelFactories(OpenJDK6Runtime.INSTANCE,
+                    OpenJDK7Runtime.INSTANCE, GuavaRuntime.INSTANCE,
+                    JRuby12Runtime.INSTANCE, JRuby16Runtime.INSTANCE,
+                    JRuby17Runtime.INSTANCE);
+            this.snapshot = snapshot;
+        } finally {
+            this.loadingSnapshot = false;
+        }
     }
 
     public void setExcludeFileName(String value) {

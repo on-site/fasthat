@@ -39,12 +39,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Formatter;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
@@ -73,6 +75,7 @@ public abstract class QueryHandler implements Runnable {
     protected String urlStart;
     protected String query;
     protected PrintWriter out;
+    protected Server server;
     protected Snapshot snapshot;
     protected ImmutableListMultimap<String, String> params;
     protected boolean rawMode;
@@ -83,6 +86,18 @@ public abstract class QueryHandler implements Runnable {
 
     public Snapshot getSnapshot() {
         return snapshot;
+    }
+
+    public String getHttpStatus() {
+        return "200 OK";
+    }
+
+    public List<String> getHeaders() {
+        return ImmutableList.<String>builder()
+                .add("Content-Type: text/html; charset=UTF-8")
+                .add("Cache-Control: no-cache")
+                .add("Pragma: no-cache")
+                .build();
     }
 
     void setPath(String s) {
@@ -99,6 +114,10 @@ public abstract class QueryHandler implements Runnable {
 
     void setOutput(PrintWriter o) {
         this.out = o;
+    }
+
+    void setServer(Server server) {
+        this.server = server;
     }
 
     void setSnapshot(Snapshot ss) {

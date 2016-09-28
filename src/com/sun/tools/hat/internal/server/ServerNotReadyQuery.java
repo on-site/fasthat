@@ -35,16 +35,23 @@ package com.sun.tools.hat.internal.server;
 import com.sun.tools.hat.internal.parser.LoadProgress;
 import com.sun.tools.hat.internal.server.view.MemoryUsageView;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 class ServerNotReadyQuery extends MustacheQueryHandler {
-    private final LoadProgress loadProgress;
     private final MemoryUsageView memoryUsage = new MemoryUsageView(this);
 
-    public ServerNotReadyQuery(LoadProgress loadProgress) {
-        this.loadProgress = loadProgress;
+    public Iterable<Path> getHeapFiles() throws IOException {
+        return Files.newDirectoryStream(server.getHeapsPath(), path -> path.toFile().isFile());
     }
 
     public LoadProgress getLoadProgress() {
-        return loadProgress;
+        return server.getLoadProgress();
+    }
+
+    public boolean isLoadingSnapshot() {
+        return server.isLoadingSnapshot();
     }
 
     public MemoryUsageView getMemoryUsage() {
