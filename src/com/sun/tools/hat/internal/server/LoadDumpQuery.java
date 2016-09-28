@@ -36,9 +36,8 @@ import java.io.IOException;
 
 public class LoadDumpQuery extends RedirectQueryHandler {
     @Override
-    public void run() {
+    public void process() {
         server.setDumpParallel(params.get("dump").get(0), null);
-        super.run();
     }
 
     @Override

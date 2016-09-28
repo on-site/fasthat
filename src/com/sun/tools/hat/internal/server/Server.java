@@ -169,6 +169,7 @@ public class Server {
 
         if (dump == null) {
             this.snapshot = null;
+            System.gc();
             System.out.println("Cleared snapshot.");
             return;
         } else {

@@ -32,31 +32,16 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 
-import java.util.List;
-
-abstract class RedirectQueryHandler extends QueryHandler {
+public class DropDumpQuery extends RedirectQueryHandler {
     @Override
-    public String getHttpStatus() {
-        return "302 Moved Temporarily";
+    public void process() {
+        server.setDumpParallel(null, null);
     }
 
     @Override
-    public List<String> getHeaders() {
-        return ImmutableList.<String>builder()
-                .addAll(super.getHeaders())
-                .add("Location: " + getRedirectPath())
-                .build();
+    public String getRedirectPath() {
+        return "/";
     }
-
-    @Override
-    public void run() {
-        process();
-        out.println("<html><body>Your browser should have redirected you to: <a href=\"" + getRedirectPath() + "\">" + getRedirectPath() + "</a></body></html>");
-    }
-
-    public abstract void process();
-
-    public abstract String getRedirectPath();
 }

@@ -87,6 +87,7 @@ public class HttpReader extends HttpHandler {
                     new HandlerRoute("/finalizerSummary/", FinalizerSummaryQuery::new),
                     new HandlerRoute("/finalizerObjects/", FinalizerObjectsQuery::new),
                     new HandlerRoute("/loadDump/", HttpHandler.Method.POST, LoadDumpQuery::new),
+                    new HandlerRoute("/dropDump/", HttpHandler.Method.POST, DropDumpQuery::new),
                     new HandlerRoute("/debug/*", DebugQuery::new));
         return builder.build();
     }

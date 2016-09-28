@@ -16,6 +16,12 @@
 
   <body>
     <center><h1>{{$title}}{{/title}}</h1></center>
+    {{#snapshot}}
+      <form method="POST" action="/dropDump/">
+        <input type="submit" value="Unload Dump" />
+      </form>
+    {{/snapshot}}
+
     {{$content}}{{/content}}
   </body>
 </html>
