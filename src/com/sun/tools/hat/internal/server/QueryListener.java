@@ -51,18 +51,10 @@ import com.sun.tools.hat.internal.parser.LoadProgress;
 public class QueryListener implements Runnable {
 
     private final Executor executor = Executors.newCachedThreadPool();
-    private volatile Snapshot snapshot;
-    private final int port;
-    private final LoadProgress loadProgress;
+    private final Server server;
 
-    public QueryListener(int port, LoadProgress loadProgress) {
-        this.port = port;
-        this.loadProgress = loadProgress;
-        this.snapshot = null;   // Client will setModel when it's ready
-    }
-
-    public void setModel(Snapshot ss) {
-        this.snapshot = ss;
+    public QueryListener(Server server) {
+        this.server = server;
     }
 
     @Override
@@ -76,12 +68,13 @@ public class QueryListener implements Runnable {
     }
 
     private void waitForRequests() throws IOException {
-        try (ServerSocket ss = new ServerSocket(port)) {
+        try (ServerSocket ss = new ServerSocket(server.getPort())) {
             while (true) {
                 Socket s = ss.accept();
+                Snapshot snapshot = server.getSnapshot();
 
                 if (snapshot == null) {
-                    executor.execute(new ServerNotReadyHttpReader(s, loadProgress));
+                    executor.execute(new ServerNotReadyHttpReader(s, server.getLoadProgress()));
                 } else {
                     executor.execute(new HttpReader(s, snapshot));
                 }

@@ -31,20 +31,10 @@
 
 package com.sun.tools.hat;
 
+import com.sun.tools.hat.internal.server.Server;
+
 import java.io.IOException;
 import java.io.File;
-
-import com.sun.tools.hat.internal.lang.guava.GuavaRuntime;
-import com.sun.tools.hat.internal.lang.jruby12.JRuby12Runtime;
-import com.sun.tools.hat.internal.lang.jruby16.JRuby16Runtime;
-import com.sun.tools.hat.internal.lang.jruby17.JRuby17Runtime;
-import com.sun.tools.hat.internal.lang.openjdk6.OpenJDK6Runtime;
-import com.sun.tools.hat.internal.lang.openjdk7.OpenJDK7Runtime;
-import com.sun.tools.hat.internal.model.Snapshot;
-import com.sun.tools.hat.internal.model.ReachableExcludesImpl;
-import com.sun.tools.hat.internal.parser.LoadProgress;
-import com.sun.tools.hat.internal.parser.Reader;
-import com.sun.tools.hat.internal.server.QueryListener;
 
 /**
  *
@@ -54,19 +44,21 @@ import com.sun.tools.hat.internal.server.QueryListener;
 
 public class Main {
 
-    private static String VERSION_STRING = "jhat version 2.0";
+    private static String VERSION_STRING = "fasthat version 2.0";
 
     private static void usage(String message) {
         if ( message != null ) {
             System.err.println("ERROR: " + message);
         }
-        System.err.println("Usage:  jhat [-stack <bool>] [-refs <bool>] [-port <port>] [-baseline <file>] [-debug <int>] [-version] [-h|-help] <file>");
+        System.err.println("Usage:  fasthat [-stack <bool>] [-refs <bool>] [-port <port>] [-heaps <dir>] [-baseline <file>] [-debug <int>] [-version] [-h|-help] [<file>]");
         System.err.println();
         System.err.println("\t-J<flag>          Pass <flag> directly to the runtime system. For");
         System.err.println("\t\t\t  example, -J-mx512m to use a maximum heap size of 512MB");
         System.err.println("\t-stack false:     Turn off tracking object allocation call stack.");
         System.err.println("\t-refs false:      Turn off tracking of references to objects");
         System.err.println("\t-port <port>:     Set the port for the HTTP server.  Defaults to 7000");
+        System.err.println("\t-heaps <dir>:     Indicate the heaps directory.  Defaults to the current");
+        System.err.println("\t\t\t  directory.");
         System.err.println("\t-exclude <file>:  Specify a file that lists data members that should");
         System.err.println("\t\t\t  be excluded from the reachableFrom query.");
         System.err.println("\t-baseline <file>: Specify a baseline object dump.  Objects in");
@@ -103,21 +95,19 @@ public class Main {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        if (args.length < 1) {
-            usage("No arguments supplied");
-        }
-
-        boolean parseonly = false;
-        int portNumber = 7000;
-        boolean callStack = true;
-        boolean calculateRefs = true;
+        Server server = new Server();
         String baselineDump = null;
-        String excludeFileName = null;
-        int debugLevel = 0;
+        String dump = null;
+
         for (int i = 0; ; i += 2) {
+            if (args.length == 0) {
+                break;
+            }
+
             if (i > (args.length - 1)) {
                 usage("Option parsing error");
             }
+
             if ("-version".equals(args[i])) {
                 System.out.print(VERSION_STRING);
                 System.out.println(" (java version " + System.getProperty("java.version") + ")");
@@ -129,87 +119,35 @@ public class Main {
             }
 
             if (i == (args.length - 1)) {
+                dump = args[i];
                 break;
             }
             String key = args[i];
             String value = args[i+1];
             if ("-stack".equals(key)) {
-                callStack = booleanValue(value);
+                server.setCallStack(booleanValue(value));
             } else if ("-refs".equals(key)) {
-                calculateRefs = booleanValue(value);
+                server.setCalculateRefs(booleanValue(value));
             } else if ("-port".equals(key)) {
-                portNumber = Integer.parseInt(value, 10);
+                server.setPort(Integer.parseInt(value, 10));
             } else if ("-exclude".equals(key)) {
-                excludeFileName = value;
+                server.setExcludeFileName(value);
             } else if ("-baseline".equals(key)) {
                 baselineDump = value;
             } else if ("-debug".equals(key)) {
-                debugLevel = Integer.parseInt(value, 10);
+                server.setDebugLevel(Integer.parseInt(value, 10));
             } else if ("-parseonly".equals(key)) {
                 // Undocumented option. To be used for testing purpose only
-                parseonly = booleanValue(value);
-            }
-        }
-        String fileName = args[args.length - 1];
-        File excludeFile = null;
-        if (excludeFileName != null) {
-            excludeFile = new File(excludeFileName);
-            if (!excludeFile.exists()) {
-                System.out.println("Exclude file " + excludeFile
-                                    + " does not exist.  Aborting.");
-                System.exit(1);
+                server.setParseOnly(booleanValue(value));
             }
         }
 
-        Thread serverThread = null;
-        QueryListener listener = null;
-        LoadProgress loadProgress = new LoadProgress();
-
-        if (!parseonly && debugLevel != 2) {
-            listener = new QueryListener(portNumber, loadProgress);
-            serverThread = new Thread(listener);
-            serverThread.setName("fasthat-query-listener");
-            serverThread.setDaemon(true);
-            serverThread.start();
-            System.out.println("Started HTTP server on port " + portNumber);
-            System.out.println("Server is listening.");
+        File excludeFile = server.getExcludeFile();
+        if (excludeFile != null && !excludeFile.exists()) {
+            System.out.println("Exclude file " + excludeFile + " does not exist.  Aborting.");
+            System.exit(1);
         }
 
-        System.out.println("Reading from " + fileName + "...");
-        Snapshot model = Reader.readFile(loadProgress, fileName, callStack, debugLevel);
-        System.out.println("Snapshot read, resolving...");
-        model.resolve(loadProgress, calculateRefs);
-        System.out.println("Snapshot resolved.");
-
-        if (excludeFile != null) {
-            model.setReachableExcludes(new ReachableExcludesImpl(excludeFile));
-        }
-
-        if (baselineDump != null) {
-            System.out.println("Reading baseline snapshot...");
-            Snapshot baseline = Reader.readFile(loadProgress, baselineDump, false, debugLevel);
-            baseline.resolve(loadProgress, false);
-            System.out.println("Discovering new objects...");
-            model.markNewRelativeTo(baseline);
-            baseline = null;    // Guard against conservative GC
-        }
-        model.setUpModelFactories(OpenJDK6Runtime.INSTANCE,
-                OpenJDK7Runtime.INSTANCE, GuavaRuntime.INSTANCE,
-                JRuby12Runtime.INSTANCE, JRuby16Runtime.INSTANCE,
-                JRuby17Runtime.INSTANCE);
-        if ( debugLevel == 2 ) {
-            System.out.println("No server, -debug 2 was used.");
-            System.exit(0);
-        }
-
-        if (parseonly) {
-            // do not start web server.
-            System.out.println("-parseonly is true, exiting..");
-            System.exit(0);
-        }
-
-        listener.setModel(model);
-        System.out.println("Server is ready.");
-        serverThread.join();
+        server.start(dump, baselineDump);
     }
 }
