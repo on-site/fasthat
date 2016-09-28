@@ -34,7 +34,7 @@ package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.server.view.RootSet;
 import com.sun.tools.hat.internal.util.StreamIterable;
 

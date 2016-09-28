@@ -5,13 +5,7 @@
       <h2>{{name}}</h2>
 
       {{#classes}}
-        {{#validId}}
-          <a href="/class/{{idString}}">class {{name}}</a> [{{idString}}]
-        {{/validId}}
-        {{^validId}}
-          <a href="/class/{{#urlEncode}}{{{name}}}{{/urlEncode}}">class {{name}}</a>
-        {{/validId}}
-
+        {{>class}} {{#validId}}[{{idString}}]{{/validId}}
         <br />
       {{/classes}}
     {{/packages}}

@@ -46,6 +46,8 @@ import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.QueryHandler;
 import com.sun.tools.hat.internal.util.Misc;
 
+import java.util.stream.StreamSupport;
+
 /**
  * View model for {@link JavaThing}.
  *
@@ -57,6 +59,7 @@ public class JavaThingView extends ViewModel {
     private final boolean showDetail;
     private final Integer limit;
     private Model model;
+    private Integer instancesCountWithoutSubclasses;
 
     public JavaThingView(QueryHandler handler, JavaThing thing) {
         this(handler, thing, false, true, null);
@@ -129,6 +132,51 @@ public class JavaThingView extends ViewModel {
         }
 
         return null;
+    }
+
+    public boolean isArrayClass() {
+        if (isJavaClass()) {
+            return getName().startsWith("[");
+        }
+
+        return false;
+    }
+
+    public Integer getInstancesCountWithoutSubclasses() {
+        if (instancesCountWithoutSubclasses != null) {
+            return instancesCountWithoutSubclasses;
+        }
+
+        if (isJavaClass()) {
+            instancesCountWithoutSubclasses = toJavaClass().getInstancesCount(false);
+            return instancesCountWithoutSubclasses;
+        }
+
+        return null;
+    }
+
+    public Long getInstancesWithoutSubclasses() {
+        if (isJavaClass()) {
+            return StreamSupport.stream(toJavaClass().getInstances(false).spliterator(), false).filter(JavaHeapObject::isNew).count();
+        }
+
+        return null;
+    }
+
+    public Long getTotalInstanceSize() {
+        if (isJavaClass()) {
+            return toJavaClass().getTotalInstanceSize();
+        }
+
+        return null;
+    }
+
+    public String getInstancesCountWithoutSubclassesLabel() {
+        if (getInstancesCountWithoutSubclasses() == null) {
+            return null;
+        } else {
+            return Misc.pluralize(getInstancesCountWithoutSubclasses(), "instance");
+        }
     }
 
     public long getId() {

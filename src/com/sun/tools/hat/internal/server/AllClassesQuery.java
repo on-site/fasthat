@@ -32,7 +32,6 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.sun.tools.hat.internal.model.*;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 import com.sun.tools.hat.internal.server.view.JavaPackage;
 

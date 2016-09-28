@@ -1,0 +1,11 @@
+{{#isNull}}
+  null
+{{/isNull}}
+{{^isNull}}
+  {{#validId}}
+    <a href="/class/{{idString}}">class {{name}}</a>
+  {{/validId}}
+  {{^validId}}
+    <a href="/class/{{#urlEncode}}{{{name}}}{{/urlEncode}}">class {{name}}</a>
+  {{/validId}}
+{{/isNull}}

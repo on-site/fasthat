@@ -185,4 +185,12 @@ public class Misc {
         millis %= ONE_SECOND;
         return String.format("%d:%02d:%02d.%03d", hours, minutes, seconds, millis);
     }
+
+    public static String pluralize(int value, String base) {
+        if (value == 1) {
+            return base;
+        } else {
+            return base + "s";
+        }
+    }
 }

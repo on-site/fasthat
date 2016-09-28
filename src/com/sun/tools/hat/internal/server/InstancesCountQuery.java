@@ -34,7 +34,9 @@ package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Ordering;
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
+import com.sun.tools.hat.internal.util.StreamIterable;
 
 import java.util.Collection;
 
@@ -44,92 +46,57 @@ import java.util.Collection;
  */
 
 
-class InstancesCountQuery extends QueryHandler {
+class InstancesCountQuery extends MustacheQueryHandler {
     private final boolean excludePlatform;
+    private Collection<JavaThingView> classes;
 
     public InstancesCountQuery(boolean excludePlatform) {
         this.excludePlatform = excludePlatform;
     }
 
-    @Override
-    public void run() {
+    public String getTitle() {
         if (excludePlatform) {
-            startHtml("Instance Counts for All Classes (excluding platform)");
+            return "Instance Counts for All Classes (excluding platform)";
         } else {
-            startHtml("Instance Counts for All Classes (including platform)");
+            return "Instance Counts for All Classes (including platform)";
         }
-
-        Collection<JavaClass> classes = snapshot.getClasses();
-        if (excludePlatform) {
-            classes = Collections2.filter(classes, cls -> !PlatformClasses.isPlatformClass(cls));
-        }
-
-        long totalSize = classes.stream().mapToLong(JavaClass::getTotalInstanceSize).sum();
-        long instances = classes.stream().mapToLong(cls -> cls.getInstancesCount(false)).sum();
-        classes.stream().sorted(Ordering.natural().reverse().onResultOf((JavaClass cls) -> cls.getInstancesCount(false))
-                .compound(Ordering.natural().onResultOf((JavaClass cls) -> cls.getName().startsWith("[")))
-                .compound(Ordering.natural().onResultOf(JavaClass::getName))).forEach(clazz -> {
-            int count = clazz.getInstancesCount(false);
-            print("" + count);
-            printAnchorStart();
-            print("instances/" + encodeForURL(clazz));
-            out.print("\"> ");
-            if (count == 1) {
-                print("instance");
-            } else {
-                print("instances");
-            }
-            out.print("</a> ");
-            if (snapshot.getHasNewSet()) {
-                int newInst = 0;
-                for (JavaHeapObject obj : clazz.getInstances(false)) {
-                    if (obj.isNew()) {
-                        newInst++;
-                    }
-                }
-                print("(");
-                printAnchorStart();
-                print("newInstances/" + encodeForURL(clazz));
-                out.print("\">");
-                print("" + newInst + " new");
-                out.print("</a>) ");
-            }
-            print("of ");
-            printClass(clazz);
-            out.println("<br>");
-        });
-        out.println("<h2>Total of " + instances + " instances occupying " + totalSize + " bytes.</h2>");
-
-        out.println("<h2>Other Queries</h2>");
-        out.println("<ul>");
-
-        out.print("<li>");
-        printAnchorStart();
-        if (!excludePlatform) {
-            out.print("showInstanceCounts/\">");
-            print("Show instance counts for all classes (excluding platform)");
-        } else {
-            out.print("showInstanceCounts/includePlatform/\">");
-            print("Show instance counts for all classes (including platform)");
-        }
-        out.println("</a>");
-
-        out.print("<li>");
-        printAnchorStart();
-        out.print("allClassesWithPlatform/\">");
-        print("Show All Classes (including platform)");
-        out.println("</a>");
-
-        out.print("<li>");
-        printAnchorStart();
-        out.print("\">");
-        print("Show All Classes (excluding platform)");
-        out.println("</a>");
-
-        out.println("</ul>");
-
-        endHtml();
     }
 
+    public boolean getExcludePlatform() {
+        return excludePlatform;
+    }
 
+    public boolean hasNewSet() {
+        return snapshot.getHasNewSet();
+    }
+
+    public Iterable<JavaThingView> getClasses() {
+        return new StreamIterable<>(getClassesCollection().stream()
+                .sorted(Ordering.natural().reverse().onResultOf(JavaThingView::getInstancesCountWithoutSubclasses)
+                .compound(Ordering.natural().onResultOf(JavaThingView::isArrayClass))
+                .compound(Ordering.natural().onResultOf(JavaThingView::getName))));
+    }
+
+    public long getInstances() {
+        return getClassesCollection().stream().mapToLong(cls -> cls.getInstancesCountWithoutSubclasses()).sum();
+    }
+
+    public long getTotalSize() {
+        return getClassesCollection().stream().mapToLong(JavaThingView::getTotalInstanceSize).sum();
+    }
+
+    private Collection<JavaThingView> getClassesCollection() {
+        if (classes != null) {
+            return classes;
+        }
+
+        Collection<JavaClass> result = snapshot.getClasses();
+
+        if (excludePlatform) {
+            result = Collections2.filter(result, cls -> !PlatformClasses.isPlatformClass(cls));
+        }
+
+        classes = Collections2.transform(result, cls -> new JavaThingView(this, cls));
+        return classes;
+    }
 }
