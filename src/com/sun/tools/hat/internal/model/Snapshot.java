@@ -212,9 +212,6 @@ public class Snapshot {
         return hasNewSet;
     }
 
-    // To show heap parsing progress, we print a '.' after this limit
-    private static final int DOT_LIMIT = 5000;
-
     /**
      * Called after reading complete, to initialize the structure
      */
@@ -285,20 +282,19 @@ public class Snapshot {
 
         if (calculateRefs) {
             calculateReferencesToObjects(loadProgress);
-            System.out.print("Eliminating duplicate references");
-            System.out.flush();
+            System.out.println("Eliminating duplicate references: 0% done");
             // This println refers to the *next* step
         }
         progress = loadProgress.startTickedProgress("Eliminating duplicate references", heapObjects.size());
-        int count = 0;
+        int lastPercentDone = 0;
         for (JavaHeapObject t : heapObjects.values()) {
             t.setupReferers();
-            ++count;
-            if (calculateRefs && count % DOT_LIMIT == 0) {
-                System.out.print(".");
-                System.out.flush();
-            }
             progress.tick();
+
+            if (progress.getPercentDoneInt() > lastPercentDone) {
+                lastPercentDone = progress.getPercentDoneInt();
+                System.out.println("Eliminating duplicate references: " + lastPercentDone + "% done");
+            }
         }
         if (calculateRefs) {
             System.out.println();
@@ -308,19 +304,17 @@ public class Snapshot {
 
     private void calculateReferencesToObjects(LoadProgress loadProgress) {
         LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Chasing references", heapObjects.size() + roots.size());
-        System.out.print("Chasing references, expect "
-                         + (heapObjects.size() / DOT_LIMIT) + " dots");
-        System.out.flush();
-        int count = 0;
+        System.out.println("Chasing references: 0% done");
+        int lastPercentDone = 0;
         for (final JavaHeapObject t : heapObjects.values()) {
             // call addReferenceFrom(t) on all objects t references:
             t.visitReferencedObjects(other -> other.addReferenceFrom(t));
-            ++count;
-            if (count % DOT_LIMIT == 0) {
-                System.out.print(".");
-                System.out.flush();
-            }
             progress.tick();
+
+            if (progress.getPercentDoneInt() > lastPercentDone) {
+                lastPercentDone = progress.getPercentDoneInt();
+                System.out.println("Chasing references: " + lastPercentDone + "% done");
+            }
         }
         System.out.println();
         for (Root r : roots) {

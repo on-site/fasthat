@@ -2,13 +2,13 @@
   {{$title}}Server Not Ready{{/title}}
 
   {{$content}}
-    {{#loadingSnapshot}}
-      {{#memoryUsage}}
-        <p>
-          <b>Heap Utilization:</b> {{usedMemory}} / {{totalMemory}} ({{percentMemoryUsed}})
-        </p>
-      {{/memoryUsage}}
+    {{#memoryUsage}}
+      <p>
+        <b>Heap Utilization:</b> {{usedMemory}} / {{totalMemory}} ({{percentMemoryUsed}})
+      </p>
+    {{/memoryUsage}}
 
+    {{#loadingSnapshot}}
       {{#loadProgress}}
         <p>
           {{loadString}}
