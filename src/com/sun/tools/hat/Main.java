@@ -57,10 +57,10 @@ public class Main {
         System.err.println("\t-stack false:     Turn off tracking object allocation call stack.");
         System.err.println("\t-refs false:      Turn off tracking of references to objects");
         System.err.println("\t-port <port>:     Set the port for the HTTP server.  Defaults to 7000");
-        System.err.println("\t-heaps <dir>:     Indicate the heaps directory.  Defaults to the current");
-        System.err.println("\t\t\t  directory.");
         System.err.println("\t-exclude <file>:  Specify a file that lists data members that should");
         System.err.println("\t\t\t  be excluded from the reachableFrom query.");
+        System.err.println("\t-heaps <dir>:     Indicate the heaps directory.  Defaults to the current");
+        System.err.println("\t\t\t  directory.");
         System.err.println("\t-baseline <file>: Specify a baseline object dump.  Objects in");
         System.err.println("\t\t\t  both heap dumps with the same ID and same class will");
         System.err.println("\t\t\t  be marked as not being \"new\".");
@@ -99,7 +99,7 @@ public class Main {
         String baselineDump = null;
         String dump = null;
 
-        for (int i = 0; ; i += 2) {
+        for (int i = 0; i < args.length; i += 2) {
             if (args.length == 0) {
                 break;
             }
@@ -132,6 +132,8 @@ public class Main {
                 server.setPort(Integer.parseInt(value, 10));
             } else if ("-exclude".equals(key)) {
                 server.setExcludeFileName(value);
+            } else if ("-heaps".equals(key)) {
+                server.setHeapsDir(value);
             } else if ("-baseline".equals(key)) {
                 baselineDump = value;
             } else if ("-debug".equals(key)) {
