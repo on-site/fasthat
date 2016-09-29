@@ -32,6 +32,7 @@
 package com.sun.tools.hat.internal.util;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
 /**
@@ -42,6 +43,7 @@ import java.util.stream.Stream;
  */
 public class StreamIterable<T> implements Iterable<T> {
     private final Stream<T> stream;
+    private boolean closed = false;
 
     public StreamIterable(Stream<T> stream) {
         this.stream = stream;
@@ -49,6 +51,35 @@ public class StreamIterable<T> implements Iterable<T> {
 
     @Override
     public Iterator<T> iterator() {
-        return stream.iterator();
+        return new StreamIterator();
+    }
+
+    private class StreamIterator implements Iterator<T> {
+        private final Iterator<T> iterator = stream.iterator();
+
+        @Override
+        public boolean hasNext() {
+            if (closed) {
+                return false;
+            }
+
+            boolean result = iterator.hasNext();
+
+            if (!result) {
+                stream.close();
+                closed = true;
+            }
+
+            return result;
+        }
+
+        @Override
+        public T next() {
+            if (closed) {
+                throw new NoSuchElementException("The stream has been closed!");
+            }
+
+            return iterator.next();
+        }
     }
 }

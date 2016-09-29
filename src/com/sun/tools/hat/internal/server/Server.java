@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.google.common.base.Preconditions;
 import com.sun.tools.hat.internal.lang.guava.GuavaRuntime;
 import com.sun.tools.hat.internal.lang.jruby12.JRuby12Runtime;
 import com.sun.tools.hat.internal.lang.jruby16.JRuby16Runtime;
@@ -158,7 +159,7 @@ public class Server {
         serverThread = new Thread(() -> {
             try {
                 setDump(dump, baselineDump);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 System.err.println("Error while loading dump!");
                 e.printStackTrace(System.err);
             }
@@ -169,6 +170,15 @@ public class Server {
     }
 
     public void setDump(String dump, String baselineDump) throws IOException {
+        setDump(dump, baselineDump, true);
+    }
+
+    public void setDump(String dump, String baselineDump, boolean validateDumpPaths) throws IOException {
+        if (validateDumpPaths) {
+            Preconditions.checkArgument(allowedDumpPath(dump), "Heap dump is not in an allowed path to process: " + dump);
+            Preconditions.checkArgument(allowedDumpPath(baselineDump), "Baseline heap dump is not in an allowed path to process: " + baselineDump);
+        }
+
         this.dump = dump;
         this.baselineDump = baselineDump;
 
@@ -213,6 +223,14 @@ public class Server {
         }
     }
 
+    private boolean allowedDumpPath(String dump) {
+        if (dump == null) {
+            return true;
+        }
+
+        return new File(dump).toPath().startsWith(getHeapsPath());
+    }
+
     public void setExcludeFileName(String value) {
         excludeFileName = value;
     }
@@ -236,7 +254,7 @@ public class Server {
             System.out.println("Server is listening.");
         }
 
-        setDump(dump, baselineDump);
+        setDump(dump, baselineDump, false);
 
         if ( debugLevel == 2 ) {
             System.out.println("No server, -debug 2 was used.");
