@@ -48,6 +48,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
+/**
+ * Contains all the sever relevant objects and config.
+ *
+ * @author Mike Virata-Stone
+ */
 public class Server {
     private Thread serverThread;
     private QueryListener listener;
