@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
@@ -135,7 +136,7 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
     public static class TickedProgress extends ProgressElement {
         private final String name;
         private final int numTicks;
-        private volatile int progress = 0;
+        private final AtomicInteger progress = new AtomicInteger(0);
 
         public TickedProgress(String name, int numTicks) {
             this.name = name;
@@ -143,7 +144,7 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
         }
 
         public void tick() {
-            progress++;
+            progress.incrementAndGet();
         }
 
         public int getPercentDoneInt() {
@@ -156,7 +157,7 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
                 return 100.0;
             }
 
-            return ((double) progress / (double) numTicks) * 100.0;
+            return (progress.doubleValue() / (double) numTicks) * 100.0;
         }
 
         @Override

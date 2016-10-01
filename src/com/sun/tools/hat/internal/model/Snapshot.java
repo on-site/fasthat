@@ -334,19 +334,12 @@ public class Snapshot {
 
     private void preCacheHistograms(LoadProgress loadProgress) {
         LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Pre-caching histograms", classes.size());
-        System.out.println("Pre-caching histograms: 0% done");
-        int lastPercentDone = 0;
+        System.out.println("Pre-caching histograms");
 
-        for (JavaClass clazz : classes.values()) {
-            // This method caches the result, and is expensive for large heaps
-            clazz.getTotalInstanceSize();
+        classes.values().parallelStream().forEach(clazz -> {
+            clazz.cacheTotalInstanceSize();
             progress.tick();
-
-            if (progress.getPercentDoneInt() > lastPercentDone) {
-                lastPercentDone = progress.getPercentDoneInt();
-                System.out.println("Pre-caching histograms: " + lastPercentDone + "% done");
-            }
-        }
+        });
     }
 
     public void markNewRelativeTo(Snapshot baseline) {
