@@ -75,6 +75,8 @@ public class JavaClass extends JavaHeapObject {
     private int instanceSize;
     // Total number of fields including inherited ones
     private int totalNumFields;
+    // Cache of total instance size
+    private long totalInstanceSize = -1L;
 
 
     public JavaClass(long id, String name, long superclassId, long loaderId,
@@ -386,18 +388,24 @@ public class JavaClass extends JavaHeapObject {
      *          arrays.
      */
     public long getTotalInstanceSize() {
-        int count = instances.size();
-        if (count == 0 || !isArray()) {
-            return (long) count * instanceSize;
-        }
+        if (totalInstanceSize >= 0) {
+            return totalInstanceSize;
+        } else {
+            int count = instances.size();
+            if (count == 0 || !isArray()) {
+                totalInstanceSize = (long) count * instanceSize;
+                return totalInstanceSize;
+            }
 
-        // array class and non-zero count, we have to
-        // get the size of each instance and sum it
-        long result = 0;
-        for (JavaThing t : instances) {
-            result += t.getSize();
+            // array class and non-zero count, we have to
+            // get the size of each instance and sum it
+            long result = 0;
+            for (JavaThing t : instances) {
+                result += t.getSize();
+            }
+            totalInstanceSize = result;
+            return totalInstanceSize;
         }
-        return result;
     }
 
     /**

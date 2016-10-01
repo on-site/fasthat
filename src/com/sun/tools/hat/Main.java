@@ -56,6 +56,7 @@ public class Main {
         System.err.println("\t\t\t  example, -J-mx512m to use a maximum heap size of 512MB");
         System.err.println("\t-stack false:     Turn off tracking object allocation call stack.");
         System.err.println("\t-refs false:      Turn off tracking of references to objects");
+        System.err.println("\t-histo false:     Turn off pre-caching of histogram sizes");
         System.err.println("\t-port <port>:     Set the port for the HTTP server.  Defaults to 7000");
         System.err.println("\t-exclude <file>:  Specify a file that lists data members that should");
         System.err.println("\t\t\t  be excluded from the reachableFrom query.");
@@ -128,6 +129,8 @@ public class Main {
                 server.setCallStack(booleanValue(value));
             } else if ("-refs".equals(key)) {
                 server.setCalculateRefs(booleanValue(value));
+            } else if ("-histo".equals(key)) {
+                server.setPreCacheHistograms(booleanValue(value));
             } else if ("-port".equals(key)) {
                 server.setPort(Integer.parseInt(value, 10));
             } else if ("-exclude".equals(key)) {

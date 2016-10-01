@@ -215,7 +215,7 @@ public class Snapshot {
     /**
      * Called after reading complete, to initialize the structure
      */
-    public void resolve(LoadProgress loadProgress, boolean calculateRefs) {
+    public void resolve(LoadProgress loadProgress, boolean calculateRefs, boolean preCacheHistograms) {
         System.out.println("Resolving " + heapObjects.size() + " objects...");
 
         // First, resolve the classes.  All classes must be resolved before
@@ -300,6 +300,10 @@ public class Snapshot {
             System.out.println();
         }
         loadProgress.end();
+
+        if (preCacheHistograms) {
+            preCacheHistograms(loadProgress);
+        }
     }
 
     private void calculateReferencesToObjects(LoadProgress loadProgress) {
@@ -326,6 +330,23 @@ public class Snapshot {
             progress.tick();
         }
         loadProgress.end();
+    }
+
+    private void preCacheHistograms(LoadProgress loadProgress) {
+        LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Pre-caching histograms", classes.size());
+        System.out.println("Pre-caching histograms: 0% done");
+        int lastPercentDone = 0;
+
+        for (JavaClass clazz : classes.values()) {
+            // This method caches the result, and is expensive for large heaps
+            clazz.getTotalInstanceSize();
+            progress.tick();
+
+            if (progress.getPercentDoneInt() > lastPercentDone) {
+                lastPercentDone = progress.getPercentDoneInt();
+                System.out.println("Pre-caching histograms: " + lastPercentDone + "% done");
+            }
+        }
     }
 
     public void markNewRelativeTo(Snapshot baseline) {

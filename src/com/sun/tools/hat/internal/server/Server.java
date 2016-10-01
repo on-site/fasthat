@@ -65,6 +65,7 @@ public class Server {
     private int port = 7000;
     private boolean callStack = true;
     private boolean calculateRefs = true;
+    private boolean preCacheHistograms = true;
     private String heapsDir = ".";
     private String dump;
     private String baselineDump;
@@ -97,6 +98,10 @@ public class Server {
 
     public boolean getCalculateRefs() {
         return calculateRefs;
+    }
+
+    public boolean getPreCacheHistograms() {
+        return preCacheHistograms;
     }
 
     public String getHeapsDir() {
@@ -145,6 +150,10 @@ public class Server {
 
     public void setCalculateRefs(boolean value) {
         calculateRefs = value;
+    }
+
+    public void setPreCacheHistograms(boolean value) {
+        preCacheHistograms = value;
     }
 
     public void setHeapsDir(String value) {
@@ -196,7 +205,7 @@ public class Server {
             System.out.println("Reading from " + dump + "...");
             Snapshot snapshot = Reader.readFile(loadProgress, dump, callStack, debugLevel);
             System.out.println("Snapshot read, resolving...");
-            snapshot.resolve(loadProgress, calculateRefs);
+            snapshot.resolve(loadProgress, calculateRefs, preCacheHistograms);
             System.out.println("Snapshot resolved.");
 
             File excludeFile = getExcludeFile();
@@ -207,7 +216,7 @@ public class Server {
             if (baselineDump != null) {
                 System.out.println("Reading baseline snapshot...");
                 Snapshot baseline = Reader.readFile(loadProgress, baselineDump, false, debugLevel);
-                baseline.resolve(loadProgress, false);
+                baseline.resolve(loadProgress, false, false);
                 System.out.println("Discovering new objects...");
                 snapshot.markNewRelativeTo(baseline);
                 baseline = null;    // Guard against conservative GC
