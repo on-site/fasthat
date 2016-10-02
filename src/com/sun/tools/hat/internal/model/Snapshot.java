@@ -282,22 +282,11 @@ public class Snapshot {
 
         if (calculateRefs) {
             calculateReferencesToObjects(loadProgress);
-            System.out.println("Eliminating duplicate references: 0% done");
-            // This println refers to the *next* step
         }
         progress = loadProgress.startTickedProgress("Eliminating duplicate references", heapObjects.size());
-        int lastPercentDone = 0;
         for (JavaHeapObject t : heapObjects.values()) {
             t.setupReferers();
             progress.tick();
-
-            if (progress.getPercentDoneInt() > lastPercentDone) {
-                lastPercentDone = progress.getPercentDoneInt();
-                System.out.println("Eliminating duplicate references: " + lastPercentDone + "% done");
-            }
-        }
-        if (calculateRefs) {
-            System.out.println();
         }
         loadProgress.end();
 
@@ -308,19 +297,11 @@ public class Snapshot {
 
     private void calculateReferencesToObjects(LoadProgress loadProgress) {
         LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Chasing references", heapObjects.size() + roots.size());
-        System.out.println("Chasing references: 0% done");
-        int lastPercentDone = 0;
         for (final JavaHeapObject t : heapObjects.values()) {
             // call addReferenceFrom(t) on all objects t references:
             t.visitReferencedObjects(other -> other.addReferenceFrom(t));
             progress.tick();
-
-            if (progress.getPercentDoneInt() > lastPercentDone) {
-                lastPercentDone = progress.getPercentDoneInt();
-                System.out.println("Chasing references: " + lastPercentDone + "% done");
-            }
         }
-        System.out.println();
         for (Root r : roots) {
             r.resolve(this);
             JavaHeapObject t = findThing(r.getId());
@@ -334,12 +315,13 @@ public class Snapshot {
 
     private void preCacheHistograms(LoadProgress loadProgress) {
         LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Pre-caching histograms", classes.size());
-        System.out.println("Pre-caching histograms");
 
         classes.values().parallelStream().forEach(clazz -> {
             clazz.cacheTotalInstanceSize();
             progress.tick();
         });
+
+        progress.end();
     }
 
     public void markNewRelativeTo(Snapshot baseline) {

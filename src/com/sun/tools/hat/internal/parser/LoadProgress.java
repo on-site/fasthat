@@ -46,13 +46,18 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
     private List<ProgressElement> elements = Collections.synchronizedList(new ArrayList<>());
 
     public void startLoadingStream(String heapFile, PositionDataInputStream stream) {
-        elements.add(new StreamProgress(heapFile, stream));
+        addProgress(new StreamProgress(heapFile, stream));
     }
 
     public TickedProgress startTickedProgress(String name, int numTicks) {
         TickedProgress progress = new TickedProgress(name, numTicks);
-        elements.add(progress);
+        addProgress(progress);
         return progress;
+    }
+
+    private void addProgress(ProgressElement progress) {
+        elements.add(progress);
+        progress.start();
     }
 
     public void end() {
@@ -85,10 +90,14 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
         protected abstract double getPercentDone();
         protected abstract String getLoadDescription();
 
+        public void start() {
+            System.out.println(String.format("----- Starting: %s -----", getLoadDescription()));
+        }
+
         public String getLoadString() {
             double percentDone = getPercentDone();
             String loadTime = "unknown";
-            long elapsed = System.currentTimeMillis() - startTime;
+            long elapsed = getElapsedTime();
 
             if (elapsed > 0 && percentDone > 0.0) {
                 double totalExpectedMillis = (elapsed / (percentDone / 100.0)) - elapsed;
@@ -98,8 +107,13 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
             return String.format("%s: %1.1f%%, estimated remaining load time: %s", getLoadDescription(), percentDone, loadTime);
         }
 
+        private long getElapsedTime() {
+            return System.currentTimeMillis() - startTime;
+        }
+
         public void end() {
             ended = true;
+            System.out.println(String.format("Finished: %s in %s", getLoadDescription(), Misc.formatTime(getElapsedTime())));
         }
 
         protected boolean isEnded() {
@@ -129,7 +143,7 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
 
         @Override
         protected String getLoadDescription() {
-            return String.format("%s is loading", heapFile);
+            return String.format("Loading %s", heapFile);
         }
     }
 
