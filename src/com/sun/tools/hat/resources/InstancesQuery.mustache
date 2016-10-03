@@ -1,0 +1,12 @@
+{{<layout}}
+  {{$title}}{{title}}{{/title}}
+  {{$content}}
+    {{#breadcrumbs}}{{>breadcrumbs}}{{/breadcrumbs}}
+    {{#objects}}
+      {{>javaThing}}
+      <br />
+    {{/objects}}
+
+    <h2>Total of {{numInstances}} instances occupying {{totalSize}} bytes.</h2>
+  {{/content}}
+{{/layout}}

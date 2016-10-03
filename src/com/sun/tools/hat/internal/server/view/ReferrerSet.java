@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 On-Site.com.
+ * Copyright © 2016 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -29,21 +29,26 @@
  * version of the library, but you are not obligated to do so. If you do
  * not wish to do so, delete this exception statement from your version.
  */
+package com.sun.tools.hat.internal.server.view;
 
-package com.sun.tools.hat.internal.server;
+import com.sun.tools.hat.internal.server.QueryHandler;
 
-import com.google.common.collect.Iterables;
+import java.util.List;
 
-import java.io.IOException;
+/**
+ * View model for a sequence of referrers.
+ *
+ * @author Mike Virata-Stone
+ */
+public class ReferrerSet extends ViewModel {
+    private final List<JavaThingView> referrers;
 
-public class LoadDumpQuery extends RedirectQueryHandler {
-    @Override
-    public void process() {
-        server.setDumpParallel(Iterables.getOnlyElement(params.get("dump")), null);
+    public ReferrerSet(QueryHandler handler, List<JavaThingView> referrers) {
+        super(handler);
+        this.referrers = referrers;
     }
 
-    @Override
-    public String getRedirectPath() {
-        return "/";
+    public List<JavaThingView> getReferrers() {
+        return referrers;
     }
 }

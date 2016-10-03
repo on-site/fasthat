@@ -33,6 +33,8 @@
 
 package com.sun.tools.hat.internal.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntConsumer;
@@ -192,5 +194,15 @@ public class Misc {
         } else {
             return base + "s";
         }
+    }
+
+    public static String encodeForURL(String s) {
+        try {
+            s = URLEncoder.encode(s, "UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            // Should never happen
+            throw new AssertionError(ex);
+        }
+        return s;
     }
 }

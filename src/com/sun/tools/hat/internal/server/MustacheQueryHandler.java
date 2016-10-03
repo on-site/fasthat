@@ -48,6 +48,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import com.sun.tools.hat.internal.util.Misc;
+
 import java.io.InputStreamReader;
 import java.io.Reader;
 
@@ -74,7 +76,7 @@ abstract class MustacheQueryHandler extends QueryHandler {
     }
 
     // Functions for templates to use
-    public static final Function<String, String> urlEncode = MustacheQueryHandler::encodeForURL;
+    public static final Function<String, String> urlEncode = Misc::encodeForURL;
 
     @Override
     public void run() {

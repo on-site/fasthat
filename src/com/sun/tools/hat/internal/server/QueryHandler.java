@@ -130,13 +130,7 @@ public abstract class QueryHandler implements Runnable {
     }
 
     protected static String encodeForURL(String s) {
-        try {
-            s = URLEncoder.encode(s, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            // Should never happen
-            throw new AssertionError(ex);
-        }
-        return s;
+        return Misc.encodeForURL(s);
     }
 
     protected void startHtml(String title) {
