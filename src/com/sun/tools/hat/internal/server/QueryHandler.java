@@ -84,8 +84,16 @@ public abstract class QueryHandler implements Runnable {
         return rawMode;
     }
 
+    public boolean getHasNewSet() {
+        return snapshot.getHasNewSet();
+    }
+
     public Snapshot getSnapshot() {
         return snapshot;
+    }
+
+    public String getQuery() {
+        return query;
     }
 
     public String getHttpStatus() {

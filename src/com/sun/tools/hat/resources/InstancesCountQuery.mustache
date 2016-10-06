@@ -3,22 +3,8 @@
   {{$content}}
     {{#classes}}
       {{instancesCountWithoutSubclasses}}
-      {{#validId}}
-        <a href="/instances/{{idString}}">{{instancesCountWithoutSubclassesLabel}}</a>
-      {{/validId}}
-      {{^validId}}
-        <a href="/instances/{{#urlEncode}}{{{name}}}{{/urlEncode}}">{{instancesCountWithoutSubclassesLabel}}</a>
-      {{/validId}}
-
-      {{#hasNewSet}}
-        {{#validId}}
-          (<a href="/newInstances/{{idString}}">{{instancesWithoutSubclasses}} new</a>)
-        {{/validId}}
-        {{^validId}}
-          (<a href="/newInstances/{{#urlEncode}}{{{name}}}{{/urlEncode}}">{{instancesWithoutSubclasses}} new</a>)
-        {{/validId}}
-      {{/hasNewSet}}
-
+      <a href="/instances/{{urlEncodedId}}">{{instancesCountWithoutSubclassesLabel}}</a>
+      {{#hasNewSet}}(<a href="/newInstances/{{urlEncodedId}}">{{instancesWithoutSubclasses}} new</a>){{/hasNewSet}}
       of {{>class}}
       <br />
     {{/classes}}

@@ -1,0 +1,18 @@
+{{#validId}}
+  <h2>References to this object:</h2>
+  {{#referers}}
+    {{#thing}}{{>javaThing}}{{/thing}} : {{description}}
+    <br />
+  {{/referers}}
+
+  <h2>Other Queries</h2>
+  Reference Chains from Rootset
+
+  <ul>
+    <li><a href="/roots/{{hexId}}">Exclude weak refs</a></li>
+    <li><a href="/allRoots/{{hexId}}">Include weak refs</a></li>
+  </ul>
+
+  <a href="/reachableFrom/{{hexId}}">Objects reachable from here</a>
+  <br />
+{{/validId}}

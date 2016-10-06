@@ -33,7 +33,11 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Ordering;
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaField;
+import com.sun.tools.hat.internal.model.JavaStatic;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
 
 import java.util.Arrays;
 
@@ -43,22 +47,18 @@ import java.util.Arrays;
  */
 
 
-class ClassQuery extends QueryHandler {
-    public ClassQuery() {
-    }
-
-    @Override
-    public void run() {
-        startHtml("Class %s", query);
+class ClassQuery extends MustacheQueryHandler {
+    public JavaThingView getJavaClass() {
         JavaClass clazz = snapshot.findClass(query);
-        if (clazz == null) {
-            error("class not found: %s", query);
-        } else {
-            printFullClass(clazz);
+
+        if (clazz != null) {
+            return new JavaThingView(this, clazz);
         }
-        endHtml();
+
+        return null;
     }
 
+    // TODO: Remove the methods below
     protected void printFullClass(JavaClass clazz) {
         out.print("<h1>");
         print(clazz.toString());

@@ -1,0 +1,47 @@
+<h1>{{toString}}</h1>
+
+<h2>Superclass:</h2>
+{{#superclass}}{{>class}}{{/superclass}}
+
+<h2>Loader Details</h2>
+<h3>ClassLoader:</h3>
+{{#loader}}{{>javaThing}}{{/loader}}
+
+<h3>Signers:</h3>
+{{#signers}}{{>javaThing}}{{/signers}}
+
+<h3>Protection Domain:</h3>
+{{#protectionDomain}}{{>javaThing}}{{/protectionDomain}}
+
+<h2>Subclasses:</h2>
+{{#subclasses}}
+  {{>class}}
+  <br />
+{{/subclasses}}
+
+<h2>Instance Data Members:</h2>
+{{#fields}}
+  {{>field}}
+  <br />
+{{/fields}}
+
+<h2>Static Data Members:</h2>
+{{#statics}}
+  {{>static}}
+  <br />
+{{/statics}}
+
+<h2>Instances</h2>
+<a href="/instances/{{urlEncodedId}}">Exclude subclasses</a><br />
+<a href="/allInstances/{{urlEncodedId}}">Include subclasses</a><br />
+
+{{#hasNewSet}}
+  <h2>New Instances</h2>
+  <a href="/newInstances/{{urlEncodedId}}">Exclude subclasses</a><br />
+  <a href="/allNewInstances/{{urlEncodedId}}">Include subclasses</a><br />
+{{/hasNewSet}}
+
+<h2>References summary by Type</h2>
+<a href="/refsByType/{{urlEncodedId}}">References summary by type</a>
+
+{{>referencesTo}}

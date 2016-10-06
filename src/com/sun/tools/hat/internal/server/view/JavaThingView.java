@@ -31,6 +31,8 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.HasSimpleForm;
@@ -41,11 +43,16 @@ import com.sun.tools.hat.internal.lang.ModelVisitor;
 import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.model.JavaStatic;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.QueryHandler;
 import com.sun.tools.hat.internal.util.Misc;
+import com.sun.tools.hat.internal.util.StreamIterable;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.StreamSupport;
 
 /**
@@ -171,6 +178,66 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    public JavaThingView getSuperclass() {
+        if (isJavaClass()) {
+            return new JavaThingView(handler, toJavaClass().getSuperclass());
+        }
+
+        return null;
+    }
+
+    public JavaThingView getLoader() {
+        if (isJavaClass()) {
+            return new JavaThingView(handler, toJavaClass().getLoader());
+        }
+
+        return null;
+    }
+
+    public JavaThingView getSigners() {
+        if (isJavaClass()) {
+            return new JavaThingView(handler, toJavaClass().getSigners());
+        }
+
+        return null;
+    }
+
+    public JavaThingView getProtectionDomain() {
+        if (isJavaClass()) {
+            return new JavaThingView(handler, toJavaClass().getProtectionDomain());
+        }
+
+        return null;
+    }
+
+    public Iterable<JavaThingView> getSubclasses() {
+        if (isJavaClass()) {
+            List<JavaClass> subclasses = Arrays.asList(toJavaClass().getSubclasses());
+            return Lists.transform(subclasses, clazz -> new JavaThingView(handler, clazz));
+        }
+
+        return null;
+    }
+
+    public Iterable<JavaFieldView> getFields() {
+        if (isJavaClass()) {
+            return new StreamIterable<>(Arrays.stream(toJavaClass().getFields())
+                    .sorted(Ordering.natural().onResultOf(JavaField::getName))
+                    .map(field -> new JavaFieldView(handler, field)));
+        }
+
+        return null;
+    }
+
+    public Iterable<JavaStaticView> getStatics() {
+        if (isJavaClass()) {
+            List<JavaStatic> statics = Arrays.asList(toJavaClass().getStatics());
+            return Lists.transform(statics, s -> new JavaStaticView(handler, s));
+        }
+
+        return null;
+    }
+
     public String getInstancesCountWithoutSubclassesLabel() {
         if (getInstancesCountWithoutSubclasses() == null) {
             return null;
@@ -181,6 +248,16 @@ public class JavaThingView extends ViewModel {
 
     public long getId() {
         return toJavaHeapObject().getId();
+    }
+
+    public String getUrlEncodedId() {
+        if (isValidId()) {
+            return getIdString();
+        } else if (isJavaClass()) {
+            return Misc.encodeForURL(getName());
+        } else {
+            throw new UnsupportedOperationException("Url encoded id not implemented for type: " + thing.getClass());
+        }
     }
 
     public String getIdString() {
@@ -201,6 +278,11 @@ public class JavaThingView extends ViewModel {
 
     public int getSize() {
         return toJavaHeapObject().getSize();
+    }
+
+    public Iterable<RefererView> getReferers() {
+        return new StreamIterable<>(toJavaHeapObject().getReferers().stream()
+                .map(ref -> new RefererView(handler, ref, thing)));
     }
 
     public Model getModel() {

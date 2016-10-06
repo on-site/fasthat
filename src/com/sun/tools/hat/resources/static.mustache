@@ -1,0 +1,9 @@
+{{#field}}
+  {{>field}} :
+  {{#hasId}}
+    {{#value}}{{>javaThing}}{{/value}}
+  {{/hasId}}
+  {{^hasId}}
+    {{#value}}{{toString}}{{/value}}
+  {{/hasId}}
+{{/field}}
