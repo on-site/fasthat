@@ -31,57 +31,56 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
-import com.sun.tools.hat.internal.model.JavaField;
+import com.google.common.collect.Lists;
+import com.sun.tools.hat.internal.model.StackFrame;
+import com.sun.tools.hat.internal.model.StackTrace;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
+import java.util.Arrays;
+
 /**
- * View model for {@link JavaField}.
+ * View model for {@link StackTrace}.
  *
  * @author Mike Virata-Stone
  */
-public class JavaFieldView extends ViewModel {
-    private final JavaField field;
+public class StackTraceView extends ViewModel {
+    private final StackTrace stackTrace;
 
-    public JavaFieldView(QueryHandler handler, JavaField field) {
+    public StackTraceView(QueryHandler handler, StackTrace stackTrace) {
         super(handler);
-        this.field = field;
+        this.stackTrace = stackTrace;
     }
 
-    public boolean hasId() {
-        return field.hasId();
+    public Iterable<StackFrameView> getFrames() {
+        return Lists.transform(Arrays.asList(stackTrace.getFrames()), frame -> new StackFrameView(handler, frame));
     }
 
-    public String getName() {
-        return field.getName();
-    }
+    public static class StackFrameView extends ViewModel {
+        private final StackFrame frame;
 
-    public String getSignature() {
-        return field.getSignature();
-    }
-
-    public WithValue withValue(JavaThingView value) {
-        return new WithValue(handler, this, value);
-    }
-
-    /**
-     * A field paired with its value.
-     */
-    public static class WithValue extends ViewModel {
-        private final JavaFieldView field;
-        private final JavaThingView value;
-
-        public WithValue(QueryHandler handler, JavaFieldView field, JavaThingView value) {
+        public StackFrameView(QueryHandler handler, StackFrame frame) {
             super(handler);
-            this.field = field;
-            this.value = value;
+            this.frame = frame;
         }
 
-        public JavaFieldView getField() {
-            return field;
+        public String getClassName() {
+            return frame.getClassName();
         }
 
-        public JavaThingView getValue() {
-            return value;
+        public String getMethodName() {
+            return frame.getMethodName();
+        }
+
+        public String getMethodSignature() {
+            return frame.getMethodSignature();
+        }
+
+        public String getSourceFileName() {
+            return frame.getSourceFileName();
+        }
+
+        public String getLineNumber() {
+            return frame.getLineNumber();
         }
     }
 }

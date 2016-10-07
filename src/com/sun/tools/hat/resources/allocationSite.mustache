@@ -1,0 +1,10 @@
+{{#allocatedStackTrace}}
+  <h2>Object allocated from:</h2>
+  {{#frames}}
+    <div class="stack-frame">
+      <span class="class-name">{{className}}</span>.{{methodName}}({{methodSignature}})
+      <span class="separator">:</span>
+      {{sourceFileName}} line {{lineNumber}}
+    </div>
+  {{/frames}}
+{{/allocatedStackTrace}}

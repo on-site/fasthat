@@ -1,0 +1,10 @@
+<h1>Array of {{length}} objects</h1>
+
+<h2>Class:</h2>
+{{#clazz}}{{>class}}{{/clazz}}
+
+<h2>Values</h2>
+{{#elements}}
+  {{index}} : {{#value}}{{>javaThing}}{{/value}}
+  <br />
+{{/elements}}

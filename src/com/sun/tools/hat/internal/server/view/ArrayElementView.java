@@ -31,57 +31,28 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
-import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
 /**
- * View model for {@link JavaField}.
+ * View model for an element in an array.
  *
  * @author Mike Virata-Stone
  */
-public class JavaFieldView extends ViewModel {
-    private final JavaField field;
+public class ArrayElementView extends ViewModel {
+    private final int index;
+    private final JavaThingView value;
 
-    public JavaFieldView(QueryHandler handler, JavaField field) {
+    public ArrayElementView(QueryHandler handler, int index, JavaThingView value) {
         super(handler);
-        this.field = field;
+        this.index = index;
+        this.value = value;
     }
 
-    public boolean hasId() {
-        return field.hasId();
+    public int getIndex() {
+        return index;
     }
 
-    public String getName() {
-        return field.getName();
-    }
-
-    public String getSignature() {
-        return field.getSignature();
-    }
-
-    public WithValue withValue(JavaThingView value) {
-        return new WithValue(handler, this, value);
-    }
-
-    /**
-     * A field paired with its value.
-     */
-    public static class WithValue extends ViewModel {
-        private final JavaFieldView field;
-        private final JavaThingView value;
-
-        public WithValue(QueryHandler handler, JavaFieldView field, JavaThingView value) {
-            super(handler);
-            this.field = field;
-            this.value = value;
-        }
-
-        public JavaFieldView getField() {
-            return field;
-        }
-
-        public JavaThingView getValue() {
-            return value;
-        }
+    public JavaThingView getValue() {
+        return value;
     }
 }

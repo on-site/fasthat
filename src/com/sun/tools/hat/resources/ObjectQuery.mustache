@@ -1,0 +1,48 @@
+{{<layout}}
+  {{$title}}Object at {{query}}{{/title}}
+  {{$content}}
+    {{#thing}}
+      {{#javaClass}}
+        {{#self}}
+          {{>fullClass}}
+        {{/self}}
+      {{/javaClass}}
+      {{#javaValueArray}}
+        {{#self}}
+          {{valueString}}
+          {{>allocationSite}}
+          {{>referencesTo}}
+        {{/self}}
+      {{/javaValueArray}}
+      {{#javaObjectArray}}
+        {{#self}}
+          {{>fullObjectArray}}
+          {{>allocationSite}}
+          {{>referencesTo}}
+        {{/self}}
+      {{/javaObjectArray}}
+      {{#javaObject}}
+        {{#self}}
+          {{>fullObject}}
+          {{>allocationSite}}
+          {{>referencesTo}}
+        {{/self}}
+      {{/javaObject}}
+      {{^javaClass}}
+        {{^javaValueArray}}
+          {{^javaObjectArray}}
+            {{^javaObject}}
+              {{#self}}
+                {{toString}}
+                {{>referencesTo}}
+              {{/self}}
+            {{/javaObject}}
+          {{/javaObjectArray}}
+        {{/javaValueArray}}
+      {{/javaClass}}
+    {{/thing}}
+    {{^thing}}
+      object not found: {{query}}
+    {{/thing}}
+  {{/content}}
+{{/layout}}

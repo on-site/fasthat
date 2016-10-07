@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.lang.ClassModel;
@@ -45,8 +46,12 @@ import com.sun.tools.hat.internal.lang.ScalarModel;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.model.JavaObject;
+import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaStatic;
 import com.sun.tools.hat.internal.model.JavaThing;
+import com.sun.tools.hat.internal.model.JavaValueArray;
+import com.sun.tools.hat.internal.model.StackTrace;
 import com.sun.tools.hat.internal.server.QueryHandler;
 import com.sun.tools.hat.internal.util.Misc;
 import com.sun.tools.hat.internal.util.StreamIterable;
@@ -96,6 +101,10 @@ public class JavaThingView extends ViewModel {
         return thing == null;
     }
 
+    public JavaThingView getSelf() {
+        return this;
+    }
+
     public boolean isShowingDetail() {
         return showDetail;
     }
@@ -114,6 +123,34 @@ public class JavaThingView extends ViewModel {
 
     public JavaClass toJavaClass() {
         return (JavaClass) thing;
+    }
+
+    public boolean isJavaObject() {
+        return (thing instanceof JavaObject);
+    }
+
+    public JavaObject toJavaObject() {
+        return (JavaObject) thing;
+    }
+
+    public boolean isJavaValueArray() {
+        return (thing instanceof JavaValueArray);
+    }
+
+    public JavaValueArray toJavaValueArray() {
+        return (JavaValueArray) thing;
+    }
+
+    public boolean isJavaObjectArray() {
+        return (thing instanceof JavaObjectArray);
+    }
+
+    public JavaObjectArray toJavaObjectArray() {
+        return (JavaObjectArray) thing;
+    }
+
+    public JavaThingView getClazz() {
+        return new JavaThingView(handler, toJavaHeapObject().getClazz());
     }
 
     public String getPackageName() {
@@ -229,6 +266,54 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    public Iterable<JavaFieldView.WithValue> getFieldsWithValues() {
+        if (isJavaObject()) {
+            JavaField[] fields = getClazz().toJavaClass().getFieldsForInstance();
+            JavaThing[] values = toJavaObject().getFields();
+            ImmutableList.Builder<JavaFieldView.WithValue> builder = ImmutableList.builder();
+
+            for (int i = 0; i < fields.length; ++i) {
+                builder.add(new JavaFieldView(handler, fields[i]).withValue(new JavaThingView(handler, values[i])));
+            }
+
+            return new StreamIterable<>(builder.build().stream()
+                    .sorted(Ordering.natural().onResultOf(fieldWithValue -> fieldWithValue.getField().getName())));
+        }
+
+        return null;
+    }
+
+    public String valueString() {
+        if (isJavaValueArray()) {
+            return toJavaValueArray().valueString(true);
+        }
+
+        return null;
+    }
+
+    public Integer getLength() {
+        if (isJavaObjectArray()) {
+            return toJavaObjectArray().getLength();
+        }
+
+        return null;
+    }
+
+    public Iterable<ArrayElementView> getElements() {
+        if (isJavaObjectArray()) {
+            JavaThing[] elements = toJavaObjectArray().getElements();
+            ImmutableList.Builder<ArrayElementView> builder = ImmutableList.builder();
+
+            for (int i = 0; i < elements.length; ++i) {
+                builder.add(new ArrayElementView(handler, i, new JavaThingView(handler, elements[i])));
+            }
+
+            return builder.build();
+        }
+
+        return null;
+    }
+
     public Iterable<JavaStaticView> getStatics() {
         if (isJavaClass()) {
             List<JavaStatic> statics = Arrays.asList(toJavaClass().getStatics());
@@ -283,6 +368,16 @@ public class JavaThingView extends ViewModel {
     public Iterable<RefererView> getReferers() {
         return new StreamIterable<>(toJavaHeapObject().getReferers().stream()
                 .map(ref -> new RefererView(handler, ref, thing)));
+    }
+
+    public StackTraceView getAllocatedStackTrace() {
+        StackTrace trace = toJavaHeapObject().getAllocatedFrom();
+
+        if (trace != null && trace.getFrames().length > 0) {
+            return new StackTraceView(handler, trace);
+        }
+
+        return null;
     }
 
     public Model getModel() {

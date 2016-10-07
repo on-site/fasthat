@@ -37,6 +37,7 @@ import java.util.Map;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
 
 /**
  *
@@ -45,97 +46,13 @@ import com.sun.tools.hat.internal.model.*;
 
 
 class ObjectQuery extends ClassQuery {
-        // We inherit printFullClass from ClassQuery
+    public JavaThingView getThing() {
+        JavaThing thing = snapshot.findThing(query);
 
-    public ObjectQuery() {
-    }
-
-    @Override
-    public void run() {
-        startHtml("Object at %s", query);
-        JavaHeapObject thing = snapshot.findThing(query);
-        //
-        // In the following, I suppose we really should use a visitor
-        // pattern.  I'm not that strongly motivated to do this, however:
-        // This is the only typecase there is, and the default for an
-        // unrecognized type is to do something reasonable.
-        //
-        if (thing == null) {
-            error("object not found: %s", query);
-        } else if (thing instanceof JavaClass) {
-            printFullClass((JavaClass) thing);
-        } else if (thing instanceof JavaValueArray) {
-            print(((JavaValueArray) thing).valueString(true));
-            printAllocationSite(thing);
-            printReferencesTo(thing);
-        } else if (thing instanceof JavaObjectArray) {
-            printFullObjectArray((JavaObjectArray) thing);
-            printAllocationSite(thing);
-            printReferencesTo(thing);
-        } else if (thing instanceof JavaObject) {
-            printFullObject((JavaObject) thing);
-            printAllocationSite(thing);
-            printReferencesTo(thing);
-        } else {
-            // We should never get here
-            print(thing.toString());
-            printReferencesTo(thing);
+        if (thing != null) {
+            return new JavaThingView(this, thing);
         }
-        endHtml();
-    }
 
-    private static Map<JavaField, JavaThing> makeFieldMap(JavaField[] fields, JavaThing[] values) {
-        ImmutableMap.Builder<JavaField, JavaThing> builder = ImmutableMap.builder();
-        for (int i = 0; i < fields.length; ++i) {
-            builder.put(fields[i], values[i]);
-        }
-        return builder.build();
-    }
-
-    private void printFullObject(JavaObject obj) {
-        out.print("<h1>instance of ");
-        print(obj.toString());
-        out.print(" <small>(" + obj.getSize() + " bytes)</small>");
-        out.println("</h1>\n");
-
-        out.println("<h2>Class:</h2>");
-        printClass(obj.getClazz());
-
-        out.println("<h2>Instance data members:</h2>");
-        makeFieldMap(obj.getClazz().getFieldsForInstance(), obj.getFields()).entrySet().stream()
-                .sorted(Ordering.natural().onResultOf(e -> e.getKey().getName()))
-                .forEach(entry -> {
-            printField(entry.getKey());
-            out.print(" : ");
-            printThing(entry.getValue());
-            out.println("<br>");
-        });
-    }
-
-    private void printFullObjectArray(JavaObjectArray arr) {
-        JavaThing[] elements = arr.getElements();
-        out.println("<h1>Array of " + elements.length + " objects</h1>");
-
-        out.println("<h2>Class:</h2>");
-        printClass(arr.getClazz());
-
-        out.println("<h2>Values</h2>");
-        for (int i = 0; i < elements.length; i++) {
-            out.print("" + i + " : ");
-            printThing(elements[i]);
-            out.println("<br>");
-        }
-    }
-
-    //
-    // Print the StackTrace where this was allocated
-    //
-    private void printAllocationSite(JavaHeapObject obj) {
-        StackTrace trace = obj.getAllocatedFrom();
-        if (trace == null || trace.getFrames().length == 0) {
-            return;
-        }
-        out.println("<h2>Object allocated from:</h2>");
-        printStackTrace(trace);
+        return null;
     }
 }
