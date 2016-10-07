@@ -1,5 +1,9 @@
 {{<layout}}
-  {{$title}}{{title}}{{/title}}
+  {{$title}}
+    Instance Counts for All Classes
+    {{#excludePlatform}}(excluding platform){{/excludePlatform}}
+    {{^excludePlatform}}(including platform){{/excludePlatform}}
+  {{/title}}
   {{$content}}
     {{#classes}}
       <div>
@@ -15,7 +19,7 @@
 
     <ul>
       {{#excludePlatform}}
-        <li><a href="/showInstanceCounts/includePlatform/">Show instance counts for all classes (including platform)</a></li>
+        <li><a href="/showInstanceCounts/?platform=true">Show instance counts for all classes (including platform)</a></li>
       {{/excludePlatform}}
       {{^excludePlatform}}
         <li><a href="/showInstanceCounts/">Show instance counts for all classes (excluding platform)</a></li>

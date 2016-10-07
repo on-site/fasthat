@@ -47,23 +47,10 @@ import java.util.Collection;
 
 
 class InstancesCountQuery extends MustacheQueryHandler {
-    private final boolean excludePlatform;
     private Collection<JavaThingView> classes;
 
-    public InstancesCountQuery(boolean excludePlatform) {
-        this.excludePlatform = excludePlatform;
-    }
-
-    public String getTitle() {
-        if (excludePlatform) {
-            return "Instance Counts for All Classes (excluding platform)";
-        } else {
-            return "Instance Counts for All Classes (including platform)";
-        }
-    }
-
     public boolean getExcludePlatform() {
-        return excludePlatform;
+        return !params.containsKey("platform");
     }
 
     public boolean hasNewSet() {
@@ -92,7 +79,7 @@ class InstancesCountQuery extends MustacheQueryHandler {
 
         Collection<JavaClass> result = snapshot.getClasses();
 
-        if (excludePlatform) {
+        if (getExcludePlatform()) {
             result = Collections2.filter(result, cls -> !PlatformClasses.isPlatformClass(cls));
         }
 
