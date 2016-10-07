@@ -1,0 +1,10 @@
+{{#stackTraceAvailable}}
+  <a href="/rootStack/{{hexIndex}}">{{description}}</a>
+{{/stackTraceAvailable}}
+{{^stackTraceAvailable}}
+  {{description}}
+{{/stackTraceAvailable}}
+
+{{#referer}}
+  <small> (from <a href="/object/{{hexId}}">{{toString}}</a>)</small>
+{{/referer}}

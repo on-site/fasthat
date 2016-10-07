@@ -1,0 +1,41 @@
+{{<layout}}
+  {{$title}}
+    {{#target}}
+      Rootset references to {{toString}}
+      {{#includeWeak}}(includes weak refs){{/includeWeak}}
+      {{^includeWeak}}(excludes weak refs){{/includeWeak}}
+    {{/target}}
+    {{^target}}
+      Object not found for rootset
+    {{/target}}
+  {{/title}}
+  {{$content}}
+    {{#target}}
+      <h1>References to {{>javaThing}}</h1>
+      {{#referenceChainSets}}
+        <h2>{{typeName}} References</h2>
+        {{#referenceChains}}
+          {{#root}}<h3>{{>root}} :</h3>{{/root}}
+          {{#references}}
+            <div>
+              --&gt; {{#object}}{{>javaThing}}{{/object}}
+              {{#hasNext}}({{descriptionOfReference}}:){{/hasNext}}
+            </div>
+          {{/references}}
+        {{/referenceChains}}
+      {{/referenceChainSets}}
+
+      <h2>Other queries</h2>
+
+      {{#includeWeak}}
+        <a href="/roots/{{query}}">Exclude weak refs</a>
+      {{/includeWeak}}
+      {{^includeWeak}}
+        <a href="/allRoots/{{query}}">Include weak refs</a>
+      {{/includeWeak}}
+    {{/target}}
+    {{^target}}
+      object not found: {{query}}
+    {{/target}}
+  {{/content}}
+{{/layout}}

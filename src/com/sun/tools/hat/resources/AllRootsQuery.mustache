@@ -5,22 +5,8 @@
       <h2>{{typeName}} References</h2>
 
       {{#roots}}
-        <div>
-          {{#stackTraceAvailable}}
-            <a href="/rootStack/{{hexIndex}}">{{description}}</a>
-          {{/stackTraceAvailable}}
-          {{^stackTraceAvailable}}
-            {{description}}
-          {{/stackTraceAvailable}}
-
-          {{#referer}}
-            <small> (from <a href="/object/{{hexId}}">{{toString}}</a>)</small>
-          {{/referer}}
-          :
-        </div>
-        {{#javaThing}}
-          <div>--&gt; {{>javaThing}}</div>
-        {{/javaThing}}
+        <div>{{>root}} :</div>
+        {{#javaThing}}<div>--&gt; {{>javaThing}}</div>{{/javaThing}}
       {{/roots}}
     {{/rootSets}}
 

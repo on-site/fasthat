@@ -35,7 +35,10 @@ package com.sun.tools.hat.internal.server;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.model.ReferenceChain;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
+import com.sun.tools.hat.internal.server.view.ReferenceChainSet;
+import com.sun.tools.hat.internal.util.StreamIterable;
 
 /**
  *
@@ -43,89 +46,31 @@ import com.sun.tools.hat.internal.model.*;
  */
 
 
-class RootsQuery extends QueryHandler {
+class RootsQuery extends MustacheQueryHandler {
     private final boolean includeWeak;
+    private JavaThingView target;
 
     public RootsQuery(boolean includeWeak) {
         this.includeWeak = includeWeak;
     }
 
-    @Override
-    public void run() {
-        long id = parseHex(query);
-        JavaHeapObject target = snapshot.findThing(id);
-        if (target == null) {
-            startHtml("Object not found for rootset");
-            error("object not found: %#x", id);
-            endHtml();
-            return;
-        }
-        if (includeWeak) {
-            startHtml("Rootset references to %s (includes weak refs)", target);
-        } else {
-            startHtml("Rootset references to %s (excludes weak refs)", target);
-        }
-        out.flush();
-
-        out.print("<h1>References to ");
-        printThing(target);
-        out.println("</h1>");
-        // More interesting values are *higher*
-        Multimap<Integer, ReferenceChain> refs = Multimaps.index(
-                snapshot.rootsetReferencesTo(target, includeWeak),
-                chain -> chain.getObj().getRoot().getType());
-        refs.asMap().entrySet().stream().sorted(Ordering.natural().reverse()
-                .onResultOf(entry -> entry.getKey())).forEach(entry -> {
-            out.print("<h2>");
-            print(Root.getTypeName(entry.getKey()) + " References");
-            out.println("</h2>");
-            entry.getValue().stream().sorted(Ordering.natural()
-                    .onResultOf(ReferenceChain::getDepth)).forEach(ref -> {
-                Root root = ref.getObj().getRoot();
-                out.print("<h3>");
-                printRoot(root);
-                if (root.getReferer() != null) {
-                    out.print("<small> (from ");
-                    printThingAnchorTag(root.getReferer().getId());
-                    print(root.getReferer().toString());
-                    out.print(")</a></small>");
-
-                }
-                out.print(" :</h3>");
-                while (ref != null) {
-                    ReferenceChain next = ref.getNext();
-                    JavaHeapObject obj = ref.getObj();
-                    print("--> ");
-                    printThing(obj);
-                    if (next != null) {
-                        print(" (" +
-                                obj.describeReferenceTo(next.getObj(), snapshot)
-                                + ":)");
-                    }
-                    out.println("<br>");
-                    ref = next;
-                }
-            });
-        });
-
-        out.println("<h2>Other queries</h2>");
-
-        if (includeWeak) {
-            printAnchorStart();
-            out.print("roots/");
-            printHex(id);
-            out.print("\">");
-            out.println("Exclude weak refs</a><br>");
-            endHtml();
-        }
-
-        if (!includeWeak) {
-            printAnchorStart();
-            out.print("allRoots/");
-            printHex(id);
-            out.print("\">");
-            out.println("Include weak refs</a><br>");
-        }
+    public boolean getIncludeWeak() {
+        return includeWeak;
     }
 
+    public JavaThingView getTarget() {
+        if (target == null) {
+            target = new JavaThingView(this, snapshot.findThing(parseHex(query)));
+        }
+
+        return target;
+    }
+
+    public Iterable<ReferenceChainSet> getReferenceChainSets() {
+        // More interesting values are *higher*
+        return new StreamIterable<>(Multimaps.<Integer, ReferenceChain>index(snapshot.rootsetReferencesTo(getTarget().toJavaHeapObject(), getIncludeWeak()), chain -> chain.getObj().getRoot().getType())
+                .asMap().entrySet().stream()
+                .sorted(Ordering.natural().reverse().onResultOf(entry -> entry.getKey()))
+                .map(entry -> new ReferenceChainSet(this, entry)));
+    }
 }
