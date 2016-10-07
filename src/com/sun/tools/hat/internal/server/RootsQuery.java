@@ -47,15 +47,10 @@ import com.sun.tools.hat.internal.util.StreamIterable;
 
 
 class RootsQuery extends MustacheQueryHandler {
-    private final boolean includeWeak;
     private JavaThingView target;
 
-    public RootsQuery(boolean includeWeak) {
-        this.includeWeak = includeWeak;
-    }
-
     public boolean getIncludeWeak() {
-        return includeWeak;
+        return params.containsKey("weak");
     }
 
     public JavaThingView getTarget() {

@@ -1,41 +1,45 @@
 {{<layout}}
   {{$title}}
     {{#target}}
-      Rootset references to {{toString}}
-      {{#includeWeak}}(includes weak refs){{/includeWeak}}
-      {{^includeWeak}}(excludes weak refs){{/includeWeak}}
-    {{/target}}
-    {{^target}}
-      Object not found for rootset
+      {{#null}}
+        Object not found for rootset
+      {{/null}}
+      {{^null}}
+        Rootset references to {{#self}}{{toString}}{{/self}}
+        {{#includeWeak}}(includes weak refs){{/includeWeak}}
+        {{^includeWeak}}(excludes weak refs){{/includeWeak}}
+      {{/null}}
     {{/target}}
   {{/title}}
   {{$content}}
     {{#target}}
-      <h1>References to {{>javaThing}}</h1>
-      {{#referenceChainSets}}
-        <h2>{{typeName}} References</h2>
-        {{#referenceChains}}
-          {{#root}}<h3>{{>root}} :</h3>{{/root}}
-          {{#references}}
-            <div>
-              --&gt; {{#object}}{{>javaThing}}{{/object}}
-              {{#hasNext}}({{descriptionOfReference}}:){{/hasNext}}
-            </div>
-          {{/references}}
-        {{/referenceChains}}
-      {{/referenceChainSets}}
+      {{#null}}
+        object not found: {{query}}
+      {{/null}}
+      {{^null}}
+        <h1>References to {{#self}}{{>javaThing}}{{/self}}</h1>
+        {{#referenceChainSets}}
+          <h2>{{typeName}} References</h2>
+          {{#referenceChains}}
+            {{#root}}<h3>{{>root}} :</h3>{{/root}}
+            {{#references}}
+              <div>
+                --&gt; {{#object}}{{>javaThing}}{{/object}}
+                {{#hasNext}}({{descriptionOfReference}}:){{/hasNext}}
+              </div>
+            {{/references}}
+          {{/referenceChains}}
+        {{/referenceChainSets}}
 
-      <h2>Other queries</h2>
+        <h2>Other queries</h2>
 
-      {{#includeWeak}}
-        <a href="/roots/{{query}}">Exclude weak refs</a>
-      {{/includeWeak}}
-      {{^includeWeak}}
-        <a href="/allRoots/{{query}}">Include weak refs</a>
-      {{/includeWeak}}
-    {{/target}}
-    {{^target}}
-      object not found: {{query}}
+        {{#includeWeak}}
+          <a href="/roots/{{query}}">Exclude weak refs</a>
+        {{/includeWeak}}
+        {{^includeWeak}}
+          <a href="/roots/{{query}}?weak=true">Include weak refs</a>
+        {{/includeWeak}}
+      {{/null}}
     {{/target}}
   {{/content}}
 {{/layout}}
