@@ -1,5 +1,9 @@
 {{<layout}}
-  {{$title}}{{title}}{{/title}}
+  {{$title}}
+    All Classes
+    {{#excludePlatform}}(excluding platform){{/excludePlatform}}
+    {{^excludePlatform}}(including platform){{/excludePlatform}}
+  {{/title}}
   {{$content}}
     {{#packages}}
       <h2>{{name}}</h2>
@@ -13,7 +17,7 @@
 
     <ul>
       {{#excludePlatform}}
-        <li><a href="/allClassesWithPlatform/">All classes including platform</a></li>
+        <li><a href="/allClasses/?platform=true">All classes including platform</a></li>
       {{/excludePlatform}}
       {{^excludePlatform}}
         <li><a href="/allClasses/">All classes excluding platform</a></li>

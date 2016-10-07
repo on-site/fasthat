@@ -42,23 +42,10 @@ import java.util.List;
  * @author      Bill Foote
  */
 class AllClassesQuery extends MustacheQueryHandler {
-    private final boolean excludePlatform;
     private List<JavaPackage> packages;
 
-    public AllClassesQuery(boolean excludePlatform) {
-        this.excludePlatform = excludePlatform;
-    }
-
-    public String getTitle() {
-        if (excludePlatform) {
-            return "All Classes (excluding platform)";
-        } else {
-            return "All Classes (including platform)";
-        }
-    }
-
     public boolean getExcludePlatform() {
-        return excludePlatform;
+        return !params.containsKey("platform");
     }
 
     public boolean isOqlSupported() {
@@ -70,7 +57,7 @@ class AllClassesQuery extends MustacheQueryHandler {
             return packages;
         }
 
-        packages = JavaPackage.getAll(this, excludePlatform);
+        packages = JavaPackage.getAll(this, getExcludePlatform());
         return packages;
     }
 }
