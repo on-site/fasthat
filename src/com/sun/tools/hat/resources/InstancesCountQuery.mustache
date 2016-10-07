@@ -2,11 +2,12 @@
   {{$title}}{{title}}{{/title}}
   {{$content}}
     {{#classes}}
-      {{instancesCountWithoutSubclasses}}
-      <a href="/instances/{{urlEncodedId}}">{{instancesCountWithoutSubclassesLabel}}</a>
-      {{#hasNewSet}}(<a href="/newInstances/{{urlEncodedId}}">{{instancesWithoutSubclasses}} new</a>){{/hasNewSet}}
-      of {{>class}}
-      <br />
+      <div>
+        {{instancesCountWithoutSubclasses}}
+        <a href="/instances/{{urlEncodedId}}">{{instancesCountWithoutSubclassesLabel}}</a>
+        {{#hasNewSet}}(<a href="/newInstances/{{urlEncodedId}}">{{instancesWithoutSubclasses}} new</a>){{/hasNewSet}}
+        of {{>class}}
+      </div>
     {{/classes}}
 
     <h2>Total of {{instances}} instances occupying {{totalSize}} bytes.</h2>
