@@ -37,7 +37,7 @@ import com.sun.tools.hat.internal.util.Misc;
 
 import java.io.PrintWriter;
 
-class ErrorQuery extends QueryHandler {
+class ErrorQuery extends MustacheQueryHandler {
     private final String message;
 
     public ErrorQuery(String msg) {
@@ -49,11 +49,7 @@ class ErrorQuery extends QueryHandler {
         return "500 Internal Server Error";
     }
 
-    @Override
-    public void run() {
-        out.println();
-        out.println("<html><head><link rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\" /></head><body bgcolor=\"#ffffff\">");
-        out.println(Misc.encodeHtml(Strings.nullToEmpty(message)));
-        out.println("</body></html>");
+    public String getMessage() {
+        return message;
     }
 }
