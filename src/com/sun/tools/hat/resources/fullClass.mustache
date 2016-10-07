@@ -30,12 +30,12 @@
 
 <h2>Instances</h2>
 <div><a href="/instances/{{urlEncodedId}}">Exclude subclasses</a></div>
-<div><a href="/allInstances/{{urlEncodedId}}">Include subclasses</a></div>
+<div><a href="/instances/{{urlEncodedId}}?subclasses=true">Include subclasses</a></div>
 
 {{#hasNewSet}}
   <h2>New Instances</h2>
-  <div><a href="/newInstances/{{urlEncodedId}}">Exclude subclasses</a></div>
-  <div><a href="/allNewInstances/{{urlEncodedId}}">Include subclasses</a></div>
+  <div><a href="/instances/{{urlEncodedId}}?new=true">Exclude subclasses</a></div>
+  <div><a href="/instances/{{urlEncodedId}}?new=true&subclasses=true">Include subclasses</a></div>
 {{/hasNewSet}}
 
 <h2>References summary by Type</h2>

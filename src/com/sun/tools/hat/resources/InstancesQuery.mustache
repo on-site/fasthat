@@ -1,5 +1,11 @@
 {{<layout}}
-  {{$title}}{{title}}{{/title}}
+  {{$title}}
+    {{#useNewObjects}}New{{/useNewObjects}}
+    {{#referee}}References{{/referee}}
+    {{^referee}}Instances{{/referee}}
+    of {{#javaClass}}{{name}}{{/javaClass}}
+    {{#includeSubclasses}}(including subclasses){{/includeSubclasses}}
+  {{/title}}
   {{$content}}
     {{#breadcrumbs}}{{>breadcrumbs}}{{/breadcrumbs}}
     {{#objects}}

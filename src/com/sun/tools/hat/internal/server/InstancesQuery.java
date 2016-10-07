@@ -55,18 +55,19 @@ import com.sun.tools.hat.internal.util.Misc;
 
 
 class InstancesQuery extends MustacheQueryHandler {
-    private final boolean includeSubclasses;
-    private final boolean newObjects;
     private JavaThingView javaClass;
     private ReferrerSet referrers;
     private Collection<JavaThingView> objects;
 
-    public InstancesQuery(boolean includeSubclasses, boolean newObjects) {
-        this.includeSubclasses = includeSubclasses;
-        this.newObjects = newObjects;
+    public boolean getIncludeSubclasses() {
+        return params.containsKey("subclasses");
     }
 
-    private JavaThingView getJavaClass() {
+    public boolean getUseNewObjects() {
+        return params.containsKey("new");
+    }
+
+    public JavaThingView getJavaClass() {
         if (javaClass == null) {
             javaClass = new JavaThingView(this, resolveClass(query, true));
         }
@@ -74,16 +75,8 @@ class InstancesQuery extends MustacheQueryHandler {
         return javaClass;
     }
 
-    private boolean isReferee() {
+    public boolean isReferee() {
         return Boolean.parseBoolean(Iterables.getOnlyElement(params.get("referee"), "false"));
-    }
-
-    public String getTitle() {
-        return String.format("%s%s of %s%s",
-                             newObjects ? "New " : "",
-                             isReferee() ? "Referees" : "Instances",
-                             getJavaClass().getName(),
-                             includeSubclasses ? " (including subclasses)" : "");
     }
 
     public BreadcrumbsView getBreadcrumbs() {
@@ -102,7 +95,7 @@ class InstancesQuery extends MustacheQueryHandler {
     public Collection<JavaThingView> getObjects() {
         if (objects == null) {
             List<JavaThingView> referrers = getReferrers().getReferrers();
-            Set<JavaHeapObject> result = Misc.getInstances(getJavaClass().toJavaClass(), includeSubclasses, Lists.transform(referrers, JavaThingView::toJavaClass));
+            Set<JavaHeapObject> result = Misc.getInstances(getJavaClass().toJavaClass(), getIncludeSubclasses(), Lists.transform(referrers, JavaThingView::toJavaClass));
 
             if (isReferee()) {
                 int size = referrers.size();
@@ -110,7 +103,7 @@ class InstancesQuery extends MustacheQueryHandler {
                 result = Misc.getRefereesByClass(result, prev);
             }
 
-            if (newObjects) {
+            if (getUseNewObjects()) {
                 result = Sets.filter(result, JavaHeapObject::isNew);
             }
 
