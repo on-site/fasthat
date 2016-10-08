@@ -1,0 +1,12 @@
+{{<layout}}
+  {{$title}}Objects pending finalization{{/title}}
+  {{$content}}
+    <a href="/finalizerSummary/">Finalizer summary</a>
+
+    <h1>Objects pending finalization</h1>
+
+    {{#finalizerObjects}}
+      <div>{{>javaThing}}</div>
+    {{/finalizerObjects}}
+  {{/content}}
+{{/layout}}

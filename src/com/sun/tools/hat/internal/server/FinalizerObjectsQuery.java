@@ -32,22 +32,11 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.sun.tools.hat.internal.model.*;
+import com.google.common.collect.Collections2;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
 
-public class FinalizerObjectsQuery extends QueryHandler {
-    @Override
-    public void run() {
-        startHtml("Objects pending finalization");
-
-        out.println("<a href='/finalizerSummary/'>Finalizer summary</a>");
-
-        out.println("<h1>Objects pending finalization</h1>");
-
-        for (JavaHeapObject obj : snapshot.getFinalizerObjects()) {
-            printThing(obj);
-            out.println("<br>");
-        }
-
-        endHtml();
+public class FinalizerObjectsQuery extends MustacheQueryHandler {
+    public Iterable<JavaThingView> getFinalizerObjects() {
+        return Collections2.transform(snapshot.getFinalizerObjects(), thing -> new JavaThingView(this, thing));
     }
 }
