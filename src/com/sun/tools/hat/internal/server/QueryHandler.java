@@ -224,21 +224,6 @@ public abstract class QueryHandler implements Runnable {
         }
     }
 
-    protected void printRoot(Root root) {
-        StackTrace st = root.getStackTrace();
-        boolean traceAvailable = (st != null) && (st.getFrames().length != 0);
-        if (traceAvailable) {
-            printAnchorStart();
-            out.print("rootStack/");
-            printHex(root.getIndex());
-            out.print("\">");
-        }
-        print(root.getDescription());
-        if (traceAvailable) {
-            out.print("</a>");
-        }
-    }
-
     protected void printClass(JavaClass clazz) {
         if (clazz == null) {
             out.println("null");
@@ -257,22 +242,6 @@ public abstract class QueryHandler implements Runnable {
             return encodeForURL(clazz.getName());
         } else {
             return clazz.getIdString();
-        }
-    }
-
-    protected void printField(JavaField field) {
-        print(field.getName() + " (" + field.getSignature() + ")");
-    }
-
-    protected void printStatic(JavaStatic member) {
-        JavaField f = member.getField();
-        printField(f);
-        out.print(" : ");
-        if (f.hasId()) {
-            JavaThing t = member.getValue();
-            printThing(t);
-        } else {
-            print(member.getValue().toString());
         }
     }
 
