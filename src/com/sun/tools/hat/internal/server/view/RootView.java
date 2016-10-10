@@ -34,6 +34,7 @@ package com.sun.tools.hat.internal.server.view;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Root;
+import com.sun.tools.hat.internal.model.StackTrace;
 import com.sun.tools.hat.internal.server.QueryHandler;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -50,8 +51,14 @@ public class RootView extends ViewModel {
         this.root = root;
     }
 
-    public boolean isStackTraceAvailable() {
-        return root.getStackTrace() != null && root.getStackTrace().getFrames().length != 0;
+    public StackTraceView getStackTrace() {
+        StackTrace trace = root.getStackTrace();
+
+        if (trace != null && trace.getFrames().length > 0) {
+            return new StackTraceView(handler, trace);
+        }
+
+        return null;
     }
 
     public String getDescription() {

@@ -32,8 +32,8 @@
 
 package com.sun.tools.hat.internal.server;
 
-
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.model.Root;
+import com.sun.tools.hat.internal.server.view.RootView;
 
 /**
  * Query to show the StackTrace for a given root
@@ -42,29 +42,24 @@ import com.sun.tools.hat.internal.model.*;
  */
 
 
-class RootStackQuery extends QueryHandler {
+class RootStackQuery extends MustacheQueryHandler {
+    private RootView root;
 
-    public RootStackQuery() {
-    }
-
-    @Override
-    public void run() {
-        int index = (int) parseHex(query);
-        Root root = snapshot.getRootAt(index);
+    public RootView getRoot() {
         if (root == null) {
-            error("Root at %d not found", index);
-            return;
-        }
-        StackTrace st = root.getStackTrace();
-        if (st == null || st.getFrames().length == 0) {
-            error("No stack trace for %s", root.getDescription());
-            return;
-        }
-        startHtml("Stack Trace for %s", root.getDescription());
-        out.println("<p>");
-        printStackTrace(st);
-        out.println("</p>");
-        endHtml();
-    }
+            int index = (int) parseHex(query);
 
+            if (index >= snapshot.getRoots().size()) {
+                return null;
+            }
+
+            Root r = snapshot.getRootAt(index);
+
+            if (r != null) {
+                root = new RootView(this, r);
+            }
+        }
+
+        return root;
+    }
 }

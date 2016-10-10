@@ -1,0 +1,29 @@
+{{<layout}}
+  {{$title}}
+    {{#root}}
+      {{#stackTrace}}
+        Stack Trace for {{description}}
+      {{/stackTrace}}
+      {{^stackTrace}}
+        No stack trace for {{description}}
+      {{/stackTrace}}
+    {{/root}}
+    {{^root}}
+      Root at {{query}} not found
+    {{/root}}
+  {{/title}}
+  {{$content}}
+    {{#root}}
+      {{#stackTrace}}
+        <p>Stack Trace for {{description}}</p>
+        {{>stackTrace}}
+      {{/stackTrace}}
+      {{^stackTrace}}
+        No stack trace for {{description}}
+      {{/stackTrace}}
+    {{/root}}
+    {{^root}}
+      Root at {{query}} not found
+    {{/root}}
+  {{/content}}
+{{/layout}}

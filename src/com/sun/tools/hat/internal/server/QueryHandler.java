@@ -178,10 +178,6 @@ public abstract class QueryHandler implements Runnable {
         out.print("\">");
     }
 
-    protected void printThing(JavaThing thing) {
-        printImpl(thing, false, true, null);
-    }
-
     protected void printDetailed(JavaThing thing) {
         printImpl(thing, false, true, Integer.MAX_VALUE);
     }
@@ -242,20 +238,6 @@ public abstract class QueryHandler implements Runnable {
             return encodeForURL(clazz.getName());
         } else {
             return clazz.getIdString();
-        }
-    }
-
-    protected void printStackTrace(StackTrace trace) {
-        StackFrame[] frames = trace.getFrames();
-        for (StackFrame f : frames) {
-            String clazz = f.getClassName();
-            out.print("<font color=purple>");
-            print(clazz);
-            out.print("</font>");
-            print("." + f.getMethodName() + "(" + f.getMethodSignature() + ")");
-            out.print(" <bold>:</bold> ");
-            print(f.getSourceFileName() + " line " + f.getLineNumber());
-            out.println("<br>");
         }
     }
 
