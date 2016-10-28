@@ -31,15 +31,10 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.sun.tools.hat.internal.server.QueryHandler;
-import com.sun.tools.hat.internal.util.Misc;
 
-import java.util.Collection;
 import java.util.Iterator;
 
 /**
@@ -48,7 +43,6 @@ import java.util.Iterator;
  * @author Mike Virata-Stone
  */
 public class BreadcrumbsView extends ViewModel {
-    private static final Joiner PARAMS_JOINER = Joiner.on("&");
     private final String path;
     private final String pathInfo;
     private final String name;
@@ -58,6 +52,10 @@ public class BreadcrumbsView extends ViewModel {
 
     public BreadcrumbsView(QueryHandler handler, String path, JavaThingView javaClass, ReferrerSet referrers) {
         this(handler, path, null, null, javaClass, referrers, null);
+    }
+
+    public BreadcrumbsView(QueryHandler handler, String path, String pathInfo, String name, JavaThingView javaClass, ReferrerSet referrers) {
+        this(handler, path, pathInfo, name, javaClass, referrers, null);
     }
 
     private BreadcrumbsView(QueryHandler handler, String path, String pathInfo, String name, JavaThingView javaClass, ReferrerSet referrers, Multimap<String, String> params) {
@@ -129,27 +127,14 @@ public class BreadcrumbsView extends ViewModel {
         }
     }
 
-    public class Breadcrumb {
-        private final JavaThingView thing;
-        private final ImmutableMultimap<String, String> params;
-
+    public class Breadcrumb extends Link {
         private Breadcrumb(JavaThingView thing, ImmutableMultimap<String, String> params) {
-            this.thing = thing;
-            this.params = params;
+            super(BreadcrumbsView.this.handler, path, pathInfo, thing.getName(), null, null, null, null, params);
         }
 
-        public String getPath() {
-            return String.format("/%s/%s", path, Misc.encodeForURL(Strings.nullToEmpty(pathInfo)));
-        }
-
-        public String getQueryString() {
-            Collection<String> paramStrings = Collections2.transform(params.entries(),
-                     entry -> String.format("%s=%s", Misc.encodeForURL(entry.getKey()), Misc.encodeForURL(entry.getValue())));
-            return PARAMS_JOINER.join(paramStrings);
-        }
-
-        public String getLabel() {
-            return thing.getName();
+        @Override
+        public Multimap<String, String> buildParams() {
+            return getParams();
         }
     }
 }

@@ -1,18 +1,7 @@
-{{#javaClass}}
-  {{#hasReferrers}}
-    <p align="center">
-      {{#baseCrumb}}
-        <a href="{{path}}?{{queryString}}">{{label}}</a>
-      {{/baseCrumb}}
-      {{#crumbs}}
-        &rarr;
-        <a href="{{path}}?{{queryString}}">{{label}}</a>
-      {{/crumbs}}
-    </p>
-  {{/hasReferrers}}
-  {{^hasReferrers}}
-    <p>
-      <strong>{{#javaClass}}{{>class}}{{/javaClass}}</strong>
-    </p>
-  {{/hasReferrers}}
-{{/javaClass}}
+<p align="center">
+  {{#baseCrumb}}{{>link}}{{/baseCrumb}}
+  {{#crumbs}}
+    &rarr;
+    {{>link}}
+  {{/crumbs}}
+</p>

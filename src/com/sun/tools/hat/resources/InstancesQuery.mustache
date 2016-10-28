@@ -7,7 +7,19 @@
     {{#includeSubclasses}}(including subclasses){{/includeSubclasses}}
   {{/title}}
   {{$content}}
-    {{#breadcrumbs}}{{>breadcrumbs}}{{/breadcrumbs}}
+    {{#breadcrumbs}}
+      {{#javaClass}}
+        {{#hasReferrers}}
+          {{>breadcrumbs}}
+        {{/hasReferrers}}
+        {{^hasReferrers}}
+          <p>
+            <strong>{{#javaClass}}{{>class}}{{/javaClass}}</strong>
+          </p>
+        {{/hasReferrers}}
+      {{/javaClass}}
+    {{/breadcrumbs}}
+
     {{#objects}}
       <div>{{>javaThing}}</div>
     {{/objects}}

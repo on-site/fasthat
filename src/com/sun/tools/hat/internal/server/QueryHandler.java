@@ -92,6 +92,10 @@ public abstract class QueryHandler implements Runnable {
         return snapshot;
     }
 
+    public String getPath() {
+        return path;
+    }
+
     public String getQuery() {
         return query;
     }
