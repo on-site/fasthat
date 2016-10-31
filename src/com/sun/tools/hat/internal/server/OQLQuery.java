@@ -33,7 +33,8 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Iterables;
-import com.sun.tools.hat.internal.oql.*;
+import com.sun.tools.hat.internal.oql.OQLException;
+import com.sun.tools.hat.internal.util.StreamIterable;
 
 /**
  * This handles Object Query Language (OQL) queries.
@@ -41,51 +42,27 @@ import com.sun.tools.hat.internal.oql.*;
  * @author A. Sundararajan
  */
 
-class OQLQuery extends QueryHandler {
-    @Override
-    public void run() {
-        startHtml("Object Query Language (OQL) query");
-        String oql = Iterables.getOnlyElement(params.get("query"), null);
-        out.println("<p align='center'><table>");
-        out.println("<tr><td><b>");
-        out.println("<a href='/allClasses/'>All Classes (excluding platform)</a>");
-        out.println("</b></td>");
-        out.println("<td><b><a href='/oqlhelp/'>OQL Help</a></b></td></tr>");
-        out.println("</table></p>");
-        out.println("<form action='/oql/' method='get'>");
-        out.println("<p align='center'>");
-        out.println("<textarea name='query' cols=80 rows=10>");
-        if (oql != null) {
-            print(oql);
-        }
-        out.println("</textarea>");
-        out.println("</p>");
-        out.println("<p align='center'>");
-        out.println("<input type='submit' value='Execute'></input>");
-        out.println("</p>");
-        out.println("</form>");
-        if (oql != null) {
-            executeQuery(oql);
-        }
-        endHtml();
+class OQLQuery extends MustacheQueryHandler {
+    public String getOql() {
+        return Iterables.getOnlyElement(params.get("query"), null);
     }
 
-    private void executeQuery(String q) {
-        try {
-            out.println("<table border='1'>");
-            snapshot.getOqlEngine().executeQuery(q, o -> {
-                out.println("<tr><td>");
-                try {
-                    out.println(snapshot.getOqlEngine().toHtml(o));
-                } catch (Exception e) {
-                    printException(e);
-                }
-                out.println("</td></tr>");
-                return out.checkError();
-            });
-            out.println("</table>");
-        } catch (OQLException exp) {
-            printException(exp);
+    public Iterable<Object> getOqlResults() throws OQLException {
+        if (getOql() == null) {
+            return null;
         }
+
+        return new StreamIterable<>(snapshot.getOqlEngine().executeQuery(getOql())
+                .map(object -> {
+                    try {
+                        if (out.checkError()) {
+                            throw new RuntimeException("Query aborted");
+                        }
+
+                        return snapshot.getOqlEngine().toHtml(object);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }));
     }
 }

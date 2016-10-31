@@ -1,0 +1,34 @@
+{{<layout}}
+  {{$title}}Object Query Language (OQL) query{{/title}}
+  {{$content}}
+    <p align="center">
+      <table>
+        <tr>
+          <th><a href="/allClasses/">All Classes (excluding platform)</a></th>
+          <th><a href="/oqlhelp/">OQL Help</a></th>
+        </tr>
+      </table>
+    </p>
+
+    <form action="/oql/" method="get">
+      <p align="center">
+        <textarea name="query" cols=80 rows=10>{{oql}}</textarea>
+      </p>
+
+      <p align="center">
+        <input type="submit" value="Execute" />
+      </p>
+    </form>
+
+    {{#oql}}
+      <table border="1">
+        {{#oqlResults}}
+          <tr>
+            <td>{{{toString}}}</td>
+          </tr>
+          {{flush}}
+        {{/oqlResults}}
+      </table>
+    {{/oql}}
+  {{/content}}
+{{/layout}}

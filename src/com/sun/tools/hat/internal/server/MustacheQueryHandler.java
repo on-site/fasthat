@@ -78,6 +78,10 @@ abstract class MustacheQueryHandler extends QueryHandler {
     // Functions for templates to use
     public static final Function<String, String> urlEncode = Misc::encodeForURL;
 
+    public void flush() {
+        out.flush();
+    }
+
     @Override
     public void run() {
         try {
