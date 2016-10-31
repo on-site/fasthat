@@ -42,11 +42,6 @@ import com.sun.tools.hat.internal.oql.*;
  */
 
 class OQLQuery extends QueryHandler {
-
-    public OQLQuery(ThreadLocal<OQLEngine> engine) {
-        this.engine = engine;
-    }
-
     @Override
     public void run() {
         startHtml("Object Query Language (OQL) query");
@@ -78,10 +73,10 @@ class OQLQuery extends QueryHandler {
     private void executeQuery(String q) {
         try {
             out.println("<table border='1'>");
-            engine.get().executeQuery(q, o -> {
+            snapshot.getOqlEngine().executeQuery(q, o -> {
                 out.println("<tr><td>");
                 try {
-                    out.println(engine.get().toHtml(o));
+                    out.println(snapshot.getOqlEngine().toHtml(o));
                 } catch (Exception e) {
                     printException(e);
                 }
@@ -93,6 +88,4 @@ class OQLQuery extends QueryHandler {
             printException(exp);
         }
     }
-
-    private final ThreadLocal<OQLEngine> engine;
 }

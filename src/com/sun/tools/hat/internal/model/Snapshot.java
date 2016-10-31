@@ -38,6 +38,7 @@ import java.util.*;
 import com.google.common.collect.ImmutableList;
 import com.sun.tools.hat.internal.lang.ModelFactory;
 import com.sun.tools.hat.internal.lang.LanguageRuntime;
+import com.sun.tools.hat.internal.oql.OQLEngine;
 import com.sun.tools.hat.internal.parser.LoadProgress;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 import com.sun.tools.hat.internal.util.Misc;
@@ -124,9 +125,20 @@ public class Snapshot {
 
     private volatile ImmutableList<ModelFactory> modelFactories;
 
+    private final ThreadLocal<OQLEngine> oqlEngine = new ThreadLocal<OQLEngine>() {
+        @Override
+        protected OQLEngine initialValue() {
+            return new OQLEngine(Snapshot.this);
+        }
+    };
+
     public Snapshot(ReadBuffer buf) {
         nullThing = new HackJavaValue("<null>", 0);
         readBuf = buf;
+    }
+
+    public OQLEngine getOqlEngine() {
+        return oqlEngine.get();
     }
 
     public void setSiteTrace(JavaHeapObject obj, StackTrace trace) {

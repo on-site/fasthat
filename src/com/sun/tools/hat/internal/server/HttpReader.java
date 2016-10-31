@@ -47,23 +47,15 @@ import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 
 public class HttpReader extends HttpHandler {
-    private class EngineThreadLocal extends ThreadLocal<OQLEngine> {
-        @Override
-        protected OQLEngine initialValue() {
-            return new OQLEngine(snapshot);
-        }
-    }
-
     private final Server server;
     private final Snapshot snapshot;
-    private final EngineThreadLocal engine = new EngineThreadLocal();
     private final ImmutableList<HandlerRoute> routes = makeHandlerRoutes();
 
     private ImmutableList<HandlerRoute> makeHandlerRoutes() {
         ImmutableList.Builder<HandlerRoute> builder = ImmutableList.builder();
 
         if (OQLEngine.isOQLSupported()) {
-            builder.add(new HandlerRoute("/oql/", () -> new OQLQuery(engine)),
+            builder.add(new HandlerRoute("/oql/", OQLQuery::new),
                         new HandlerRoute("/oqlhelp/", OQLHelp::new));
         }
         builder.add(new HandlerRoute("/", IndexQuery::new),
