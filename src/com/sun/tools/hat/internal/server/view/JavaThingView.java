@@ -58,6 +58,7 @@ import com.sun.tools.hat.internal.util.StreamIterable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.StreamSupport;
 
 /**
@@ -475,5 +476,23 @@ public class JavaThingView extends ViewModel {
     @Override
     public String toString() {
         return thing.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(thing);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof JavaThingView)) {
+            return false;
+        }
+
+        if (other == null) {
+            return false;
+        }
+
+        return Objects.equals(thing, ((JavaThingView) other).thing);
     }
 }

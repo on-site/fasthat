@@ -1,0 +1,45 @@
+{{<layout}}
+  {{$title}}Finalizer Summary{{/title}}
+  {{$content}}
+    <p align="center">
+      <strong><a href="/allClasses/">All Classes (excluding platform)</a></strong>
+    </p>
+
+    <p align="center">
+      <strong>
+        Total
+
+        {{#hasFinalizingClasses}}
+          <a href="/finalizerObjects/">instances</a>
+        {{/hasFinalizingClasses}}
+        {{^hasFinalizingClasses}}
+          instances
+        {{/hasFinalizingClasses}}
+
+        pending finalization: {{pendingFinalizationCount}}
+      </strong>
+    </p>
+
+    <hr />
+
+    {{#hasFinalizingClasses}}
+      <table border="1" align="center">
+        <thead>
+          <tr>
+            <th>Count</th>
+            <th>Class</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {{#finalizingClasses}}
+            <tr>
+              <td>{{count}}</td>
+              <td>{{#element}}{{>class}}{{/element}}</td>
+            </tr>
+          {{/finalizingClasses}}
+        </tbody>
+      </table>
+    {{/hasFinalizingClasses}}
+  {{/content}}
+{{/layout}}

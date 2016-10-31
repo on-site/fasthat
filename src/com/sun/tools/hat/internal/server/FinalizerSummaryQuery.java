@@ -35,58 +35,46 @@ package com.sun.tools.hat.internal.server;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
-import com.sun.tools.hat.internal.model.*;
-import java.util.*;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
+import com.sun.tools.hat.internal.util.StreamIterable;
 
-public class FinalizerSummaryQuery extends QueryHandler {
-    @Override
-    public void run() {
-        startHtml("Finalizer Summary");
+import java.util.Collection;
 
-        out.println("<p align='center'>");
-        out.println("<b><a href='/allClasses/'>All Classes (excluding platform)</a></b>");
-        out.println("</p>");
+public class FinalizerSummaryQuery extends MustacheQueryHandler {
+    private Integer pendingFinalizationCount;
+    private Multiset<JavaThingView> finalizingClasses;
 
-        printFinalizerSummary(snapshot.getFinalizerObjects());
-        endHtml();
+    public boolean hasFinalizingClasses() {
+        return getPendingFinalizationCount() != 0;
     }
 
-    private void printFinalizerSummary(Collection<? extends JavaHeapObject> objs) {
-        int count = 0;
-        Multiset<JavaClass> bag = HashMultiset.create();
+    public int getPendingFinalizationCount() {
+        cacheData();
+        return pendingFinalizationCount;
+    }
 
-        for (JavaHeapObject obj : objs) {
-            count++;
-            bag.add(obj.getClazz());
-        }
+    public Iterable<Multiset.Entry<JavaThingView>> getFinalizingClasses() {
+        cacheData();
+        return new StreamIterable<>(finalizingClasses.entrySet().stream()
+                .sorted(Ordering.natural().reverse().onResultOf(Multiset.Entry::getCount)));
+    }
 
-        out.println("<p align='center'>");
-        out.println("<b>");
-        out.println("Total ");
-        if (count != 0) {
-            out.print("<a href='/finalizerObjects/'>instances</a>");
-        } else {
-            out.print("instances");
-        }
-        out.println(" pending finalization: ");
-        out.print(count);
-        out.println("</b></p><hr>");
-
-        if (count == 0) {
+    private void cacheData() {
+        if (pendingFinalizationCount != null && pendingFinalizationCount != null) {
             return;
         }
 
-        // calculate and print histogram
-        out.println("<table border=1 align=center>");
-        out.println("<tr><th>Count</th><th>Class</th></tr>");
-        bag.entrySet().stream().sorted(Ordering.natural().reverse()
-                .onResultOf(entry -> entry.getCount())).forEach(entry -> {
-            out.println("<tr><td>");
-            out.println(entry.getCount());
-            out.println("</td><td>");
-            printClass(entry.getElement());
-            out.println("</td><tr>");
-        });
-        out.println("</table>");
+        int totalPending = 0;
+        Multiset<JavaThingView> bag = HashMultiset.create();
+
+        for (JavaHeapObject object : snapshot.getFinalizerObjects()) {
+            totalPending++;
+            bag.add(new JavaThingView(this, object.getClazz()));
+        }
+
+        pendingFinalizationCount = totalPending;
+        finalizingClasses = bag;
     }
 }
