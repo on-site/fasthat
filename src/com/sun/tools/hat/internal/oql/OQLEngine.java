@@ -32,10 +32,22 @@
 
 package com.sun.tools.hat.internal.oql;
 
-import com.sun.tools.hat.internal.model.*;
-import java.io.*;
-import java.util.*;
-import javax.script.*;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.model.Snapshot;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.StringTokenizer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 /**
  * This is Object Query Language Interpreter
@@ -60,6 +72,17 @@ public class OQLEngine {
         init(snapshot);
     }
 
+    public synchronized void executeQuery(String query, ObjectVisitor visitor) throws OQLException {
+        try (Stream<Object> stream = executeQuery(query)) {
+            Iterator<Object> iterator = stream.iterator();
+            while (iterator.hasNext()) {
+                if (visitor.visit(iterator.next())) {
+                    return;
+                }
+            }
+        }
+    }
+
     /**
        Query is of the form
 
@@ -68,8 +91,7 @@ public class OQLEngine {
             [ where &lt;java script boolean expression&gt; ]
           ]
     */
-    public synchronized void executeQuery(String query, ObjectVisitor visitor)
-                                          throws OQLException {
+    public synchronized Stream<Object> executeQuery(String query) throws OQLException {
         debugPrint("query : " + query);
         StringTokenizer st = new StringTokenizer(query);
         if (st.hasMoreTokens()) {
@@ -78,12 +100,10 @@ public class OQLEngine {
                 // Query does not start with 'select' keyword.
                 // Just treat it as plain JavaScript and eval it.
                 try {
-                    Object res = evalScript(query);
-                    visitor.visit(res);
+                    return Stream.of(evalScript(query));
                 } catch (Exception e) {
                     throw new OQLException(e);
                 }
-                return;
             }
         } else {
             throw new OQLException("query syntax error: no 'select' clause");
@@ -149,12 +169,10 @@ public class OQLEngine {
             }
         }
 
-        executeQuery(new OQLQuery(selectExpr, isInstanceOf, className,
-                                  identifier, whereExpr), visitor);
+        return executeQuery(new OQLQuery(selectExpr, isInstanceOf, className, identifier, whereExpr));
     }
 
-    private void executeQuery(OQLQuery q, ObjectVisitor visitor)
-                              throws OQLException {
+    private Stream<Object> executeQuery(OQLQuery q) throws OQLException {
         JavaClass clazz = null;
         if (q.className != null) {
             clazz = snapshot.findClass(q.className);
@@ -181,29 +199,37 @@ public class OQLEngine {
             }
 
             if (clazz != null) {
-                for (JavaHeapObject obj : clazz.getInstances(q.isInstanceOf)) {
-                    Object[] args = new Object[] { wrapJavaObject(obj) };
-                    boolean b = (whereCode == null);
-                    if (!b) {
-                        Object res = call("__where__", args);
-                        if (res instanceof Boolean) {
-                            b = ((Boolean)res).booleanValue();
-                        } else if (res instanceof Number) {
-                            b = ((Number)res).intValue() != 0;
-                        } else {
-                            b = (res != null);
-                        }
-                    }
+                boolean whereIsNull = whereCode == null;
 
-                    if (b) {
-                        Object select = call("__select__", args);
-                        if (visitor.visit(select)) return;
+                return StreamSupport.stream(clazz.getInstances(q.isInstanceOf).spliterator(), false).filter(obj -> {
+                    try {
+                        Object[] args = new Object[] { wrapJavaObject(obj) };
+                        boolean b = whereIsNull;
+                        if (!b) {
+                            Object res = call("__where__", args);
+                            if (res instanceof Boolean) {
+                                b = ((Boolean)res).booleanValue();
+                            } else if (res instanceof Number) {
+                                b = ((Number)res).intValue() != 0;
+                            } else {
+                                b = (res != null);
+                            }
+                        }
+
+                        return b;
+                    } catch (NoSuchMethodException | ScriptException e) {
+                        throw new RuntimeException(e);
                     }
-                }
+                }).map(obj -> {
+                    try {
+                        return call("__select__", new Object[] { wrapJavaObject(obj) });
+                    } catch (NoSuchMethodException | ScriptException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
             } else {
                 // simple "select <expr>" query
-                Object select = call("__select__");
-                visitor.visit(select);
+                return Stream.of(call("__select__"));
             }
         } catch (Exception e) {
             throw new OQLException(e);
