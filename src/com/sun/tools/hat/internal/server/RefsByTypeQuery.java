@@ -32,31 +32,102 @@
 
 package com.sun.tools.hat.internal.server;
 
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.server.view.BreadcrumbsView;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
+import com.sun.tools.hat.internal.server.view.Link;
+import com.sun.tools.hat.internal.server.view.ReferrerSet;
 import com.sun.tools.hat.internal.util.Misc;
+import com.sun.tools.hat.internal.util.StreamIterable;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * References by type summary
  *
  */
-public class RefsByTypeQuery extends QueryHandler {
-    @Override
-    public void run() {
-        JavaClass clazz = resolveClass(query, true);
-        Collection<JavaClass> referrers = Collections2.transform(
-                params.get("referrer"), referrer -> resolveClass(referrer, false));
-        ImmutableSetMultimap.Builder<JavaClass, JavaHeapObject> rfrBuilder
-                = ImmutableSetMultimap.builder();
-        final ImmutableSetMultimap.Builder<JavaClass, JavaHeapObject> rfeBuilder
-                = ImmutableSetMultimap.builder();
-        for (final JavaHeapObject instance : Misc.getInstances(clazz, false, referrers)) {
+public class RefsByTypeQuery extends MustacheQueryHandler {
+    private JavaThingView clazz;
+    private ReferrerSet referrers;
+    private List<JavaClass> rawReferrers;
+    private ImmutableMultiset<JavaThingView> referrersStat;
+    private ImmutableMultiset<JavaThingView> refereesStat;
+
+    public JavaThingView getJavaClass() {
+        if (clazz == null) {
+            clazz = new JavaThingView(this, resolveClass(query, true));
+        }
+
+        return clazz;
+    }
+
+    private List<JavaClass> getRawReferrers() {
+        if (rawReferrers == null) {
+            rawReferrers = Lists.transform(params.get("referrer"), referrer -> resolveClass(referrer, false));
+        }
+
+        return rawReferrers;
+    }
+
+    private ReferrerSet getReferrers() {
+        if (referrers == null) {
+            referrers = new ReferrerSet(this, Lists.transform(getRawReferrers(), referrer -> new JavaThingView(this, referrer)));
+        }
+
+        return referrers;
+    }
+
+    public BreadcrumbsView getBreadcrumbs() {
+        return new BreadcrumbsView(this, path, null, null, getJavaClass(), getReferrers());
+    }
+
+    public boolean hasReferrers() {
+        return !getReferrersStat().isEmpty();
+    }
+
+    public boolean hasReferees() {
+        return !getRefereesStat().isEmpty();
+    }
+
+    private ImmutableMultiset<JavaThingView> getReferrersStat() {
+        cacheData();
+        return referrersStat;
+    }
+
+    private ImmutableMultiset<JavaThingView> getRefereesStat() {
+        cacheData();
+        return refereesStat;
+    }
+
+    public Iterable<JavaClassWithLinks> getReferrersStatEntries() {
+        return getStatEntries(getReferrersStat());
+    }
+
+    public Iterable<JavaClassWithLinks> getRefereesStatEntries() {
+        return getStatEntries(getRefereesStat());
+    }
+
+    private Iterable<JavaClassWithLinks> getStatEntries(ImmutableMultiset<JavaThingView> multiset) {
+        return new StreamIterable<>(multiset.entrySet().stream()
+                .sorted(Ordering.natural().reverse().onResultOf(Multiset.Entry::getCount))
+                .map(JavaClassWithLinks::new));
+    }
+
+    private void cacheData() {
+        if (referrersStat != null && refereesStat != null) {
+            return;
+        }
+
+        final ImmutableSetMultimap.Builder<JavaThingView, JavaThingView> rfrBuilder = ImmutableSetMultimap.builder();
+        final ImmutableSetMultimap.Builder<JavaThingView, JavaThingView> rfeBuilder = ImmutableSetMultimap.builder();
+
+        for (final JavaHeapObject instance : Misc.getInstances(getJavaClass().toJavaClass(), false, getRawReferrers())) {
             if (instance.getId() == -1) {
                 continue;
             }
@@ -66,61 +137,46 @@ public class RefsByTypeQuery extends QueryHandler {
                      System.out.println("null class for " + ref);
                      continue;
                 }
-                rfrBuilder.put(cl, instance);
+                rfrBuilder.put(new JavaThingView(this, cl), new JavaThingView(this, instance));
             }
-            instance.visitReferencedObjects(obj -> rfeBuilder.put(obj.getClazz(), instance));
-        } // for each instance
-
-        startHtml("References by Type");
-        out.println("<p align='center'>");
-        printClass(clazz);
-        if (clazz.getId() != -1) {
-            println("[" + clazz.getIdString() + "]");
-        }
-        out.println("</p>");
-        printBreadcrumbs(path, null, null, clazz, referrers, null);
-
-        ImmutableMultiset<JavaClass> referrersStat = rfrBuilder.build().keys();
-        if (!referrersStat.isEmpty()) {
-            out.println("<h3 align='center'>Referrers by Type</h3>");
-            print(referrersStat, clazz, referrers, true);
+            instance.visitReferencedObjects(obj -> rfeBuilder.put(new JavaThingView(this, obj.getClazz()), new JavaThingView(this, instance)));
         }
 
-        ImmutableMultiset<JavaClass> refereesStat = rfeBuilder.build().keys();
-        if (!refereesStat.isEmpty()) {
-            out.println("<h3 align='center'>Referees by Type</h3>");
-            print(refereesStat, clazz, referrers, false);
-        }
-
-        endHtml();
-    } // run
-
-    private void print(Multiset<JavaClass> multiset, JavaClass primary,
-            Collection<JavaClass> referrers, boolean supportsChaining) {
-        out.println("<table border='1' align='center'>");
-        out.println("<tr><th>Class</th><th>Count</th></tr>");
-        multiset.entrySet().stream().sorted(Ordering.natural().reverse()
-                .onResultOf(Multiset.Entry::getCount)).forEach(entry -> {
-            out.println("<tr><td>");
-            JavaClass clazz = entry.getElement();
-            printClass(clazz);
-            if (supportsChaining) {
-                out.printf(" (%s, %s)",
-                        formatLink("top", clazz, null, null),
-                        formatLink("chain", primary, referrers, clazz));
-            } else {
-                out.printf(" (%s)",
-                        formatLink("refs", clazz, null, null));
-            }
-            out.println("</td><td>");
-            out.println(entry.getCount());
-            out.println("</td></tr>");
-        });
-        out.println("</table>");
+        referrersStat = rfrBuilder.build().keys();
+        refereesStat = rfeBuilder.build().keys();
     }
 
-    private String formatLink(String label, JavaClass clazz,
-            Collection<JavaClass> referrers, JavaClass tail) {
-        return formatLink(path, null, label, null, clazz, referrers, tail, null);
+    public class JavaClassWithLinks {
+        private final JavaThingView clazz;
+        private final int count;
+
+        public JavaClassWithLinks(Multiset.Entry<JavaThingView> entry) {
+            this.clazz = entry.getElement();
+            this.count = entry.getCount();
+        }
+
+        public JavaThingView getClazz() {
+            return clazz;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public Link getTopLink() {
+            return link("top", clazz, null, null);
+        }
+
+        public Link getChainLink() {
+            return link("chain", getJavaClass(), getReferrers(), clazz);
+        }
+
+        public Link getRefsLink() {
+            return link("refs", clazz, null, null);
+        }
+
+        private Link link(String label, JavaThingView clazz, ReferrerSet referrers, JavaThingView tail) {
+            return new Link(RefsByTypeQuery.this, path, null, label, null, clazz, referrers, tail, null);
+        }
     }
 }

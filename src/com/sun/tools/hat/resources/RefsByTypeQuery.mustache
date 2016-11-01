@@ -1,0 +1,60 @@
+{{<layout}}
+  {{$title}}References by Type{{/title}}
+  {{$content}}
+    <p align="center">
+      {{#javaClass}}
+        {{>class}}{{#validId}}[{{idString}}]{{/validId}}
+      {{/javaClass}}
+    </p>
+
+    {{#breadcrumbs}}{{>breadcrumbs}}{{/breadcrumbs}}
+
+    {{#hasReferrers}}
+      <h3 align="center">Referrers by Type</h3>
+
+      <table border="1" align="center">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {{#referrersStatEntries}}
+            <tr>
+              <td>
+                {{#clazz}}{{>class}}{{/clazz}} ({{#topLink}}{{>link}}{{/topLink}}, {{#chainLink}}{{>link}}{{/chainLink}})
+              </td>
+              <td>{{count}}</td>
+            </tr>
+          {{/referrersStatEntries}}
+        </tbody>
+      </table>
+    {{/hasReferrers}}
+
+    {{#hasReferees}}
+      <h3 align="center">Referees by Type</h3>
+
+      <table border="1" align="center">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {{#refereesStatEntries}}
+            <tr>
+              <td>
+                {{#clazz}}{{>class}}{{/clazz}} ({{#refsLink}}{{>link}}{{/refsLink}})
+              </td>
+              <td>{{count}}</td>
+            </tr>
+          {{/refereesStatEntries}}
+        </tbody>
+      </table>
+    {{/hasReferees}}
+  {{/content}}
+{{/layout}}
