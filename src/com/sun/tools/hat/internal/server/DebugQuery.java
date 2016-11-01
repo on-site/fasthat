@@ -33,6 +33,7 @@
 package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.server.view.JavaThingView;
 import com.sun.tools.hat.internal.util.Suppliers;
 
 /**
@@ -40,25 +41,29 @@ import com.sun.tools.hat.internal.util.Suppliers;
  *
  * @author Chris Jester-Young
  */
-class DebugQuery extends QueryHandler {
-    @Override
-    public void run() {
-        if (query.startsWith("0x"))
-            printObject(query);
-        else if (query.equals("unmemoize"))
-            unmemoize();
+class DebugQuery extends MustacheQueryHandler {
+    public static class Unmemoize extends RedirectQueryHandler {
+        @Override
+        public void process() {
+            Suppliers.unmemoizeAll();
+        }
+
+        @Override
+        public String getRedirectPath() {
+            return "/debug/?unmemoized=true";
+        }
     }
 
-    private void printObject(String id) {
-        JavaHeapObject thing = snapshot.findThing(id);
-        startHtml("Object at %s", thing.getIdString());
-        printDetailed(thing);
-        endHtml();
+    public JavaThingView getObject() {
+        if (!query.startsWith("0x")) {
+            return null;
+        }
+
+        JavaHeapObject thing = snapshot.findThing(query);
+        return JavaThingView.detailed(this, thing);
     }
 
-    private void unmemoize() {
-        Suppliers.unmemoizeAll();
-        startHtml("Unmemoized all suppliers");
-        endHtml();
+    public boolean isUnmemoized() {
+        return params.containsKey("unmemoized");
     }
 }

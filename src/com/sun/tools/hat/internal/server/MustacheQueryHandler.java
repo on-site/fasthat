@@ -51,7 +51,9 @@ import com.google.common.cache.LoadingCache;
 import com.sun.tools.hat.internal.util.Misc;
 
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 
 import java.util.function.Function;
 
@@ -89,5 +91,14 @@ abstract class MustacheQueryHandler extends QueryHandler {
         } catch (Exception e) {
             printException(e);
         }
+    }
+
+    private void printException(Throwable t) {
+        out.println(Misc.encodeHtml(t.getMessage()));
+        out.println("<pre>");
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        out.print(Misc.encodeHtml(sw.toString()));
+        out.println("</pre>");
     }
 }
