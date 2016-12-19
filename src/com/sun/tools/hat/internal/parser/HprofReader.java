@@ -189,7 +189,7 @@ public class HprofReader extends Reader {
         if (identifierSize != 4 && identifierSize != 8) {
             throw new IOException("I'm sorry, but I can't deal with an identifier size of " + identifierSize + ".  I can only deal with 4 or 8.");
         }
-        System.out.println("Dump file created " + (new Date(in.readLong())));
+        System.out.printf("Dump file created %s%n", new Date(in.readLong()));
         currPos += 8;
 
         for (;;) {
@@ -204,9 +204,7 @@ public class HprofReader extends Reader {
             // length >2GB.  so store 32bit value in long to keep it unsigned.
             long length = in.readInt() & 0xffffffffL;
             if (debugLevel > 0) {
-                System.err.println("Read record type " + type
-                                   + ", length " + length
-                                   + " at position " + toHex(currPos));
+                System.err.printf("Read record type %d, length %d at position 0x%x%n", type, length, currPos);
             }
             if (length < 0) {
                 throw new IOException("Bad record length of " + length
@@ -390,9 +388,7 @@ public class HprofReader extends Reader {
         while (bytesLeft > 0) {
             int type = in.readUnsignedByte();
             if (debugLevel > 0) {
-                System.err.println("    Read heap sub-record type " + type
-                                   + " at position "
-                                   + toHex(posAtEnd - bytesLeft));
+                System.err.printf("    Read heap sub-record type %d at position 0x%x%n", type, posAtEnd - bytesLeft);
             }
             bytesLeft--;
             switch(type) {
@@ -867,7 +863,7 @@ public class HprofReader extends Reader {
     }
 
     private static void warn(String msg) {
-        System.err.println("WARNING: " + msg);
+        System.err.printf("WARNING: %s%n", msg);
     }
 
     //

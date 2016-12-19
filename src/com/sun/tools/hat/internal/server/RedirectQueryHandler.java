@@ -53,7 +53,7 @@ abstract class RedirectQueryHandler extends QueryHandler {
     @Override
     public void run() {
         process();
-        out.println("<html><body>Your browser should have redirected you to: <a href=\"" + getRedirectPath() + "\">" + getRedirectPath() + "</a></body></html>");
+        out.printf("<html><body>Your browser should have redirected you to: <a href=\"%s\">%1$s</a></body></html>%n", getRedirectPath());
     }
 
     public abstract void process();

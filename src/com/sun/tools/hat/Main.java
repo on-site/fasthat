@@ -48,9 +48,9 @@ public class Main {
 
     private static void usage(String message) {
         if ( message != null ) {
-            System.err.println("ERROR: " + message);
+            System.err.printf("ERROR: %s%n", message);
         }
-        System.err.println("Usage:  fasthat [-stack <bool>] [-refs <bool>] [-port <port>] [-heaps <dir>] [-baseline <file>] [-debug <int>] [-version] [-h|-help] [<file>]");
+        System.err.println("Usage:  fasthat [-stack <bool>] [-refs <bool>] [-histo <bool>] [-port <port>] [-heaps <dir>] [-baseline <file>] [-debug <int>] [-version] [-h|-help] [<file>]");
         System.err.println();
         System.err.println("\t-J<flag>          Pass <flag> directly to the runtime system. For");
         System.err.println("\t\t\t  example, -J-mx512m to use a maximum heap size of 512MB");
@@ -95,23 +95,14 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException {
+    public static void main(final String[] args) throws InterruptedException, IOException {
         Server server = new Server();
         String baselineDump = null;
         String dump = null;
 
         for (int i = 0; i < args.length; i += 2) {
-            if (args.length == 0) {
-                break;
-            }
-
-            if (i > (args.length - 1)) {
-                usage("Option parsing error");
-            }
-
             if ("-version".equals(args[i])) {
-                System.out.print(VERSION_STRING);
-                System.out.println(" (java version " + System.getProperty("java.version") + ")");
+                System.out.printf("%s (java version %s)%n", VERSION_STRING, System.getProperty("java.version"));
                 System.exit(0);
             }
 
@@ -149,7 +140,7 @@ public class Main {
 
         File excludeFile = server.getExcludeFile();
         if (excludeFile != null && !excludeFile.exists()) {
-            System.out.println("Exclude file " + excludeFile + " does not exist.  Aborting.");
+            System.out.printf("Exclude file %s does not exist.  Aborting.%n", excludeFile);
             System.exit(1);
         }
 

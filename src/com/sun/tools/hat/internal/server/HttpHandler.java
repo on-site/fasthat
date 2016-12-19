@@ -140,7 +140,7 @@ public abstract class HttpHandler implements Runnable {
     }
 
     private void processQuery(QueryHandler handler) {
-        out.println("HTTP/1.0 " + handler.getHttpStatus());
+        out.printf("HTTP/1.0 %s%n", handler.getHttpStatus());
 
         for (String header : handler.getHeaders()) {
             out.println(header);
@@ -168,6 +168,6 @@ public abstract class HttpHandler implements Runnable {
     }
 
     protected void log(String message) {
-        System.out.println("[" + requestId + "] " + message);
+        System.out.printf("[%d] %s%n", requestId, message);
     }
 }

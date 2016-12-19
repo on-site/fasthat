@@ -339,6 +339,6 @@ public class JavaObject extends JavaLazyReadObject {
     }
 
     private static void warn(String msg) {
-        System.err.println("WARNING: " + msg);
+        System.err.printf("WARNING: %s%n", msg);
     }
 }

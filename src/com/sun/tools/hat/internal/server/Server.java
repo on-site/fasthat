@@ -202,7 +202,7 @@ public class Server {
         }
 
         try {
-            System.out.println("Reading from " + dump + "...");
+            System.out.printf("Reading from %s...%n", dump);
             Snapshot snapshot = Reader.readFile(loadProgress, dump, callStack, debugLevel);
             System.out.println("Snapshot read, resolving...");
             snapshot.resolve(loadProgress, calculateRefs, preCacheHistograms);
@@ -259,7 +259,7 @@ public class Server {
             serverThread.setName("fasthat-query-listener");
             serverThread.setDaemon(true);
             serverThread.start();
-            System.out.println("Started HTTP server on port " + port);
+            System.out.printf("Started HTTP server on port %d%n", port);
             System.out.println("Server is listening.");
         }
 

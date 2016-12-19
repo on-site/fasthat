@@ -228,7 +228,7 @@ public class Snapshot {
      * Called after reading complete, to initialize the structure
      */
     public void resolve(LoadProgress loadProgress, boolean calculateRefs, boolean preCacheHistograms) {
-        System.out.println("Resolving " + heapObjects.size() + " objects...");
+        System.out.printf("Resolving %d objects...%n", heapObjects.size());
 
         // First, resolve the classes.  All classes must be resolved before
         // we try any objects, because the objects use classes in their

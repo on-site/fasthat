@@ -61,7 +61,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
         try {
             return readValueLength();
         } catch (IOException exp) {
-            System.err.println("lazy read failed at offset " + offset);
+            System.err.printf("lazy read failed at offset %d%n", offset);
             exp.printStackTrace();
             return 0;
         }
@@ -72,7 +72,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
         try {
             return readValue();
         } catch (IOException exp) {
-            System.err.println("lazy read failed at offset " + offset);
+            System.err.printf("lazy read failed at offset %d%n", offset);
             exp.printStackTrace();
             return Snapshot.EMPTY_BYTE_ARRAY;
         }
@@ -90,7 +90,7 @@ public abstract class JavaLazyReadObject extends JavaHeapObject {
                 return buf.getLong(offset);
             }
         } catch (IOException exp) {
-            System.err.println("lazy read failed at offset " + offset);
+            System.err.printf("lazy read failed at offset %d%n", offset);
             exp.printStackTrace();
             return -1;
         }

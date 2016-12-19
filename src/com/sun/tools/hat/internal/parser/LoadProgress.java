@@ -91,7 +91,7 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
         protected abstract String getLoadDescription();
 
         public void start() {
-            System.out.println(String.format("----- Starting: %s -----", getLoadDescription()));
+            System.out.printf("----- Starting: %s -----%n", getLoadDescription());
         }
 
         public String getLoadString() {
@@ -113,7 +113,7 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
 
         public void end() {
             ended = true;
-            System.out.println(String.format("Finished: %s in %s", getLoadDescription(), Misc.formatTime(getElapsedTime())));
+            System.out.printf("Finished: %s in %s%n", getLoadDescription(), Misc.formatTime(getElapsedTime()));
         }
 
         protected boolean isEnded() {
