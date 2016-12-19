@@ -84,7 +84,7 @@ public class Server {
         return snapshot;
     }
 
-    public boolean getParseOnly() {
+    public boolean isParseOnly() {
         return parseOnly;
     }
 
@@ -92,15 +92,15 @@ public class Server {
         return port;
     }
 
-    public boolean getCallStack() {
+    public boolean isCallStack() {
         return callStack;
     }
 
-    public boolean getCalculateRefs() {
+    public boolean isCalculateRefs() {
         return calculateRefs;
     }
 
-    public boolean getPreCacheHistograms() {
+    public boolean isPreCacheHistograms() {
         return preCacheHistograms;
     }
 
@@ -108,8 +108,8 @@ public class Server {
         return heapsDir;
     }
 
-    public Path getHeapsPath() {
-        return new File(heapsDir).toPath();
+    public Path getHeapsPath() throws IOException {
+        return new File(heapsDir).getCanonicalFile().toPath();
     }
 
     public String getDump() {
@@ -160,14 +160,14 @@ public class Server {
         heapsDir = value;
     }
 
-    public void setDumpParallel(final String dump, final String baselineDump) {
+    public void loadDumpParallel(String dump, String baselineDump) {
         if (isLoadingSnapshot()) {
             return;
         }
 
         serverThread = new Thread(() -> {
             try {
-                setDump(dump, baselineDump);
+                loadDump(dump, baselineDump);
             } catch (Exception e) {
                 System.err.println("Error while loading dump!");
                 e.printStackTrace(System.err);
@@ -178,11 +178,11 @@ public class Server {
         serverThread.start();
     }
 
-    public void setDump(String dump, String baselineDump) throws IOException {
-        setDump(dump, baselineDump, true);
+    public void loadDump(String dump, String baselineDump) throws IOException {
+        loadDump(dump, baselineDump, true);
     }
 
-    public void setDump(String dump, String baselineDump, boolean validateDumpPaths) throws IOException {
+    public void loadDump(String dump, String baselineDump, boolean validateDumpPaths) throws IOException {
         if (validateDumpPaths) {
             Preconditions.checkArgument(allowedDumpPath(dump), "Heap dump is not in an allowed path to process: " + dump);
             Preconditions.checkArgument(allowedDumpPath(baselineDump), "Baseline heap dump is not in an allowed path to process: " + baselineDump);
@@ -219,7 +219,6 @@ public class Server {
                 baseline.resolve(loadProgress, false, false);
                 System.out.println("Discovering new objects...");
                 snapshot.markNewRelativeTo(baseline);
-                baseline = null;    // Guard against conservative GC
             }
 
             snapshot.setUpModelFactories(OpenJDK6Runtime.INSTANCE,
@@ -232,12 +231,18 @@ public class Server {
         }
     }
 
-    private boolean allowedDumpPath(String dump) {
+    public boolean allowedDumpPath(String dump) {
         if (dump == null) {
             return true;
         }
 
-        return new File(dump).toPath().startsWith(getHeapsPath());
+        try {
+            Path heapsPath = getHeapsPath();
+            Path dumpPath = new File(dump).getCanonicalFile().toPath();
+            return !dumpPath.equals(heapsPath) && dumpPath.startsWith(heapsPath);
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public void setExcludeFileName(String value) {
@@ -263,7 +268,7 @@ public class Server {
             System.out.println("Server is listening.");
         }
 
-        setDump(dump, baselineDump, false);
+        loadDump(dump, baselineDump, false);
 
         if ( debugLevel == 2 ) {
             System.out.println("No server, -debug 2 was used.");

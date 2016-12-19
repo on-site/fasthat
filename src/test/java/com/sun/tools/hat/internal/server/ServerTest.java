@@ -30,18 +30,68 @@
  * not wish to do so, delete this exception statement from your version.
  */
 
+
+/*
+ * The Original Code is HAT. The Initial Developer of the
+ * Original Code is Bill Foote, with contributions from others
+ * at JavaSoft/Sun.
+ */
 package com.sun.tools.hat.internal.server;
 
-import java.io.IOException;
+import static org.testng.Assert.*;
 
-public class DropDumpQuery extends RedirectQueryHandler {
-    @Override
-    public void process() {
-        server.loadDumpParallel(null, null);
+import org.testng.annotations.Test;
+
+/**
+ * Test case for {@link Server}.
+ *
+ * @author Mike Virata-Stone
+ */
+public class ServerTest {
+    @Test
+    public void nullDumpIsAllowed() {
+        assertTrue(server().allowedDumpPath(null));
     }
 
-    @Override
-    public String getRedirectPath() {
-        return "/";
+    @Test
+    public void fileWithinDumpPathIsAllowed() {
+        assertTrue(server().allowedDumpPath("/etc/heaps/someheap.hprof"));
+    }
+
+    @Test
+    public void fileNestedWithinDumpPathIsAllowed() {
+        assertTrue(server().allowedDumpPath("/etc/heaps/nested/someheap.hprof"));
+    }
+
+    @Test
+    public void fileOutsideDumpPathIsDisallowed() {
+        assertFalse(server().allowedDumpPath("/etc/someheap.hprof"));
+    }
+
+    @Test
+    public void fileOutsideDumpPathViaRelativePathIsDisallowed() {
+        assertFalse(server().allowedDumpPath("/etc/heaps/../outsideheap.hprof"));
+    }
+
+    @Test
+    public void theDirectoryItselfIsDisallowed() {
+        assertFalse(server().allowedDumpPath("/etc/heaps"));
+    }
+
+    @Test
+    public void specialFilesAreDisallowed() {
+        assertFalse(server().allowedDumpPath("/etc/heaps/."));
+        assertFalse(server().allowedDumpPath("/etc/heaps/.."));
+    }
+
+    @Test
+    public void aFileStartingWithTheHeapsDirectoryIsDisallowed() {
+        assertFalse(server().allowedDumpPath("/etc/heapsFile.hprof"));
+    }
+
+    private Server server() {
+        Server server = new Server();
+        server.setHeapsDir("/etc/heaps");
+        return server;
     }
 }
