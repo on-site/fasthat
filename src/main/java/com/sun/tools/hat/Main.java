@@ -44,7 +44,7 @@ import java.io.File;
 
 public class Main {
 
-    private static String VERSION_STRING = "fasthat version 2.0";
+    private static String VERSION_STRING = "fasthat version 2.1";
 
     private static void usage(String message) {
         if ( message != null ) {
