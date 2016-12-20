@@ -203,7 +203,7 @@ public class OQLEngine {
 
                 return StreamSupport.stream(clazz.getInstances(q.isInstanceOf).spliterator(), false).filter(obj -> {
                     try {
-                        Object[] args = new Object[] { wrapJavaObject(obj) };
+                        Object[] args = { wrapJavaObject(obj) };
                         boolean b = whereIsNull;
                         if (!b) {
                             Object res = call("__where__", args);
@@ -222,7 +222,7 @@ public class OQLEngine {
                     }
                 }).map(obj -> {
                     try {
-                        return call("__select__", new Object[] { wrapJavaObject(obj) });
+                        return call("__select__", wrapJavaObject(obj));
                     } catch (NoSuchMethodException | ScriptException e) {
                         throw new RuntimeException(e);
                     }
