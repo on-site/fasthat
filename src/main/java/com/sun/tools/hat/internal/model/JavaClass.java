@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterables;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 
@@ -76,8 +78,7 @@ public class JavaClass extends JavaHeapObject {
     // Total number of fields including inherited ones
     private int totalNumFields;
     // Cache of total instance size
-    private volatile long totalInstanceSize = -1L;
-
+    private final Supplier<Long> totalInstanceSizeSupplier = Suppliers.memoize(this::getTotalInstanceSizeSupplierImpl);
 
     public JavaClass(long id, String name, long superclassId, long loaderId,
                      long signersId, long protDomainId,
@@ -388,18 +389,13 @@ public class JavaClass extends JavaHeapObject {
      *          arrays.
      */
     public long getTotalInstanceSize() {
-        if (totalInstanceSize >= 0) {
-            return totalInstanceSize;
-        } else {
-            return cacheTotalInstanceSize();
-        }
+        return totalInstanceSizeSupplier.get();
     }
 
-    public synchronized long cacheTotalInstanceSize() {
+    private long getTotalInstanceSizeSupplierImpl() {
         int count = instances.size();
         if (count == 0 || !isArray()) {
-            totalInstanceSize = (long) count * instanceSize;
-            return totalInstanceSize;
+            return (long) count * instanceSize;
         }
 
         // array class and non-zero count, we have to
@@ -408,8 +404,7 @@ public class JavaClass extends JavaHeapObject {
         for (JavaThing t : instances) {
             result += t.getSize();
         }
-        totalInstanceSize = result;
-        return totalInstanceSize;
+        return result;
     }
 
     /**

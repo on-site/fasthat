@@ -329,7 +329,7 @@ public class Snapshot {
         LoadProgress.TickedProgress progress = loadProgress.startTickedProgress("Pre-caching histograms", classes.size());
 
         classes.values().parallelStream().forEach(clazz -> {
-            clazz.cacheTotalInstanceSize();
+            clazz.getTotalInstanceSize();
             progress.tick();
         });
 
