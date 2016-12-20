@@ -35,6 +35,8 @@ package com.sun.tools.hat.internal.lang.common;
 import java.util.Arrays;
 import java.util.Collections;
 
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
 import com.sun.tools.hat.internal.model.JavaThing;
 
@@ -45,6 +47,8 @@ import com.sun.tools.hat.internal.model.JavaThing;
  * @author Chris K. Jester-Young
  */
 public class SafeArray {
+    private static final Interner<SafeArray> INTERNER = Interners.newWeakInterner();
+
     public final JavaObjectArray array;
     private final JavaThing nullThing;
 
@@ -57,6 +61,10 @@ public class SafeArray {
         JavaThing[] elements = array.getElements();
         Collections.replaceAll(Arrays.asList(elements), null, nullThing);
         return elements;
+    }
+
+    public SafeArray intern() {
+        return INTERNER.intern(this);
     }
 
     @Override

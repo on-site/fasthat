@@ -48,11 +48,11 @@ import com.sun.tools.hat.internal.model.JavaThing;
 
 public class JRubyArray extends SimpleCollectionModel {
     private static final LoadingCache<SafeArray, ImmutableList<JavaThing>> ELEMENT_CACHE
-            = CacheBuilder.newBuilder().softValues().build(
+            = CacheBuilder.newBuilder().weakKeys().softValues().build(
                     CacheLoader.from(arr -> ImmutableList.copyOf(arr.getElements())));
 
     private JRubyArray(JRuby factory, SafeArray arr, int begin, int length) {
-        super(factory, () -> ELEMENT_CACHE.getUnchecked(arr).subList(begin, begin + length));
+        super(factory, () -> ELEMENT_CACHE.getUnchecked(arr.intern()).subList(begin, begin + length));
     }
 
     public static JRubyArray make(JRuby factory, JavaObject obj) {
