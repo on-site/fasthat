@@ -59,7 +59,7 @@ public class Server {
     private QueryListener listener;
     private final LoadProgress loadProgress = new LoadProgress();
     private volatile Snapshot snapshot;
-    private volatile boolean loadingSnapshot = false;
+    private boolean loadingSnapshot = false;
 
     private boolean parseOnly = false;
     private int port = 7000;
@@ -76,8 +76,12 @@ public class Server {
         return loadProgress;
     }
 
-    public boolean isLoadingSnapshot() {
+    public synchronized boolean isLoadingSnapshot() {
         return loadingSnapshot;
+    }
+
+    private synchronized void setLoadingSnapshot(boolean value) {
+        loadingSnapshot = value;
     }
 
     public Snapshot getSnapshot() {
@@ -197,7 +201,7 @@ public class Server {
             System.out.println("Cleared snapshot.");
             return;
         } else {
-            this.loadingSnapshot = true;
+            setLoadingSnapshot(true);
             this.snapshot = null;
         }
 
@@ -227,7 +231,7 @@ public class Server {
                     JRuby17Runtime.INSTANCE);
             this.snapshot = snapshot;
         } finally {
-            this.loadingSnapshot = false;
+            setLoadingSnapshot(false);
         }
     }
 
