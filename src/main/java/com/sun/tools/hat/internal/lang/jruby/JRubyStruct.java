@@ -34,6 +34,7 @@ package com.sun.tools.hat.internal.lang.jruby;
 
 import java.util.Iterator;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -43,7 +44,6 @@ import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.lang.common.SimpleObjectModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 /**
  * Model for JRuby {@code struct}s.

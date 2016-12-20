@@ -33,12 +33,12 @@
 
 package com.sun.tools.hat.internal.lang.openjdk;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import com.sun.tools.hat.internal.lang.common.SafeArray;
 import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaObjectArray;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 public class JavaArray extends SimpleCollectionModel {
     public JavaArray(OpenJDK factory, JavaObjectArray array) {

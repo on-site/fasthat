@@ -35,13 +35,13 @@ package com.sun.tools.hat.internal.lang.guava;
 
 import java.util.List;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.SimpleMapModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 class GuavaCustConcHash extends SimpleMapModel {
     private static ImmutableMap<JavaThing, JavaThing> getMapImpl(Iterable<JavaObject> segments) {

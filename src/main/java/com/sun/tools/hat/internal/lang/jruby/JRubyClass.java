@@ -39,13 +39,13 @@ import java.util.Deque;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.HasSimpleForm;
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.model.JavaObject;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 /**
  * Class model for JRuby. Mostly version-independent except for field

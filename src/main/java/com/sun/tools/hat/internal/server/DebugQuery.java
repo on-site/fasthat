@@ -34,7 +34,6 @@ package com.sun.tools.hat.internal.server;
 
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.server.view.JavaThingView;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 /**
  * A query for setting breakpoints in, to debug models and the like.
@@ -42,18 +41,6 @@ import com.sun.tools.hat.internal.util.Suppliers;
  * @author Chris Jester-Young
  */
 class DebugQuery extends MustacheQueryHandler {
-    public static class Unmemoize extends RedirectQueryHandler {
-        @Override
-        public void process() {
-            Suppliers.unmemoizeAll();
-        }
-
-        @Override
-        public String getRedirectPath() {
-            return "/debug/?unmemoized=true";
-        }
-    }
-
     public JavaThingView getObject() {
         if (!query.startsWith("0x")) {
             return null;
@@ -61,9 +48,5 @@ class DebugQuery extends MustacheQueryHandler {
 
         JavaHeapObject thing = snapshot.findThing(query);
         return JavaThingView.detailed(this, thing);
-    }
-
-    public boolean isUnmemoized() {
-        return params.containsKey("unmemoized");
     }
 }

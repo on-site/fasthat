@@ -33,9 +33,9 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSortedSet;
 import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

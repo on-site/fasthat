@@ -40,13 +40,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.SimpleObjectModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 public class JRubyObject extends SimpleObjectModel {
     private static ImmutableMap<String, JavaThing> getProperties(JRuby factory, JavaObject obj) {

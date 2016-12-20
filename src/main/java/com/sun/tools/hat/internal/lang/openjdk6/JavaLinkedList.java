@@ -33,13 +33,13 @@
 
 package com.sun.tools.hat.internal.lang.openjdk6;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import com.sun.tools.hat.internal.lang.Models;
 import com.sun.tools.hat.internal.lang.common.SimpleCollectionModel;
 import com.sun.tools.hat.internal.model.JavaObject;
 import com.sun.tools.hat.internal.model.JavaThing;
-import com.sun.tools.hat.internal.util.Suppliers;
 
 class JavaLinkedList extends SimpleCollectionModel {
     private static ImmutableList<JavaThing> getCollectionImpl(JavaObject header) {
