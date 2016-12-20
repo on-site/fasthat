@@ -44,12 +44,14 @@ import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.github.mustachejava.MustacheResolver;
 
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import com.sun.tools.hat.internal.util.Misc;
 
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -74,7 +76,9 @@ abstract class MustacheQueryHandler extends QueryHandler {
     });
 
     private static Reader getReader(String resourceName) {
-        return new InputStreamReader(MustacheQueryHandler.class.getResourceAsStream("/com/sun/tools/hat/resources/" + resourceName + ".mustache"));
+        InputStream stream = MustacheQueryHandler.class.getResourceAsStream("/com/sun/tools/hat/resources/" + resourceName + ".mustache");
+        Preconditions.checkState(stream != null, "Invalid resource: /com/sun/tools/hat/resources/%s.mustache", resourceName);
+        return new InputStreamReader(stream);
     }
 
     // Functions for templates to use

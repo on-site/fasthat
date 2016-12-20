@@ -184,8 +184,8 @@ public class Server {
 
     public void loadDump(String dump, String baselineDump, boolean validateDumpPaths) throws IOException {
         if (validateDumpPaths) {
-            Preconditions.checkArgument(allowedDumpPath(dump), "Heap dump is not in an allowed path to process: " + dump);
-            Preconditions.checkArgument(allowedDumpPath(baselineDump), "Baseline heap dump is not in an allowed path to process: " + baselineDump);
+            Preconditions.checkArgument(allowedDumpPath(dump), "Heap dump is not in an allowed path to process: %s", dump);
+            Preconditions.checkArgument(allowedDumpPath(baselineDump), "Baseline heap dump is not in an allowed path to process: %s", baselineDump);
         }
 
         this.dump = dump;
@@ -254,9 +254,7 @@ public class Server {
     }
 
     public void start(String dump, String baselineDump) throws InterruptedException, IOException {
-        if (listener != null) {
-            throw new IllegalStateException("Start called multiple times!");
-        }
+        Preconditions.checkState(listener == null, "Start called multiple times!");
 
         if (!parseOnly && debugLevel != 2) {
             listener = new QueryListener(this);
