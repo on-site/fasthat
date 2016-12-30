@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.oql.OQLEngine;
 import com.sun.tools.hat.internal.server.view.JavaPackage;
 
@@ -44,14 +45,17 @@ import java.util.List;
 class AllClassesQuery extends MustacheQueryHandler {
     private List<JavaPackage> packages;
 
+    @ViewGetter
     public boolean getExcludePlatform() {
         return !params.containsKey("platform");
     }
 
+    @ViewGetter
     public boolean isOqlSupported() {
         return OQLEngine.isOQLSupported();
     }
 
+    @ViewGetter
     public List<JavaPackage> getPackages() {
         if (packages != null) {
             return packages;

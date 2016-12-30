@@ -35,6 +35,7 @@ package com.sun.tools.hat.internal.server;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.ReferenceChain;
 import com.sun.tools.hat.internal.server.view.JavaThingView;
 import com.sun.tools.hat.internal.server.view.ReferenceChainSet;
@@ -49,10 +50,12 @@ import com.sun.tools.hat.internal.util.StreamIterable;
 class RootsQuery extends MustacheQueryHandler {
     private JavaThingView target;
 
+    @ViewGetter
     public boolean getIncludeWeak() {
         return params.containsKey("weak");
     }
 
+    @ViewGetter
     public JavaThingView getTarget() {
         if (target == null) {
             target = new JavaThingView(this, snapshot.findThing(parseHex(query)));
@@ -61,6 +64,7 @@ class RootsQuery extends MustacheQueryHandler {
         return target;
     }
 
+    @ViewGetter
     public Iterable<ReferenceChainSet> getReferenceChainSets() {
         // More interesting values are *higher*
         return new StreamIterable<>(Multimaps.<Integer, ReferenceChain>index(snapshot.rootsetReferencesTo(getTarget().toJavaHeapObject(), getIncludeWeak()), chain -> chain.getObj().getRoot().getType())

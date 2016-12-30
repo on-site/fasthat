@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.server.view.ReachableObjectsView;
 
 /**
@@ -41,6 +42,7 @@ import com.sun.tools.hat.internal.server.view.ReachableObjectsView;
 
 
 class ReachableQuery extends MustacheQueryHandler {
+    @ViewGetter
     public ReachableObjectsView getReachableObjects() {
         return new ReachableObjectsView(this, snapshot.findThing(parseHex(query)));
     }

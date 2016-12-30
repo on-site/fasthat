@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.server.view.BreadcrumbsView;
@@ -59,14 +60,17 @@ class InstancesQuery extends MustacheQueryHandler {
     private ReferrerSet referrers;
     private Collection<JavaThingView> objects;
 
+    @ViewGetter
     public boolean getIncludeSubclasses() {
         return params.containsKey("subclasses");
     }
 
+    @ViewGetter
     public boolean getUseNewObjects() {
         return params.containsKey("new");
     }
 
+    @ViewGetter
     public JavaThingView getJavaClass() {
         if (javaClass == null) {
             javaClass = new JavaThingView(this, resolveClass(query, true));
@@ -75,10 +79,12 @@ class InstancesQuery extends MustacheQueryHandler {
         return javaClass;
     }
 
+    @ViewGetter
     public boolean isReferee() {
         return Boolean.parseBoolean(Iterables.getOnlyElement(params.get("referee"), "false"));
     }
 
+    @ViewGetter
     public BreadcrumbsView getBreadcrumbs() {
         return new BreadcrumbsView(this, path, getJavaClass(), getReferrers());
     }
@@ -92,6 +98,7 @@ class InstancesQuery extends MustacheQueryHandler {
         return referrers;
     }
 
+    @ViewGetter
     public Collection<JavaThingView> getObjects() {
         if (objects == null) {
             List<JavaThingView> referrers = getReferrers().getReferrers();
@@ -113,10 +120,12 @@ class InstancesQuery extends MustacheQueryHandler {
         return objects;
     }
 
+    @ViewGetter
     public long getNumInstances() {
         return getObjects().size();
     }
 
+    @ViewGetter
     public long getTotalSize() {
         return getObjects().stream().mapToLong(JavaThingView::getSize).sum();
     }

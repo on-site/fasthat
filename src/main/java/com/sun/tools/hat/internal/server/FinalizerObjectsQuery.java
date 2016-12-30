@@ -33,9 +33,11 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Collections2;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.server.view.JavaThingView;
 
 public class FinalizerObjectsQuery extends MustacheQueryHandler {
+    @ViewGetter
     public Iterable<JavaThingView> getFinalizerObjects() {
         return Collections2.transform(snapshot.getFinalizerObjects(), thing -> new JavaThingView(this, thing));
     }

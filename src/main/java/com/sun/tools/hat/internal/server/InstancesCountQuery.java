@@ -34,6 +34,7 @@ package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.server.view.JavaThingView;
 import com.sun.tools.hat.internal.util.StreamIterable;
@@ -49,14 +50,17 @@ import java.util.Collection;
 class InstancesCountQuery extends MustacheQueryHandler {
     private Collection<JavaThingView> classes;
 
+    @ViewGetter
     public boolean getExcludePlatform() {
         return !params.containsKey("platform");
     }
 
+    @ViewGetter
     public boolean hasNewSet() {
         return snapshot.getHasNewSet();
     }
 
+    @ViewGetter
     public Iterable<JavaThingView> getClasses() {
         return new StreamIterable<>(getClassesCollection().stream()
                 .sorted(Ordering.natural().reverse().onResultOf(JavaThingView::getInstancesCountWithoutSubclasses)
@@ -64,10 +68,12 @@ class InstancesCountQuery extends MustacheQueryHandler {
                 .compound(Ordering.natural().onResultOf(JavaThingView::getName))));
     }
 
+    @ViewGetter
     public long getInstances() {
         return getClassesCollection().stream().mapToLong(cls -> cls.getInstancesCountWithoutSubclasses()).sum();
     }
 
+    @ViewGetter
     public long getTotalSize() {
         return getClassesCollection().stream().mapToLong(JavaThingView::getTotalInstanceSize).sum();
     }

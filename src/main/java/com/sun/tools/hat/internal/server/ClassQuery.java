@@ -33,6 +33,7 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaStatic;
@@ -48,6 +49,7 @@ import java.util.Arrays;
 
 
 class ClassQuery extends MustacheQueryHandler {
+    @ViewGetter
     public JavaThingView getJavaClass() {
         JavaClass clazz = snapshot.findClass(query);
 

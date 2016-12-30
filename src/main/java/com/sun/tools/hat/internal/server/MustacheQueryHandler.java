@@ -49,6 +49,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.util.Misc;
 
 import java.io.InputStream;
@@ -82,8 +83,10 @@ abstract class MustacheQueryHandler extends QueryHandler {
     }
 
     // Functions for templates to use
+    @ViewGetter
     public static final Function<String, String> urlEncode = Misc::encodeForURL;
 
+    @ViewGetter
     public void flush() {
         out.flush();
     }

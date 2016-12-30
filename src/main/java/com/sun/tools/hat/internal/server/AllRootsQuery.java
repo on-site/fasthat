@@ -34,6 +34,7 @@ package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.server.view.RootSet;
 import com.sun.tools.hat.internal.util.StreamIterable;
@@ -47,6 +48,7 @@ import java.util.stream.Stream;
 
 
 class AllRootsQuery extends MustacheQueryHandler {
+    @ViewGetter
     public Iterable<RootSet> getRootSets() {
         // More interesting values are *higher*
         return new StreamIterable<>(Multimaps.index(snapshot.getRoots(), Root::getType).asMap().entrySet().stream()

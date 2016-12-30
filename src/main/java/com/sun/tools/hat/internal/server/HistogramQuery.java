@@ -42,6 +42,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Snapshot;
@@ -151,6 +152,7 @@ public class HistogramQuery extends MustacheQueryHandler {
         }
     }
 
+    @ViewGetter
     public JavaThingView getReferee() {
         if (referee == null) {
             JavaClass javaClass = resolveClass(Iterables.getOnlyElement(params.get("referee"), null), false);
@@ -173,6 +175,7 @@ public class HistogramQuery extends MustacheQueryHandler {
         return Lists.transform(getReferrers().getReferrers(), JavaThingView::toJavaClass);
     }
 
+    @ViewGetter
     public BreadcrumbsView getBreadcrumbs() {
         return new BreadcrumbsView(this, path, query, "referee", getReferee(), getReferrers());
     }
@@ -187,26 +190,32 @@ public class HistogramQuery extends MustacheQueryHandler {
         return metrics;
     }
 
+    @ViewGetter
     public Link getClassHeaderLink() {
         return new Link(this, "class", "Class", getReferee(), getReferrers());
     }
 
+    @ViewGetter
     public boolean hasRefCount() {
         return getMetrics().hasRefCount();
     }
 
+    @ViewGetter
     public Link getRefCountHeaderLink() {
         return new Link(this, "refCount", "Reference Count", getReferee(), getReferrers());
     }
 
+    @ViewGetter
     public Link getInstanceCountHeaderLink() {
         return new Link(this, "count", "Instance Count", getReferee(), getReferrers());
     }
 
+    @ViewGetter
     public Link getTotalSizeHeaderLink() {
         return new Link(this, "size", "Total Size", getReferee(), getReferrers());
     }
 
+    @ViewGetter
     public Iterable<HistogramRow> getHistogramRows() {
         MetricsProvider metrics = getMetrics();
         Comparator<JavaClass> comparator;
@@ -231,22 +240,27 @@ public class HistogramQuery extends MustacheQueryHandler {
             this.clazz = new JavaThingView(HistogramQuery.this, clazz);
         }
 
+        @ViewGetter
         public JavaThingView getJavaClass() {
             return clazz;
         }
 
+        @ViewGetter
         public Link getRefsLink() {
             return new Link(HistogramQuery.this, query, "refs", clazz, null, null);
         }
 
+        @ViewGetter
         public Link getTopLink() {
             return new Link(HistogramQuery.this, query, "top", clazz, null, null);
         }
 
+        @ViewGetter
         public Link getChainLink() {
             return new Link(HistogramQuery.this, query, "chain", getReferee(), getReferrers(), clazz);
         }
 
+        @ViewGetter
         public Link getRefCountInstancesLink() {
             String refCount = String.valueOf(metrics.getRefCount(clazz.toJavaClass()));
             ImmutableMultimap<String, String> params = ImmutableMultimap.of("referee", "true");
@@ -258,6 +272,7 @@ public class HistogramQuery extends MustacheQueryHandler {
             }
         }
 
+        @ViewGetter
         public Link getInstancesLink() {
             String count = String.valueOf(metrics.getCount(clazz.toJavaClass()));
 
@@ -268,6 +283,7 @@ public class HistogramQuery extends MustacheQueryHandler {
             }
         }
 
+        @ViewGetter
         public long getMetricsSize() {
             return getMetrics().getSize(clazz.toJavaClass());
         }

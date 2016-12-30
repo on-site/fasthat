@@ -35,6 +35,7 @@ package com.sun.tools.hat.internal.server;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.server.view.JavaThingView;
@@ -46,15 +47,18 @@ public class FinalizerSummaryQuery extends MustacheQueryHandler {
     private Integer pendingFinalizationCount;
     private Multiset<JavaThingView> finalizingClasses;
 
+    @ViewGetter
     public boolean hasFinalizingClasses() {
         return getPendingFinalizationCount() != 0;
     }
 
+    @ViewGetter
     public int getPendingFinalizationCount() {
         cacheData();
         return pendingFinalizationCount;
     }
 
+    @ViewGetter
     public Iterable<Multiset.Entry<JavaThingView>> getFinalizingClasses() {
         cacheData();
         return new StreamIterable<>(finalizingClasses.entrySet().stream()

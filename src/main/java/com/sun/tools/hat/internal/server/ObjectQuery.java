@@ -36,7 +36,8 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
+import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.view.JavaThingView;
 
 /**
@@ -46,6 +47,7 @@ import com.sun.tools.hat.internal.server.view.JavaThingView;
 
 
 class ObjectQuery extends ClassQuery {
+    @ViewGetter
     public JavaThingView getThing() {
         JavaThing thing = snapshot.findThing(query);
 

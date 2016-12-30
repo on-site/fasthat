@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.server.view.RootView;
 
@@ -45,6 +46,7 @@ import com.sun.tools.hat.internal.server.view.RootView;
 class RootStackQuery extends MustacheQueryHandler {
     private RootView root;
 
+    @ViewGetter
     public RootView getRoot() {
         if (root == null) {
             int index = (int) parseHex(query);

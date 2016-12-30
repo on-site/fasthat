@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.server;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.server.view.JavaThingView;
 import com.sun.tools.hat.internal.util.Suppliers;
@@ -54,6 +55,7 @@ class DebugQuery extends MustacheQueryHandler {
         }
     }
 
+    @ViewGetter
     public JavaThingView getObject() {
         if (!query.startsWith("0x")) {
             return null;
@@ -63,6 +65,7 @@ class DebugQuery extends MustacheQueryHandler {
         return JavaThingView.detailed(this, thing);
     }
 
+    @ViewGetter
     public boolean isUnmemoized() {
         return params.containsKey("unmemoized");
     }

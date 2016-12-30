@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.server.view.BreadcrumbsView;
@@ -59,6 +60,7 @@ public class RefsByTypeQuery extends MustacheQueryHandler {
     private ImmutableMultiset<JavaThingView> referrersStat;
     private ImmutableMultiset<JavaThingView> refereesStat;
 
+    @ViewGetter
     public JavaThingView getJavaClass() {
         if (clazz == null) {
             clazz = new JavaThingView(this, resolveClass(query, true));
@@ -83,14 +85,17 @@ public class RefsByTypeQuery extends MustacheQueryHandler {
         return referrers;
     }
 
+    @ViewGetter
     public BreadcrumbsView getBreadcrumbs() {
         return new BreadcrumbsView(this, path, null, null, getJavaClass(), getReferrers());
     }
 
+    @ViewGetter
     public boolean hasReferrers() {
         return !getReferrersStat().isEmpty();
     }
 
+    @ViewGetter
     public boolean hasReferees() {
         return !getRefereesStat().isEmpty();
     }
@@ -105,10 +110,12 @@ public class RefsByTypeQuery extends MustacheQueryHandler {
         return refereesStat;
     }
 
+    @ViewGetter
     public Iterable<JavaClassWithLinks> getReferrersStatEntries() {
         return getStatEntries(getReferrersStat());
     }
 
+    @ViewGetter
     public Iterable<JavaClassWithLinks> getRefereesStatEntries() {
         return getStatEntries(getRefereesStat());
     }
@@ -155,22 +162,27 @@ public class RefsByTypeQuery extends MustacheQueryHandler {
             this.count = entry.getCount();
         }
 
+        @ViewGetter
         public JavaThingView getClazz() {
             return clazz;
         }
 
+        @ViewGetter
         public int getCount() {
             return count;
         }
 
+        @ViewGetter
         public Link getTopLink() {
             return link("top", clazz, null, null);
         }
 
+        @ViewGetter
         public Link getChainLink() {
             return link("chain", getJavaClass(), getReferrers(), clazz);
         }
 
+        @ViewGetter
         public Link getRefsLink() {
             return link("refs", clazz, null, null);
         }

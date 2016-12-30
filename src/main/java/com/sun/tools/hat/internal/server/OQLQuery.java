@@ -33,6 +33,7 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.collect.Iterables;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.oql.OQLException;
 import com.sun.tools.hat.internal.util.StreamIterable;
 
@@ -43,10 +44,12 @@ import com.sun.tools.hat.internal.util.StreamIterable;
  */
 
 class OQLQuery extends MustacheQueryHandler {
+    @ViewGetter
     public String getOql() {
         return Iterables.getOnlyElement(params.get("query"), null);
     }
 
+    @ViewGetter
     public Iterable<Object> getOqlResults() throws OQLException {
         if (getOql() == null) {
             return null;

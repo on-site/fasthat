@@ -33,6 +33,7 @@
 package com.sun.tools.hat.internal.server;
 
 import com.google.common.base.Strings;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.util.Misc;
 
 import java.io.PrintWriter;
@@ -49,6 +50,7 @@ class ErrorQuery extends MustacheQueryHandler {
         return "500 Internal Server Error";
     }
 
+    @ViewGetter
     public String getMessage() {
         return message;
     }

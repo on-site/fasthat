@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.HasSimpleForm;
@@ -95,6 +96,7 @@ public abstract class QueryHandler implements Runnable {
         return path;
     }
 
+    @ViewGetter
     public String getQuery() {
         return query;
     }
