@@ -201,7 +201,7 @@ public class OQLEngine {
             if (clazz != null) {
                 boolean whereIsNull = whereCode == null;
 
-                return StreamSupport.stream(clazz.getInstances(q.isInstanceOf).spliterator(), false).filter(obj -> {
+                return clazz.getInstances(q.isInstanceOf).filter(obj -> {
                     try {
                         Object[] args = { wrapJavaObject(obj) };
                         boolean b = whereIsNull;

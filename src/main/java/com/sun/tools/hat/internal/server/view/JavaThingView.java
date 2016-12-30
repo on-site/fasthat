@@ -59,7 +59,7 @@ import com.sun.tools.hat.internal.util.StreamIterable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.StreamSupport;
+import java.util.stream.Stream;
 
 /**
  * View model for {@link JavaThing}.
@@ -202,7 +202,9 @@ public class JavaThingView extends ViewModel {
 
     public Long getInstancesWithoutSubclasses() {
         if (isJavaClass()) {
-            return StreamSupport.stream(toJavaClass().getInstances(false).spliterator(), false).filter(JavaHeapObject::isNew).count();
+            try (Stream<JavaHeapObject> stream = toJavaClass().getInstances(false)) {
+                return stream.filter(JavaHeapObject::isNew).count();
+            }
         }
 
         return null;

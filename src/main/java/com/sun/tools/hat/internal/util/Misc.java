@@ -165,7 +165,7 @@ public class Misc {
 
     public static ImmutableSet<JavaHeapObject> getInstances(JavaClass clazz,
             boolean includeSubclasses, Iterable<JavaClass> referrers) {
-        Iterable<JavaHeapObject> instances = clazz.getInstances(includeSubclasses);
+        Iterable<JavaHeapObject> instances = new StreamIterable<>(clazz.getInstances(includeSubclasses));
         if (referrers != null) {
             for (JavaClass referrer : referrers) {
                 instances = getReferrersByClass(instances, referrer);

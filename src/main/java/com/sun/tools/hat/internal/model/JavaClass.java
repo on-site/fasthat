@@ -35,10 +35,10 @@ package com.sun.tools.hat.internal.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.Iterables;
 import com.sun.tools.hat.internal.parser.ReadBuffer;
 
 /**
@@ -236,15 +236,15 @@ public class JavaClass extends JavaHeapObject {
         return name.indexOf('[') != -1;
     }
 
-    public Iterable<JavaHeapObject> getInstances(boolean includeSubclasses) {
+    public Stream<JavaHeapObject> getInstances(boolean includeSubclasses) {
         if (includeSubclasses) {
-            Iterable<JavaHeapObject> res = instances;
+            Stream<JavaHeapObject> result = instances.stream();
             for (JavaClass subclass : subclasses) {
-                res = Iterables.concat(res, subclass.getInstances(true));
+                result = Stream.concat(result, subclass.getInstances(true));
             }
-            return res;
+            return result;
         } else {
-            return instances;
+            return instances.stream();
         }
     }
 
