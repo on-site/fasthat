@@ -32,6 +32,7 @@
 
 package com.sun.tools.hat.internal.parser;
 
+import com.google.common.base.Stopwatch;
 import com.sun.tools.hat.internal.util.Misc;
 
 import java.io.File;
@@ -39,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -80,11 +82,10 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
     }
 
     public static abstract class ProgressElement {
-        private final long startTime;
-        private volatile boolean ended = false;
+        private final Stopwatch stopwatch;
 
         public ProgressElement() {
-            this.startTime = System.currentTimeMillis();
+            this.stopwatch = Stopwatch.createStarted();
         }
 
         protected abstract double getPercentDone();
@@ -108,16 +109,16 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
         }
 
         private long getElapsedTime() {
-            return System.currentTimeMillis() - startTime;
+            return stopwatch.elapsed(TimeUnit.MILLISECONDS);
         }
 
         public void end() {
-            ended = true;
+            stopwatch.stop();
             System.out.printf("Finished: %s in %s%n", getLoadDescription(), Misc.formatTime(getElapsedTime()));
         }
 
         protected boolean isEnded() {
-            return ended;
+            return !stopwatch.isRunning();
         }
     }
 
