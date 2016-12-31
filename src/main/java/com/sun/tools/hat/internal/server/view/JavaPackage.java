@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.server.PlatformClasses;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -76,10 +77,12 @@ public class JavaPackage extends ViewModel {
         return packages;
     }
 
+    @ViewGetter
     public String getName() {
         return name;
     }
 
+    @ViewGetter
     public List<JavaThingView> getClasses() {
         return classes;
     }

@@ -32,6 +32,7 @@
 package com.sun.tools.hat.internal.server.view;
 
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.server.QueryHandler;
 import com.sun.tools.hat.internal.util.StreamIterable;
@@ -54,10 +55,12 @@ public class RootSet extends ViewModel {
         this.entry = entry;
     }
 
+    @ViewGetter
     public String getTypeName() {
         return Root.getTypeName(entry.getKey());
     }
 
+    @ViewGetter
     public Iterable<RootView> getRoots() {
         return new StreamIterable<>(entry.getValue().stream()
                 .sorted(Ordering.natural().onResultOf(Root::getDescription))

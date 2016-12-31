@@ -32,6 +32,7 @@
 package com.sun.tools.hat.internal.server.view;
 
 import com.google.common.collect.Iterables;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.lang.ObjectModel;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -52,6 +53,7 @@ public class ObjectModelView extends ViewModel {
         this.model = model;
     }
 
+    @ViewGetter
     public Iterable<Entry> getProperties() {
         return Iterables.transform(getMap().entrySet(), this::newEntry);
     }
@@ -85,10 +87,12 @@ public class ObjectModelView extends ViewModel {
             this.value = value;
         }
 
+        @ViewGetter
         public String getKey() {
             return key;
         }
 
+        @ViewGetter
         public JavaThingView getValue() {
             return value;
         }

@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.ReferenceChain;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
@@ -47,18 +48,22 @@ public class ReferenceChainView extends ViewModel {
         this.reference = reference;
     }
 
+    @ViewGetter
     public RootView getRoot() {
         return new RootView(handler, reference.getObj().getRoot());
     }
 
+    @ViewGetter
     public JavaThingView getObject() {
         return new JavaThingView(handler, reference.getObj());
     }
 
+    @ViewGetter
     public boolean hasNext() {
         return reference.getNext() != null;
     }
 
+    @ViewGetter
     public String getDescriptionOfReference() {
         if (hasNext()) {
             return getObject().toJavaHeapObject().describeReferenceTo(reference.getNext().getObj(), handler.getSnapshot());
@@ -67,6 +72,7 @@ public class ReferenceChainView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public ReferenceChainIterable getReferences() {
         return new ReferenceChainIterable();
     }

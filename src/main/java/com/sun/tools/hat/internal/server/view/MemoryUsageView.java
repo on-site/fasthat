@@ -35,6 +35,7 @@ package com.sun.tools.hat.internal.server.view;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
 /**
@@ -69,14 +70,17 @@ public class MemoryUsageView extends ViewModel {
         memPercent = String.format("%1.1f%%", percentUsed);
     }
 
+    @ViewGetter
     public String getUsedMemory() {
         return memUsed;
     }
 
+    @ViewGetter
     public String getTotalMemory() {
         return memTotal;
     }
 
+    @ViewGetter
     public String getPercentMemoryUsed() {
         return memPercent;
     }

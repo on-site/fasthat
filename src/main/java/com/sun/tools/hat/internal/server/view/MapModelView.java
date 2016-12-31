@@ -33,6 +33,7 @@ package com.sun.tools.hat.internal.server.view;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.lang.MapModel;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -56,6 +57,7 @@ public class MapModelView extends ViewModel {
         this.limit = MoreObjects.firstNonNull(limit, DEFAULT_LIMIT);
     }
 
+    @ViewGetter
     public Integer additionalSize() {
         if (getMap().size() > limit) {
             return getMap().size() - limit;
@@ -64,6 +66,7 @@ public class MapModelView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Iterable<Entry> getEntries() {
         Iterable<Map.Entry<JavaThing, JavaThing>> result = Iterables.limit(getMap().entrySet(), limit);
         return Iterables.transform(result, this::newEntry);
@@ -92,10 +95,12 @@ public class MapModelView extends ViewModel {
             this.value = value;
         }
 
+        @ViewGetter
         public JavaThingView getKey() {
             return key;
         }
 
+        @ViewGetter
         public JavaThingView getValue() {
             return value;
         }

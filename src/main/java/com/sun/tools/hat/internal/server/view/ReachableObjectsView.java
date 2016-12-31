@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.ReachableObjects;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -53,35 +54,43 @@ public class ReachableObjectsView extends ViewModel {
         this.reachableObjects = new ReachableObjects(root, handler.getSnapshot().getReachableExcludes());
     }
 
+    @ViewGetter
     public JavaThingView getRoot() {
         return root;
     }
 
+    @ViewGetter
     public Iterable<JavaThingView> getThings() {
         return new StreamIterable<>(Arrays.asList(reachableObjects.getReachables()).stream()
                 .map(thing -> new JavaThingView(handler, thing)));
     }
 
+    @ViewGetter
     public boolean hasUsedFields() {
         return getUsedFields().length > 0;
     }
 
+    @ViewGetter
     public String[] getUsedFields() {
         return reachableObjects.getUsedFields();
     }
 
+    @ViewGetter
     public boolean hasExcludedFields() {
         return getExcludedFields().length > 0;
     }
 
+    @ViewGetter
     public String[] getExcludedFields() {
         return reachableObjects.getExcludedFields();
     }
 
+    @ViewGetter
     public long getNumInstances() {
         return reachableObjects.getReachables().length;
     }
 
+    @ViewGetter
     public long getTotalSize() {
         return reachableObjects.getTotalSize();
     }

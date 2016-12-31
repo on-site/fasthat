@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
@@ -47,14 +48,17 @@ public class JavaFieldView extends ViewModel {
         this.field = field;
     }
 
+    @ViewGetter
     public boolean hasId() {
         return field.hasId();
     }
 
+    @ViewGetter
     public String getName() {
         return field.getName();
     }
 
+    @ViewGetter
     public String getSignature() {
         return field.getSignature();
     }
@@ -76,10 +80,12 @@ public class JavaFieldView extends ViewModel {
             this.value = value;
         }
 
+        @ViewGetter
         public JavaFieldView getField() {
             return field;
         }
 
+        @ViewGetter
         public JavaThingView getValue() {
             return value;
         }

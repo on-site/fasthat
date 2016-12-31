@@ -32,6 +32,7 @@
 package com.sun.tools.hat.internal.server.view;
 
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.ReferenceChain;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -56,10 +57,12 @@ public class ReferenceChainSet extends ViewModel {
         this.entry = entry;
     }
 
+    @ViewGetter
     public String getTypeName() {
         return Root.getTypeName(entry.getKey());
     }
 
+    @ViewGetter
     public Iterable<ReferenceChainView> getReferenceChains() {
         return new StreamIterable<>(entry.getValue().stream()
                 .sorted(Ordering.natural().onResultOf(ReferenceChain::getDepth))

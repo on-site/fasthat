@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaStatic;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
@@ -47,10 +48,12 @@ public class JavaStaticView extends ViewModel {
         this.javaStatic = javaStatic;
     }
 
+    @ViewGetter
     public JavaFieldView getField() {
         return new JavaFieldView(handler, javaStatic.getField());
     }
 
+    @ViewGetter
     public JavaThingView getValue() {
         return new JavaThingView(handler, javaStatic.getValue());
     }

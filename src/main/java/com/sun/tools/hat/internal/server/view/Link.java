@@ -36,6 +36,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.server.QueryHandler;
 import com.sun.tools.hat.internal.util.Misc;
 
@@ -78,6 +79,7 @@ public class Link extends ViewModel {
         this.params = params;
     }
 
+    @ViewGetter
     public String getPath() {
         return String.format("/%s/%s", path, Misc.encodeForURL(Strings.nullToEmpty(getPathInfo())));
     }
@@ -118,12 +120,14 @@ public class Link extends ViewModel {
         return builder.build();
     }
 
+    @ViewGetter
     public String getQueryString() {
         Collection<String> paramStrings = Collections2.transform(buildParams().entries(),
                  entry -> String.format("%s=%s", Misc.encodeForURL(entry.getKey()), Misc.encodeForURL(entry.getValue())));
         return PARAMS_JOINER.join(paramStrings);
     }
 
+    @ViewGetter
     public String getLabel() {
         return label;
     }

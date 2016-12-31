@@ -32,6 +32,7 @@
 package com.sun.tools.hat.internal.server.view;
 
 import com.google.common.collect.Lists;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.StackFrame;
 import com.sun.tools.hat.internal.model.StackTrace;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -51,6 +52,7 @@ public class StackTraceView extends ViewModel {
         this.stackTrace = stackTrace;
     }
 
+    @ViewGetter
     public Iterable<StackFrameView> getFrames() {
         return Lists.transform(Arrays.asList(stackTrace.getFrames()), frame -> new StackFrameView(handler, frame));
     }
@@ -63,22 +65,27 @@ public class StackTraceView extends ViewModel {
             this.frame = frame;
         }
 
+        @ViewGetter
         public String getClassName() {
             return frame.getClassName();
         }
 
+        @ViewGetter
         public String getMethodName() {
             return frame.getMethodName();
         }
 
+        @ViewGetter
         public String getMethodSignature() {
             return frame.getMethodSignature();
         }
 
+        @ViewGetter
         public String getSourceFileName() {
             return frame.getSourceFileName();
         }
 
+        @ViewGetter
         public String getLineNumber() {
             return frame.getLineNumber();
         }

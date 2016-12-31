@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -73,18 +74,22 @@ public class BreadcrumbsView extends ViewModel {
         }
     }
 
+    @ViewGetter
     public JavaThingView getJavaClass() {
         return javaClass;
     }
 
+    @ViewGetter
     public boolean hasReferrers() {
         return !referrers.getReferrers().isEmpty();
     }
 
+    @ViewGetter
     public Breadcrumb getBaseCrumb() {
         return new Breadcrumb(javaClass, getParamsBuilder().build());
     }
 
+    @ViewGetter
     public BreadcrumbIterable getCrumbs() {
         return new BreadcrumbIterable();
     }

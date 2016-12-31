@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
@@ -49,10 +50,12 @@ public class RefererView extends ViewModel {
         this.ref = new JavaThingView(handler, ref);
     }
 
+    @ViewGetter
     public JavaThingView getThing() {
         return ref;
     }
 
+    @ViewGetter
     public String getDescription() {
         return ref.toJavaHeapObject().describeReferenceTo(target, handler.getSnapshot());
     }

@@ -33,6 +33,7 @@
 package com.sun.tools.hat.internal.parser;
 
 import com.google.common.base.Stopwatch;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.util.Misc;
 
 import java.io.File;
@@ -95,6 +96,7 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
             System.out.printf("----- Starting: %s -----%n", getLoadDescription());
         }
 
+        @ViewGetter
         public String getLoadString() {
             double percentDone = getPercentDone();
             String loadTime = "unknown";

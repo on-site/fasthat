@@ -84,10 +84,12 @@ public abstract class QueryHandler implements Runnable {
         return rawMode;
     }
 
+    @ViewGetter
     public boolean getHasNewSet() {
         return snapshot.getHasNewSet();
     }
 
+    @ViewGetter
     public Snapshot getSnapshot() {
         return snapshot;
     }

@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.model.Root;
@@ -51,6 +52,7 @@ public class RootView extends ViewModel {
         this.root = root;
     }
 
+    @ViewGetter
     public StackTraceView getStackTrace() {
         StackTrace trace = root.getStackTrace();
 
@@ -61,14 +63,17 @@ public class RootView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public String getDescription() {
         return root.getDescription();
     }
 
+    @ViewGetter
     public String getHexIndex() {
         return Misc.toHex(root.getIndex());
     }
 
+    @ViewGetter
     public JavaThingView getReferer() {
         JavaThing referer = root.getReferer();
 
@@ -79,6 +84,7 @@ public class RootView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public JavaThingView getJavaThing() {
         return new JavaThingView(handler, handler.getSnapshot().findThing(root.getId()));
     }

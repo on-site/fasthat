@@ -31,6 +31,7 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.server.QueryHandler;
 
 /**
@@ -48,10 +49,12 @@ public class ArrayElementView extends ViewModel {
         this.value = value;
     }
 
+    @ViewGetter
     public int getIndex() {
         return index;
     }
 
+    @ViewGetter
     public JavaThingView getValue() {
         return value;
     }

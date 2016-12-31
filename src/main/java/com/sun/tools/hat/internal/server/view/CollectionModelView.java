@@ -33,6 +33,7 @@ package com.sun.tools.hat.internal.server.view;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.model.JavaThing;
 import com.sun.tools.hat.internal.server.QueryHandler;
@@ -56,6 +57,7 @@ public class CollectionModelView extends ViewModel {
         this.limit = MoreObjects.firstNonNull(limit, DEFAULT_LIMIT);
     }
 
+    @ViewGetter
     public Integer additionalSize() {
         if (getCollection().size() > limit) {
             return getCollection().size() - limit;
@@ -64,6 +66,7 @@ public class CollectionModelView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Iterable<JavaThingView> getJavaThings() {
         Iterable<JavaThing> result = Iterables.limit(getCollection(), limit);
         return Iterables.transform(result, this::newJavaThingView);

@@ -34,6 +34,7 @@ package com.sun.tools.hat.internal.server.view;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
 import com.sun.tools.hat.internal.lang.HasSimpleForm;
@@ -98,18 +99,22 @@ public class JavaThingView extends ViewModel {
         this.limit = limit;
     }
 
+    @ViewGetter
     public boolean isNull() {
         return thing == null;
     }
 
+    @ViewGetter
     public JavaThingView getSelf() {
         return this;
     }
 
+    @ViewGetter
     public boolean isShowingDetail() {
         return showDetail;
     }
 
+    @ViewGetter
     public boolean isJavaHeapObject() {
         return (thing instanceof JavaHeapObject);
     }
@@ -118,6 +123,7 @@ public class JavaThingView extends ViewModel {
         return (JavaHeapObject) thing;
     }
 
+    @ViewGetter
     public boolean isJavaClass() {
         return (thing instanceof JavaClass);
     }
@@ -126,6 +132,7 @@ public class JavaThingView extends ViewModel {
         return (JavaClass) thing;
     }
 
+    @ViewGetter
     public boolean isJavaObject() {
         return (thing instanceof JavaObject);
     }
@@ -134,6 +141,7 @@ public class JavaThingView extends ViewModel {
         return (JavaObject) thing;
     }
 
+    @ViewGetter
     public boolean isJavaValueArray() {
         return (thing instanceof JavaValueArray);
     }
@@ -142,6 +150,7 @@ public class JavaThingView extends ViewModel {
         return (JavaValueArray) thing;
     }
 
+    @ViewGetter
     public boolean isJavaObjectArray() {
         return (thing instanceof JavaObjectArray);
     }
@@ -150,6 +159,7 @@ public class JavaThingView extends ViewModel {
         return (JavaObjectArray) thing;
     }
 
+    @ViewGetter
     public JavaThingView getClazz() {
         return new JavaThingView(handler, toJavaHeapObject().getClazz());
     }
@@ -171,6 +181,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public String getName() {
         if (isJavaClass()) {
             return toJavaClass().getName();
@@ -187,6 +198,7 @@ public class JavaThingView extends ViewModel {
         return false;
     }
 
+    @ViewGetter
     public Integer getInstancesCountWithoutSubclasses() {
         if (instancesCountWithoutSubclasses != null) {
             return instancesCountWithoutSubclasses;
@@ -200,6 +212,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Long getInstancesWithoutSubclasses() {
         if (isJavaClass()) {
             try (Stream<JavaHeapObject> stream = toJavaClass().getInstances(false)) {
@@ -218,6 +231,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public JavaThingView getSuperclass() {
         if (isJavaClass()) {
             return new JavaThingView(handler, toJavaClass().getSuperclass());
@@ -226,6 +240,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public JavaThingView getLoader() {
         if (isJavaClass()) {
             return new JavaThingView(handler, toJavaClass().getLoader());
@@ -234,6 +249,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public JavaThingView getSigners() {
         if (isJavaClass()) {
             return new JavaThingView(handler, toJavaClass().getSigners());
@@ -242,6 +258,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public JavaThingView getProtectionDomain() {
         if (isJavaClass()) {
             return new JavaThingView(handler, toJavaClass().getProtectionDomain());
@@ -250,6 +267,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Iterable<JavaThingView> getSubclasses() {
         if (isJavaClass()) {
             List<JavaClass> subclasses = Arrays.asList(toJavaClass().getSubclasses());
@@ -259,6 +277,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Iterable<JavaFieldView> getFields() {
         if (isJavaClass()) {
             return new StreamIterable<>(Arrays.stream(toJavaClass().getFields())
@@ -269,6 +288,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Iterable<JavaFieldView.WithValue> getFieldsWithValues() {
         if (isJavaObject()) {
             JavaField[] fields = getClazz().toJavaClass().getFieldsForInstance();
@@ -286,6 +306,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public String valueString() {
         if (isJavaValueArray()) {
             return toJavaValueArray().valueString(true);
@@ -294,6 +315,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Integer getLength() {
         if (isJavaObjectArray()) {
             return toJavaObjectArray().getLength();
@@ -302,6 +324,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Iterable<ArrayElementView> getElements() {
         if (isJavaObjectArray()) {
             JavaThing[] elements = toJavaObjectArray().getElements();
@@ -317,6 +340,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public Iterable<JavaStaticView> getStatics() {
         if (isJavaClass()) {
             List<JavaStatic> statics = Arrays.asList(toJavaClass().getStatics());
@@ -326,6 +350,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public String getInstancesCountWithoutSubclassesLabel() {
         if (getInstancesCountWithoutSubclasses() == null) {
             return null;
@@ -338,6 +363,7 @@ public class JavaThingView extends ViewModel {
         return toJavaHeapObject().getId();
     }
 
+    @ViewGetter
     public String getUrlEncodedId() {
         if (isValidId()) {
             return getIdString();
@@ -348,31 +374,38 @@ public class JavaThingView extends ViewModel {
         }
     }
 
+    @ViewGetter
     public String getIdString() {
         return toJavaHeapObject().getIdString();
     }
 
+    @ViewGetter
     public String getHexId() {
         return Misc.toHex(getId());
     }
 
+    @ViewGetter
     public boolean isValidId() {
         return toJavaHeapObject().getId() != -1L;
     }
 
+    @ViewGetter
     public boolean isNew() {
         return toJavaHeapObject().isNew();
     }
 
+    @ViewGetter
     public int getSize() {
         return toJavaHeapObject().getSize();
     }
 
+    @ViewGetter
     public Iterable<RefererView> getReferers() {
         return new StreamIterable<>(toJavaHeapObject().getReferers().stream()
                 .map(ref -> new RefererView(handler, ref, thing)));
     }
 
+    @ViewGetter
     public StackTraceView getAllocatedStackTrace() {
         StackTrace trace = toJavaHeapObject().getAllocatedFrom();
 
@@ -406,6 +439,7 @@ public class JavaThingView extends ViewModel {
         return model;
     }
 
+    @ViewGetter
     public String getModelSummary() {
         if (getModel() != null) {
             String[] result = new String[1];
@@ -443,6 +477,7 @@ public class JavaThingView extends ViewModel {
         }
     }
 
+    @ViewGetter
     public CollectionModelView getCollectionModel() {
         if (getModel() != null && getModel() instanceof CollectionModel) {
             return new CollectionModelView(handler, (CollectionModel) getModel(), limit);
@@ -451,6 +486,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public MapModelView getMapModel() {
         if (getModel() != null && getModel() instanceof MapModel) {
             return new MapModelView(handler, (MapModel) getModel(), limit);
@@ -459,6 +495,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public ObjectModelView getObjectModel() {
         if (getModel() != null && getModel() instanceof ObjectModel) {
             return new ObjectModelView(handler, (ObjectModel) getModel());
@@ -467,6 +504,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     public ClassModelView getClassModel() {
         if (getModel() != null && getModel() instanceof ClassModel) {
             return new ClassModelView(handler, (ClassModel) getModel());
@@ -475,6 +513,7 @@ public class JavaThingView extends ViewModel {
         return null;
     }
 
+    @ViewGetter
     @Override
     public String toString() {
         return thing.toString();
