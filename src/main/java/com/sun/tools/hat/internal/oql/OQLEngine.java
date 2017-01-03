@@ -72,17 +72,6 @@ public class OQLEngine {
         init(snapshot);
     }
 
-    public synchronized void executeQuery(String query, ObjectVisitor visitor) throws OQLException {
-        try (Stream<Object> stream = executeQuery(query)) {
-            Iterator<Object> iterator = stream.iterator();
-            while (iterator.hasNext()) {
-                if (visitor.visit(iterator.next())) {
-                    return;
-                }
-            }
-        }
-    }
-
     /**
        Query is of the form
 

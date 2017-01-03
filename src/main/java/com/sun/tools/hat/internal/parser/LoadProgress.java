@@ -164,10 +164,6 @@ public class LoadProgress implements Iterable<LoadProgress.ProgressElement> {
             progress.incrementAndGet();
         }
 
-        public int getPercentDoneInt() {
-            return (int) getPercentDone();
-        }
-
         @Override
         protected double getPercentDone() {
             if (isEnded()) {

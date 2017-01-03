@@ -125,12 +125,7 @@ public class Snapshot {
 
     private volatile ImmutableList<ModelFactory> modelFactories;
 
-    private final ThreadLocal<OQLEngine> oqlEngine = new ThreadLocal<OQLEngine>() {
-        @Override
-        protected OQLEngine initialValue() {
-            return new OQLEngine(Snapshot.this);
-        }
-    };
+    private final ThreadLocal<OQLEngine> oqlEngine = ThreadLocal.withInitial(() -> new OQLEngine(this));
 
     public Snapshot(ReadBuffer buf) {
         nullThing = new HackJavaValue("<null>", 0);
