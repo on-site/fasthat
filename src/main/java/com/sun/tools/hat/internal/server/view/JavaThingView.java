@@ -74,7 +74,7 @@ public class JavaThingView extends ViewModel {
     private final boolean useSimpleForm;
     private final boolean showDetail;
     private final Integer limit;
-    private Model model;
+    private final Supplier<Model> model = Suppliers.memoize(this::getModelImpl);
     private final Supplier<Integer> instancesCountWithoutSubclasses = Suppliers.memoize(this::getInstancesCountWithoutSubclassesImpl);
 
     public JavaThingView(QueryHandler handler, JavaThing thing) {
@@ -422,22 +422,29 @@ public class JavaThingView extends ViewModel {
             return null;
         }
 
-        if (model != null) {
+        return model.get();
+    }
+
+    private Model getModelImpl() {
+        try (Stream<ModelFactory> stream = handler.getSnapshot().getModelFactories().stream()) {
+            return stream.map(factory -> factory.newModel(thing))
+                    .filter(Objects::nonNull)
+                    .map(this::simplifyModel)
+                    .findFirst()
+                    .orElse(null);
+        }
+    }
+
+    private Model simplifyModel(Model model) {
+        if (!useSimpleForm) {
             return model;
         }
 
-        for (ModelFactory factory : handler.getSnapshot().getModelFactories()) {
-            model = factory.newModel(thing);
-            if (model != null) {
-                if (useSimpleForm) {
-                    return model instanceof HasSimpleForm
-                            ? ((HasSimpleForm) model).getSimpleFormModel() : null;
-                }
-                return model;
-            }
+        if (model instanceof HasSimpleForm) {
+            return ((HasSimpleForm) model).getSimpleFormModel();
         }
 
-        return model;
+        return null;
     }
 
     @ViewGetter
