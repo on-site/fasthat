@@ -35,6 +35,7 @@ package com.sun.tools.hat.internal.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntConsumer;
@@ -174,18 +175,15 @@ public class Misc {
         return ImmutableSet.copyOf(instances);
     }
 
-    private static final long ONE_SECOND = 1000L;
-    private static final long ONE_MINUTE = ONE_SECOND * 60L;
-    private static final long ONE_HOUR = ONE_MINUTE * 60L;
-
     public static String formatTime(long millis) {
-        long hours = millis / ONE_HOUR;
-        millis %= ONE_HOUR;
-        long minutes = millis / ONE_MINUTE;
-        millis %= ONE_MINUTE;
-        long seconds = millis / ONE_SECOND;
-        millis %= ONE_SECOND;
-        return String.format("%d:%02d:%02d.%03d", hours, minutes, seconds, millis);
+        Duration duration = Duration.ofMillis(millis);
+        long hours = duration.toHours();
+        duration = duration.minusHours(hours);
+        long minutes = duration.toMinutes();
+        duration = duration.minusMinutes(minutes);
+        long seconds = duration.getSeconds();
+        duration = duration.minusSeconds(seconds);
+        return String.format("%d:%02d:%02d.%03d", hours, minutes, seconds, duration.toMillis());
     }
 
     public static String pluralize(int value, String base) {
