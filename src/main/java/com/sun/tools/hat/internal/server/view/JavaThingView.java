@@ -483,7 +483,7 @@ public class JavaThingView extends ViewModel {
 
     @ViewGetter
     public CollectionModelView getCollectionModel() {
-        if (getModel() != null && getModel() instanceof CollectionModel) {
+        if (getModel() instanceof CollectionModel) {
             return new CollectionModelView(handler, (CollectionModel) getModel(), limit);
         }
 
@@ -492,7 +492,7 @@ public class JavaThingView extends ViewModel {
 
     @ViewGetter
     public MapModelView getMapModel() {
-        if (getModel() != null && getModel() instanceof MapModel) {
+        if (getModel() instanceof MapModel) {
             return new MapModelView(handler, (MapModel) getModel(), limit);
         }
 
@@ -501,7 +501,7 @@ public class JavaThingView extends ViewModel {
 
     @ViewGetter
     public ObjectModelView getObjectModel() {
-        if (getModel() != null && getModel() instanceof ObjectModel) {
+        if (getModel() instanceof ObjectModel) {
             return new ObjectModelView(handler, (ObjectModel) getModel());
         }
 
@@ -510,7 +510,7 @@ public class JavaThingView extends ViewModel {
 
     @ViewGetter
     public ClassModelView getClassModel() {
-        if (getModel() != null && getModel() instanceof ClassModel) {
+        if (getModel() instanceof ClassModel) {
             return new ClassModelView(handler, (ClassModel) getModel());
         }
 
@@ -531,10 +531,6 @@ public class JavaThingView extends ViewModel {
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof JavaThingView)) {
-            return false;
-        }
-
-        if (other == null) {
             return false;
         }
 
