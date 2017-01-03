@@ -401,9 +401,9 @@ public class JavaThingView extends ViewModel {
     }
 
     @ViewGetter
-    public Iterable<RefererView> getReferers() {
-        return new StreamIterable<>(toJavaHeapObject().getReferers().stream()
-                .map(ref -> new RefererView(handler, ref, thing)));
+    public Iterable<ReferrerView> getReferrers() {
+        return new StreamIterable<>(toJavaHeapObject().getReferrers().stream()
+                .map(ref -> new ReferrerView(handler, ref, thing)));
     }
 
     @ViewGetter

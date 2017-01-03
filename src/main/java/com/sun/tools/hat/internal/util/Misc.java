@@ -126,7 +126,7 @@ public class Misc {
             Iterable<JavaHeapObject> instances) {
         ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
         for (JavaHeapObject instance : instances) {
-            builder.addAll(instance.getReferers());
+            builder.addAll(instance.getReferrers());
         }
         return builder.build();
     }
@@ -135,7 +135,7 @@ public class Misc {
             Iterable<JavaHeapObject> instances, Predicate<JavaHeapObject> filter) {
         ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
         for (JavaHeapObject instance : instances) {
-            builder.addAll(Sets.filter(instance.getReferers(), filter));
+            builder.addAll(Sets.filter(instance.getReferrers(), filter));
         }
         return builder.build();
     }

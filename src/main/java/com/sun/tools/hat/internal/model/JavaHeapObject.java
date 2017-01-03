@@ -50,7 +50,7 @@ import com.sun.tools.hat.internal.util.Misc;
 
 public abstract class JavaHeapObject extends JavaThing {
     private ImmutableSet.Builder<JavaHeapObject> builder = ImmutableSet.builder();
-    private ImmutableSet<JavaHeapObject> referers;
+    private ImmutableSet<JavaHeapObject> referrers;
 
     public abstract JavaClass getClazz();
     @Override public abstract int getSize();
@@ -67,9 +67,9 @@ public abstract class JavaHeapObject extends JavaThing {
         }
     }
 
-    void setupReferers() {
-        if (referers == null) {
-            referers = builder.build();
+    void setupReferrers() {
+        if (referrers == null) {
+            referrers = builder.build();
             builder = null;
         }
     }
@@ -131,15 +131,15 @@ public abstract class JavaHeapObject extends JavaThing {
      *
      * @return a list of JavaHeapObject instances
      */
-    public ImmutableSet<JavaHeapObject> getReferers() {
-        if (referers == null) {
+    public ImmutableSet<JavaHeapObject> getReferrers() {
+        if (referrers == null) {
             throw new IllegalStateException("not resolved: " + getIdString());
         }
-        return referers;
+        return referrers;
     }
 
     /**
-     * Given other, which the caller promises is in referers, determines if
+     * Given other, which the caller promises is in referrers, determines if
      * the reference is only a weak reference.
      */
     public boolean refersOnlyWeaklyTo(Snapshot ss, JavaThing other) {

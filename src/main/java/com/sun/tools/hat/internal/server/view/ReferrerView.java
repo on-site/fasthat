@@ -40,11 +40,11 @@ import com.sun.tools.hat.internal.server.QueryHandler;
  *
  * @author Mike Virata-Stone
  */
-public class RefererView extends ViewModel {
+public class ReferrerView extends ViewModel {
     private final JavaThing target;
     private final JavaThingView ref;
 
-    public RefererView(QueryHandler handler, JavaThing ref, JavaThing target) {
+    public ReferrerView(QueryHandler handler, JavaThing ref, JavaThing target) {
         super(handler);
         this.target = target;
         this.ref = new JavaThingView(handler, ref);

@@ -48,11 +48,11 @@ import com.sun.tools.hat.internal.util.Misc;
 public class Root {
 
     private final long id;            // ID of the JavaThing we refer to
-    private final long refererId;     // Thread or Class responsible for this, or 0
-    private int index = -1;             // Index in Snapshot.roots
+    private final long referrerId;    // Thread or Class responsible for this, or 0
+    private int index = -1;           // Index in Snapshot.roots
     private final int type;
     private final String description;
-    private JavaHeapObject referer = null;
+    private JavaHeapObject referrer = null;
     private StackTrace stackTrace = null;
 
     // Values for type.  Higher values are more interesting -- see getType().
@@ -70,15 +70,15 @@ public class Root {
     public final static int JAVA_STATIC = 9;
 
 
-    public Root(long id, long refererId, int type, String description) {
-        this(id, refererId, type, description, null);
+    public Root(long id, long referrerId, int type, String description) {
+        this(id, referrerId, type, description, null);
     }
 
 
-    public Root(long id, long refererId, int type, String description,
+    public Root(long id, long referrerId, int type, String description,
                 StackTrace stackTrace) {
         this.id = id;
-        this.refererId = refererId;
+        this.referrerId = referrerId;
         this.type = type;
         this.description = description;
         this.stackTrace = stackTrace;
@@ -143,8 +143,8 @@ public class Root {
      * Get the object that's responsible for this root, if there is one.
      * This will be null, a Thread object, or a Class object.
      */
-    public JavaHeapObject getReferer() {
-        return referer;
+    public JavaHeapObject getReferrer() {
+        return referrer;
     }
 
     /**
@@ -163,8 +163,8 @@ public class Root {
     }
 
     void resolve(Snapshot ss) {
-        if (refererId != 0) {
-            referer = ss.findThing(refererId);
+        if (referrerId != 0) {
+            referrer = ss.findThing(referrerId);
         }
         if (stackTrace != null) {
             stackTrace.resolve(ss);

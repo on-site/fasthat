@@ -106,7 +106,7 @@ function wrapRoot(root) {
         return {
             id: root.idString,
             description: root.description,
-            referrer: wrapJavaValue(root.referer),
+            referrer: wrapJavaValue(root.referrer),
             type: root.typeName
         };
     } else {
@@ -642,8 +642,8 @@ function wrapHeapSnapshot(heap) {
                     var desc = root.description;
                     var toString = html ? toHtml :
                             function (x) {return x.toString();}
-                    if (root.referer) {
-                        var ref = root.referer;
+                    if (root.referrer) {
+                        var ref = root.referrer;
                         desc += " (from " + toString(ref) + ')';
                     }
                     desc += '->';
@@ -749,16 +749,16 @@ function classof(jobject) {
 }
 
 /**
- * Find referers (a.k.a in-coming references). Calls callback
+ * Find referrers (a.k.a in-coming references). Calls callback
  * for each referrer of the given Java object. If the callback
  * returns true, the iteration is stopped.
  *
- * @param callback function to call for each referer
- * @param jobject object whose referers are retrieved
+ * @param callback function to call for each referrer
+ * @param jobject object whose referrers are retrieved
  */
 function forEachReferrer(callback, jobject) {
     jobject = unwrapJavaObject(jobject);
-    for (var ref in Iterator(jobject.referers.iterator())) {
+    for (var ref in Iterator(jobject.referrers.iterator())) {
         if (callback(wrapJavaValue(ref))) {
             return;
         }
@@ -820,7 +820,7 @@ function printAllocTrace(jobject) {
 function referrers(jobject) {
     try {
         jobject = unwrapJavaObject(jobject);
-        return wrapperIterator(jobject.referers.iterator());
+        return wrapperIterator(jobject.referrers.iterator());
     } catch (e) {
         println("referrers: " + jobject + ", " + e);
         return emptyIterator;

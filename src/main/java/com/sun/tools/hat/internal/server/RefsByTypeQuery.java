@@ -138,7 +138,7 @@ public class RefsByTypeQuery extends MustacheQueryHandler {
             if (instance.getId() == -1) {
                 continue;
             }
-            for (JavaHeapObject ref : instance.getReferers()) {
+            for (JavaHeapObject ref : instance.getReferrers()) {
                 JavaClass cl = ref.getClazz();
                 if (cl == null) {
                     System.out.printf("null class for %s%n", ref);

@@ -74,11 +74,11 @@ public class RootView extends ViewModel {
     }
 
     @ViewGetter
-    public JavaThingView getReferer() {
-        JavaThing referer = root.getReferer();
+    public JavaThingView getReferrer() {
+        JavaThing referrer = root.getReferrer();
 
-        if (referer != null) {
-            return new JavaThingView(handler, referer);
+        if (referrer != null) {
+            return new JavaThingView(handler, referrer);
         }
 
         return null;

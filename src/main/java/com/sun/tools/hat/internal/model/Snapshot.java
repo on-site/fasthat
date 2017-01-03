@@ -297,7 +297,7 @@ public class Snapshot {
         }
         progress = loadProgress.startTickedProgress("Eliminating duplicate references", heapObjects.size());
         for (JavaHeapObject t : heapObjects.values()) {
-            t.setupReferers();
+            t.setupReferrers();
             progress.tick();
         }
         loadProgress.end();
@@ -443,9 +443,9 @@ public class Snapshot {
             if (curr.getRoot() != null) {
                 result.add(chain);
                 // Even though curr is in the rootset, we want to explore its
-                // referers, because they might be more interesting.
+                // referrers, because they might be more interesting.
             }
-            for (JavaHeapObject t : curr.getReferers()) {
+            for (JavaHeapObject t : curr.getReferrers()) {
                 if (t != null && !visited.contains(t)) {
                     if (includeWeak || !t.refersOnlyWeaklyTo(this, curr)) {
                         visited.add(t);

@@ -144,7 +144,7 @@ public class HistogramQuery extends MustacheQueryHandler {
                 Iterable<JavaHeapObject> instances) {
             ImmutableSetMultimap.Builder<JavaClass, JavaHeapObject> builder = ImmutableSetMultimap.builder();
             for (JavaHeapObject instance : instances) {
-                for (JavaHeapObject referrer : instance.getReferers()) {
+                for (JavaHeapObject referrer : instance.getReferrers()) {
                     builder.put(referrer.getClazz(), instance);
                 }
             }
