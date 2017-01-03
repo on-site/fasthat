@@ -450,36 +450,32 @@ public class JavaThingView extends ViewModel {
     @ViewGetter
     public String getModelSummary() {
         if (getModel() != null) {
-            String[] result = new String[1];
-
-            getModel().visit(new ModelVisitor() {
+            return getModel().visit(new ModelVisitor<String>() {
                 @Override
-                public void visit(ScalarModel model) {
-                    result[0] = model.toString();
+                public String visit(ScalarModel model) {
+                    return model.toString();
                 }
 
                 @Override
-                public void visit(CollectionModel model) {
-                    result[0] = thing.toString();
+                public String visit(CollectionModel model) {
+                    return thing.toString();
                 }
 
                 @Override
-                public void visit(MapModel model) {
-                    result[0] = thing.toString();
+                public String visit(MapModel model) {
+                    return thing.toString();
                 }
 
                 @Override
-                public void visit(ObjectModel model) {
-                    result[0] = model.getClassModel().getName();
+                public String visit(ObjectModel model) {
+                    return model.getClassModel().getName();
                 }
 
                 @Override
-                public void visit(ClassModel model) {
-                    result[0] = model.getName();
+                public String visit(ClassModel model) {
+                    return model.getName();
                 }
             });
-
-            return result[0];
         } else {
             return thing.toString();
         }

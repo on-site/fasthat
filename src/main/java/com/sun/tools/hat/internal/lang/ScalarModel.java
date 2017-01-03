@@ -45,8 +45,8 @@ public interface ScalarModel extends Model, HasSimpleForm {
     String toString();
 
     @Override
-    default void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+    default <T> T visit(ModelVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 
     @Override

@@ -46,7 +46,7 @@ public interface CollectionModel extends Model {
     Collection<JavaThing> getCollection();
 
     @Override
-    default void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+    default <T> T visit(ModelVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

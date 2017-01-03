@@ -34,34 +34,15 @@
 package com.sun.tools.hat.internal.server;
 
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.Formatter;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
 
 import com.sun.tools.hat.internal.annotations.ViewGetter;
-import com.sun.tools.hat.internal.lang.ClassModel;
-import com.sun.tools.hat.internal.lang.CollectionModel;
-import com.sun.tools.hat.internal.lang.HasSimpleForm;
-import com.sun.tools.hat.internal.lang.MapModel;
-import com.sun.tools.hat.internal.lang.Model;
-import com.sun.tools.hat.internal.lang.ModelFactory;
-import com.sun.tools.hat.internal.lang.ModelVisitor;
-import com.sun.tools.hat.internal.lang.ObjectModel;
-import com.sun.tools.hat.internal.lang.ScalarModel;
-import com.sun.tools.hat.internal.model.*;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.util.Misc;
 
 /**

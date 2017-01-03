@@ -70,7 +70,7 @@ public interface ObjectModel extends Model {
     Map<String, JavaThing> getProperties();
 
     @Override
-    default void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+    default <T> T visit(ModelVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }

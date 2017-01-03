@@ -43,39 +43,39 @@ package com.sun.tools.hat.internal.lang;
  *
  * @author Chris K. Jester-Young
  */
-public interface ModelVisitor {
+public interface ModelVisitor<T> {
     /**
      * Visits with a scalar model.
      *
      * @param model the scalar model
      */
-    public void visit(ScalarModel model);
+    public T visit(ScalarModel model);
 
     /**
      * Visits with a collection model.
      *
      * @param model the collection model
      */
-    public void visit(CollectionModel model);
+    public T visit(CollectionModel model);
 
     /**
      * Visits with a map model.
      *
      * @param model the map model
      */
-    public void visit(MapModel model);
+    public T visit(MapModel model);
 
     /**
      * Visits with an object model.
      *
      * @param model the object model
      */
-    public void visit(ObjectModel model);
+    public T visit(ObjectModel model);
 
     /**
      * Visits with a class model.
      *
      * @param model the class model
      */
-    public void visit(ClassModel model);
+    public T visit(ClassModel model);
 }

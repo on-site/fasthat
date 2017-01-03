@@ -56,5 +56,5 @@ public interface Model {
      *
      * @param visitor the visitor to send this model to
      */
-    void visit(ModelVisitor visitor);
+    <T> T visit(ModelVisitor<T> visitor);
 }

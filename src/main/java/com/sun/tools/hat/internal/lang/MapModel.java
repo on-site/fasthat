@@ -46,7 +46,7 @@ public interface MapModel extends Model {
     Map<JavaThing, JavaThing> getMap();
 
     @Override
-    default void visit(ModelVisitor visitor) {
-        visitor.visit(this);
+    default <T> T visit(ModelVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 }
