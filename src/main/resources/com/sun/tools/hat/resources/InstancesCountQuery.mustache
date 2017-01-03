@@ -9,7 +9,7 @@
       <div>
         {{instancesCountWithoutSubclasses}}
         <a href="/instances/{{urlEncodedId}}">{{instancesCountWithoutSubclassesLabel}}</a>
-        {{#hasNewSet}}(<a href="/instances/{{urlEncodedId}}?new=true">{{instancesWithoutSubclasses}} new</a>){{/hasNewSet}}
+        {{#hasNewSet}}(<a href="/instances/{{urlEncodedId}}?new=true">{{newInstancesCountWithoutSubclasses}} new</a>){{/hasNewSet}}
         of {{>class}}
       </div>
     {{/classes}}

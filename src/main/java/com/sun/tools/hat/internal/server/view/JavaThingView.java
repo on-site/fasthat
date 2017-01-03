@@ -31,6 +31,8 @@
  */
 package com.sun.tools.hat.internal.server.view;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
@@ -73,7 +75,7 @@ public class JavaThingView extends ViewModel {
     private final boolean showDetail;
     private final Integer limit;
     private Model model;
-    private Integer instancesCountWithoutSubclasses;
+    private final Supplier<Integer> instancesCountWithoutSubclasses = Suppliers.memoize(this::getInstancesCountWithoutSubclassesImpl);
 
     public JavaThingView(QueryHandler handler, JavaThing thing) {
         this(handler, thing, false, true, null);
@@ -200,20 +202,19 @@ public class JavaThingView extends ViewModel {
 
     @ViewGetter
     public Integer getInstancesCountWithoutSubclasses() {
-        if (instancesCountWithoutSubclasses != null) {
-            return instancesCountWithoutSubclasses;
-        }
+        return instancesCountWithoutSubclasses.get();
+    }
 
+    private Integer getInstancesCountWithoutSubclassesImpl() {
         if (isJavaClass()) {
-            instancesCountWithoutSubclasses = toJavaClass().getInstancesCount(false);
-            return instancesCountWithoutSubclasses;
+            return toJavaClass().getInstancesCount(false);
         }
 
         return null;
     }
 
     @ViewGetter
-    public Long getInstancesWithoutSubclasses() {
+    public Long getNewInstancesCountWithoutSubclasses() {
         if (isJavaClass()) {
             try (Stream<JavaHeapObject> stream = toJavaClass().getInstances(false)) {
                 return stream.filter(JavaHeapObject::isNew).count();
