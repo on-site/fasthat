@@ -54,6 +54,7 @@ import com.sun.tools.hat.internal.util.Misc;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -61,25 +62,23 @@ import java.io.StringWriter;
 import java.util.function.Function;
 
 abstract class MustacheQueryHandler extends QueryHandler {
-    private static final MustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory(new MustacheResolver() {
-        @Override
-        public Reader getReader(String resourceName) {
-            return MustacheQueryHandler.getReader(resourceName);
-        }
-    });
-
-    private static final LoadingCache<Class<?>, Mustache> MUSTACHES = CacheBuilder.newBuilder().build(new CacheLoader<Class<?>, Mustache>() {
-        @Override
-        public Mustache load(Class<?> queryClass) {
-            String name = queryClass.getSimpleName();
-            return MUSTACHE_FACTORY.compile(MustacheQueryHandler.getReader(name), name);
-        }
-    });
+    private static final MustacheFactory MUSTACHE_FACTORY = new DefaultMustacheFactory(MustacheQueryHandler::getReader);
+    private static final LoadingCache<Class<?>, Mustache> MUSTACHES = CacheBuilder.newBuilder().build(CacheLoader.from(MustacheQueryHandler::load));
 
     private static Reader getReader(String resourceName) {
         InputStream stream = MustacheQueryHandler.class.getResourceAsStream("/com/sun/tools/hat/resources/" + resourceName + ".mustache");
         Preconditions.checkState(stream != null, "Invalid resource: /com/sun/tools/hat/resources/%s.mustache", resourceName);
         return new InputStreamReader(stream);
+    }
+
+    private static Mustache load(Class<?> queryClass) {
+        String name = queryClass.getSimpleName();
+
+        try (Reader reader = MustacheQueryHandler.getReader(name)) {
+            return MUSTACHE_FACTORY.compile(reader, name);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     // Functions for templates to use
