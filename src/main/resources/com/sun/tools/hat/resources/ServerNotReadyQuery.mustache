@@ -1,0 +1,28 @@
+{{<layout}}
+  {{$title}}Server Not Ready{{/title}}
+
+  {{$content}}
+    {{#memoryUsage}}
+      <p>
+        <b>Heap Utilization:</b> {{usedMemory}} / {{totalMemory}} ({{percentMemoryUsed}})
+      </p>
+    {{/memoryUsage}}
+
+    {{#loadingSnapshot}}
+      {{#loadProgress}}
+        <p>
+          {{loadString}}
+        </p>
+      {{/loadProgress}}
+
+      <meta http-equiv="refresh" content="1" />
+    {{/loadingSnapshot}}
+    {{^loadingSnapshot}}
+      {{#heapFiles}}
+        <form method="POST" action="/loadDump/?dump={{#urlEncode}}{{{toString}}}{{/urlEncode}}">
+          {{toString}} <input type="submit" value="Load" />
+        </form>
+      {{/heapFiles}}
+    {{/loadingSnapshot}}
+  {{/content}}
+{{/layout}}

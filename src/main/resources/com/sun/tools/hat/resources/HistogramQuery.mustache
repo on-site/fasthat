@@ -1,0 +1,62 @@
+{{<layout}}
+  {{$title}}Heap Histogram{{/title}}
+  {{$content}}
+    {{#breadcrumbs}}{{>breadcrumbs}}{{/breadcrumbs}}
+
+    <p align="center">
+      <b><a href="/allClasses/">All Classes (excluding platform)</a></b>
+    </p>
+
+    <table align="center" border="1">
+      <tr>
+        <th>
+          {{#classHeaderLink}}{{>link}}{{/classHeaderLink}}
+        </th>
+
+        {{#hasRefCount}}
+          <th>
+            {{#refCountHeaderLink}}{{>link}}{{/refCountHeaderLink}}
+          </th>
+        {{/hasRefCount}}
+
+        <th>
+          {{#instanceCountHeaderLink}}{{>link}}{{/instanceCountHeaderLink}}
+        </th>
+
+        <th>
+          {{#totalSizeHeaderLink}}{{>link}}{{/totalSizeHeaderLink}}
+        </th>
+      </tr>
+
+      {{#histogramRows}}
+        <tr>
+          <td>
+            {{#javaClass}}{{>class}}{{/javaClass}}
+            {{#referee}}
+              {{#isNull}}
+                ({{#refsLink}}{{>link}}{{/refsLink}})
+              {{/isNull}}
+              {{^isNull}}
+                ({{#topLink}}{{>link}}{{/topLink}}, {{#chainLink}}{{>link}}{{/chainLink}})
+              {{/isNull}}
+            {{/referee}}
+          </td>
+
+          {{#hasRefCount}}
+            <td>
+              {{#refCountInstancesLink}}{{>link}}{{/refCountInstancesLink}}
+            </td>
+          {{/hasRefCount}}
+
+          <td>
+            {{#instancesLink}}{{>link}}{{/instancesLink}}
+          </td>
+
+          <td>
+            {{metricsSize}}
+          </td>
+        </tr>
+      {{/histogramRows}}
+    </table>
+  {{/content}}
+{{/layout}}

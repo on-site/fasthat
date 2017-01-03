@@ -74,7 +74,11 @@ public class EachPomDependencyTask extends Task {
             NodeList nodes = (NodeList) xpath.evaluate("/project/dependencies/dependency", root, XPathConstants.NODESET);
 
             for (int i = 0; i < nodes.getLength(); i++) {
-                result.add(new Dependency(xpath, (Element) nodes.item(i)));
+                Dependency dependency = new Dependency(xpath, (Element) nodes.item(i));
+
+                if (!dependency.isTestScope()) {
+                    result.add(dependency);
+                }
             }
 
             return result;
@@ -89,17 +93,36 @@ public class EachPomDependencyTask extends Task {
         private final String groupId;
         private final String artifactId;
         private final String version;
+        private final String scope;
 
         public Dependency(XPath xpath, Element element) throws BuildException {
             this.groupId = getNodeText(xpath, "groupId", element);
             this.artifactId = getNodeText(xpath, "artifactId", element);
             this.version = getNodeText(xpath, "version", element);
+            this.scope = getOptionalNodeText(xpath, "scope", element);
+        }
+
+        public boolean isTestScope() {
+            return "test".equals(scope);
+        }
+
+        private String getOptionalNodeText(XPath xpath, String query, Element element) throws BuildException {
+            Element node = getNode(xpath, query, element);
+
+            if (node == null) {
+                return null;
+            }
+
+            return node.getTextContent().trim();
         }
 
         private String getNodeText(XPath xpath, String query, Element element) throws BuildException {
+            return getNode(xpath, query, element).getTextContent().trim();
+        }
+
+        private Element getNode(XPath xpath, String query, Element element) throws BuildException {
             try {
-                Element node = (Element) xpath.evaluate(query, element, XPathConstants.NODE);
-                return node.getTextContent().trim();
+                return (Element) xpath.evaluate(query, element, XPathConstants.NODE);
             } catch (Exception e) {
                 throw new BuildException("Error running XPath query: " + query, e);
             }

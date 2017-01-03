@@ -1,0 +1,23 @@
+{{<layout}}
+  {{$title}}
+    {{#object}}
+      Object at {{idString}}
+    {{/object}}
+    {{^object}}
+      Debug
+    {{/object}}
+  {{/title}}
+  {{$content}}
+    {{#isUnmemoized}}
+      <p>
+        Suppliers have been unmemoized.
+      </p>
+    {{/isUnmemoized}}
+
+    <form method="POST" action="/debug/unmemoize">
+      <input type="submit" value="Unmemoize all suppliers" />
+    </form>
+
+    {{#object}}{{>javaThing}}{{/object}}
+  {{/content}}
+{{/layout}}

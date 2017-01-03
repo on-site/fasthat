@@ -1,0 +1,29 @@
+{{<layout}}
+  {{$title}}
+    {{#useNewObjects}}New{{/useNewObjects}}
+    {{#referee}}References{{/referee}}
+    {{^referee}}Instances{{/referee}}
+    of {{#javaClass}}{{name}}{{/javaClass}}
+    {{#includeSubclasses}}(including subclasses){{/includeSubclasses}}
+  {{/title}}
+  {{$content}}
+    {{#breadcrumbs}}
+      {{#javaClass}}
+        {{#hasReferrers}}
+          {{>breadcrumbs}}
+        {{/hasReferrers}}
+        {{^hasReferrers}}
+          <p>
+            <strong>{{#javaClass}}{{>class}}{{/javaClass}}</strong>
+          </p>
+        {{/hasReferrers}}
+      {{/javaClass}}
+    {{/breadcrumbs}}
+
+    {{#objects}}
+      <div>{{>javaThing}}</div>
+    {{/objects}}
+
+    <h2>Total of {{numInstances}} instances occupying {{totalSize}} bytes.</h2>
+  {{/content}}
+{{/layout}}

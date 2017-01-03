@@ -1,0 +1,31 @@
+{{<layout}}
+  {{$title}}
+    Instance Counts for All Classes
+    {{#excludePlatform}}(excluding platform){{/excludePlatform}}
+    {{^excludePlatform}}(including platform){{/excludePlatform}}
+  {{/title}}
+  {{$content}}
+    {{#classes}}
+      <div>
+        {{instancesCountWithoutSubclasses}}
+        <a href="/instances/{{urlEncodedId}}">{{instancesCountWithoutSubclassesLabel}}</a>
+        {{#hasNewSet}}(<a href="/instances/{{urlEncodedId}}?new=true">{{newInstancesCountWithoutSubclasses}} new</a>){{/hasNewSet}}
+        of {{>class}}
+      </div>
+    {{/classes}}
+
+    <h2>Total of {{instances}} instances occupying {{totalSize}} bytes.</h2>
+    <h2>Other Queries</h2>
+
+    <ul>
+      {{#excludePlatform}}
+        <li><a href="/showInstanceCounts/?platform=true">Show instance counts for all classes (including platform)</a></li>
+      {{/excludePlatform}}
+      {{^excludePlatform}}
+        <li><a href="/showInstanceCounts/">Show instance counts for all classes (excluding platform)</a></li>
+      {{/excludePlatform}}
+      <li><a href="/allClasses/?platform=true">Show All Classes (including platform)</a></li>
+      <li><a href="/allClasses/">Show All Classes (excluding platform)</a></li>
+    </ul>
+  {{/content}}
+{{/layout}}

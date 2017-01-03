@@ -1,0 +1,11 @@
+{{<layout}}
+  {{$title}}Class {{query}}{{/title}}
+  {{$content}}
+    {{#javaClass}}
+      {{>fullClass}}
+    {{/javaClass}}
+    {{^javaClass}}
+      class not found: {{query}}
+    {{/javaClass}}
+  {{/content}}
+{{/layout}}

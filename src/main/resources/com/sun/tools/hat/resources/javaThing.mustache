@@ -1,0 +1,77 @@
+{{#isNull}}
+  null
+{{/isNull}}
+
+{{^isNull}}
+  {{#javaHeapObject}}
+    {{#validId}}
+      {{#new}}
+        <a href="/object/{{hexId}}"><strong>{{modelSummary}}[new]</strong></a>
+      {{/new}}
+
+      {{^new}}
+        <a href="/object/{{hexId}}">{{modelSummary}}</a>
+      {{/new}}
+
+      {{#showingDetail}}
+        {{#collectionModel}}
+          <span class="array-collection collection">
+            {{#javaThings}}
+              <span class="collection-element">{{>javaThing}}</span>
+            {{/javaThings}}
+
+            {{#additionalSize}}
+              <span class="collection-element">&hellip;{{additionalSize}} more</span>
+            {{/additionalSize}}
+          </span>
+        {{/collectionModel}}
+
+        {{#mapModel}}
+          <span class="map-collection collection">
+            {{#entries}}
+              <span class="collection-element">
+                {{#key}}{{>javaThing}}{{/key}}
+                &rArr;
+                {{#value}}{{>javaThing}}{{/value}}
+              </span>
+            {{/entries}}
+
+            {{#additionalSize}}
+              <span class="collection-element">&hellip;{{additionalSize}} more</span>
+            {{/additionalSize}}
+          </span>
+        {{/mapModel}}
+
+        {{#objectModel}}
+          <span class="map-collection collection">
+            {{#properties}}
+              <span class="collection-element">
+                {{key}}: {{#value}}{{>javaThing}}{{/value}}
+              </span>
+            {{/properties}}
+          </span>
+        {{/objectModel}}
+
+        {{#classModel}}
+          <span class="tuple-collection collection">
+            {{#supers}}
+              <span class="collection-element">{{>javaThing}}</span>
+            {{/supers}}
+          </span>
+        {{/classModel}}
+      {{/showingDetail}}
+
+      {{^model}}
+        ({{size}} bytes)
+      {{/model}}
+    {{/validId}}
+
+    {{^validId}}
+      {{modelSummary}}
+    {{/validId}}
+  {{/javaHeapObject}}
+
+  {{^javaHeapObject}}
+    {{toString}}
+  {{/javaHeapObject}}
+{{/isNull}}

@@ -1,0 +1,35 @@
+{{<layout}}
+  {{$title}}
+    All Classes
+    {{#excludePlatform}}(excluding platform){{/excludePlatform}}
+    {{^excludePlatform}}(including platform){{/excludePlatform}}
+  {{/title}}
+  {{$content}}
+    {{#packages}}
+      <h2>{{name}}</h2>
+
+      {{#classes}}
+        <div>{{>class}} {{#validId}}[{{idString}}]{{/validId}}</div>
+      {{/classes}}
+    {{/packages}}
+
+    <h2>Other Queries</h2>
+
+    <ul>
+      {{#excludePlatform}}
+        <li><a href="/allClasses/?platform=true">All classes including platform</a></li>
+      {{/excludePlatform}}
+      {{^excludePlatform}}
+        <li><a href="/allClasses/">All classes excluding platform</a></li>
+      {{/excludePlatform}}
+      <li><a href="/showRoots/">Show all members of the rootset</a></li>
+      <li><a href="/showInstanceCounts/?platform=true">Show instance counts for all classes (including platform)</a></li>
+      <li><a href="/showInstanceCounts/">Show instance counts for all classes (excluding platform)</a></li>
+      <li><a href="/histo/">Show heap histogram</a></li>
+      <li><a href="/finalizerSummary/">Show finalizer summary</a></li>
+      {{#oqlSupported}}
+        <li><a href="/oql/">Execute Object Query Language (OQL) query</a></li>
+      {{/oqlSupported}}
+    </ul>
+  {{/content}}
+{{/layout}}

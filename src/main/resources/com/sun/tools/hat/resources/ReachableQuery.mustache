@@ -1,0 +1,32 @@
+{{<layout}}
+  {{$title}}Objects Reachable From {{query}}{{/title}}
+  {{$content}}
+    {{#reachableObjects}}
+      <p>
+        <strong>{{#root}}{{>javaThing}}{{/root}}</strong>
+      </p>
+
+      {{#things}}
+        <div>{{>javaThing}}</div>
+      {{/things}}
+
+      {{#hasUsedFields}}
+        <h3>Data Members Followed</h3>
+
+        {{#usedFields}}
+          <div>{{toString}}</div>
+        {{/usedFields}}
+      {{/hasUsedFields}}
+
+      {{#hasExcludedFields}}
+        <h3>Excluded Data Members</h3>
+
+        {{#excludedFields}}
+          <div>{{toString}}</div>
+        {{/excludedFields}}
+      {{/hasExcludedFields}}
+
+      <h2>Total of {{numInstances}} instances occupying {{totalSize}} bytes.</h2>
+    {{/reachableObjects}}
+  {{/content}}
+{{/layout}}

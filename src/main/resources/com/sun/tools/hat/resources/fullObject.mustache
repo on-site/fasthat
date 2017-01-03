@@ -1,0 +1,9 @@
+<h1>instance of {{toString}} <small>({{size}} bytes)</small></h1>
+
+<h2>Class:</h2>
+{{#clazz}}{{>class}}{{/clazz}}
+
+<h2>Instance data members:</h2>
+{{#fieldsWithValues}}
+  <div>{{#field}}{{>field}}{{/field}} : {{#value}}{{>javaThing}}{{/value}}</div>
+{{/fieldsWithValues}}

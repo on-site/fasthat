@@ -22,7 +22,8 @@
   </target>
 
   <!-- The actual build -->
-  <property name="src" value="src"/>
+  <property name="src" value="src/main/java"/>
+  <property name="resources" value="src/main/resources"/>
   <property name="build" value="${base.build}/java"/>
   <property name="lib" value="lib"/>
   <property name="bin" value="bin"/>
@@ -59,7 +60,7 @@
 
   <target name="copy-resources" depends="init">
     <copy todir="${build}/com/sun/tools/hat/resources">
-      <fileset dir="${src}/com/sun/tools/hat/resources"/>
+      <fileset dir="${resources}/com/sun/tools/hat/resources"/>
     </copy>
   </target>
 

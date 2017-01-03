@@ -1,0 +1,18 @@
+{{<layout}}
+  {{$title}}All Members of the Rootset{{/title}}
+  {{$content}}
+    {{#rootSets}}
+      <h2>{{typeName}} References</h2>
+
+      {{#roots}}
+        <div>{{>root}} :</div>
+        {{#javaThing}}<div>--&gt; {{>javaThing}}</div>{{/javaThing}}
+      {{/roots}}
+    {{/rootSets}}
+
+    <h2>Other Queries</h2>
+    <ul>
+      <li><a href="/allClasses/">Show All Classes</a></li>
+    </ul>
+  {{/content}}
+{{/layout}}

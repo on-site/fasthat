@@ -1,0 +1,22 @@
+{{<layout}}
+  {{$content}}
+    {{#memoryUsage}}
+      <p>
+        <b>Heap Utilization:</b> {{usedMemory}} / {{totalMemory}} ({{percentMemoryUsed}})
+      </p>
+    {{/memoryUsage}}
+
+    <h1>Available Queries</h1>
+
+    <ul>
+      <li><a href="/allClasses/">All classes excluding platform</a></li>
+      <li><a href="/allClasses/?platform=true">All classes including platform</a></li>
+      <li><a href="/showRoots/">Show all members of the rootset</a></li>
+      <li><a href="/showInstanceCounts/?platform=true">Show instance counts for all classes (including platform)</a></li>
+      <li><a href="/showInstanceCounts/">Show instance counts for all classes (excluding platform)</a></li>
+      <li><a href="/histo/">Show heap histogram</a></li>
+      <li><a href="/finalizerSummary/">Show finalizer summary</a></li>
+      <li><a href="/oql/">Execute Object Query Language (OQL) query</a></li>
+    </ul>
+  {{/content}}
+{{/layout}}
