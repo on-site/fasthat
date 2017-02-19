@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 On-Site.com.
+ * Copyright © 2016, 2017 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -40,17 +40,17 @@ import com.sun.tools.hat.internal.server.QueryHandler;
  * @author Mike Virata-Stone
  */
 public class ArrayElementView extends ViewModel {
-    private final int index;
+    private final long index;
     private final JavaThingView value;
 
-    public ArrayElementView(QueryHandler handler, int index, JavaThingView value) {
+    public ArrayElementView(QueryHandler handler, long index, JavaThingView value) {
         super(handler);
         this.index = index;
         this.value = value;
     }
 
     @ViewGetter
-    public int getIndex() {
+    public long getIndex() {
         return index;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 On-Site.com.
+ * Copyright © 2016, 2017 On-Site.com.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -33,9 +33,9 @@ package com.sun.tools.hat.internal.server.view;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Streams;
 import com.sun.tools.hat.internal.annotations.ViewGetter;
 import com.sun.tools.hat.internal.lang.ClassModel;
 import com.sun.tools.hat.internal.lang.CollectionModel;
@@ -62,6 +62,7 @@ import com.sun.tools.hat.internal.util.StreamIterable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -292,16 +293,11 @@ public class JavaThingView extends ViewModel {
     @ViewGetter
     public Iterable<JavaFieldView.WithValue> getFieldsWithValues() {
         if (isJavaObject()) {
-            JavaField[] fields = getClazz().toJavaClass().getFieldsForInstance();
-            JavaThing[] values = toJavaObject().getFields();
-            ImmutableList.Builder<JavaFieldView.WithValue> builder = ImmutableList.builder();
-
-            for (int i = 0; i < fields.length; ++i) {
-                builder.add(new JavaFieldView(handler, fields[i]).withValue(new JavaThingView(handler, values[i])));
-            }
-
-            return new StreamIterable<>(builder.build().stream()
-                    .sorted(Ordering.natural().onResultOf(fieldWithValue -> fieldWithValue.getField().getName())));
+            return Streams.zip(Arrays.stream(getClazz().toJavaClass().getFieldsForInstance()),
+                    Arrays.stream(toJavaObject().getFields()),
+                    (field, value) -> new JavaFieldView(handler, field).withValue(new JavaThingView(handler, value)))
+                    .sorted(Ordering.natural().onResultOf(fwv -> fwv.getField().getName()))
+                    .collect(Collectors.toList());
         }
 
         return null;
@@ -328,14 +324,9 @@ public class JavaThingView extends ViewModel {
     @ViewGetter
     public Iterable<ArrayElementView> getElements() {
         if (isJavaObjectArray()) {
-            JavaThing[] elements = toJavaObjectArray().getElements();
-            ImmutableList.Builder<ArrayElementView> builder = ImmutableList.builder();
-
-            for (int i = 0; i < elements.length; ++i) {
-                builder.add(new ArrayElementView(handler, i, new JavaThingView(handler, elements[i])));
-            }
-
-            return builder.build();
+            return Streams.mapWithIndex(Arrays.stream(toJavaObjectArray().getElements()),
+                    (element, i) -> new ArrayElementView(handler, i, new JavaThingView(handler, element)))
+                    .collect(Collectors.toList());
         }
 
         return null;
