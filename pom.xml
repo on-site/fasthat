@@ -59,12 +59,17 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>18.0</version>
+      <version>21.0</version>
     </dependency>
     <dependency>
       <groupId>com.github.spullara.mustache.java</groupId>
       <artifactId>compiler</artifactId>
       <version>0.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.dagger</groupId>
+      <artifactId>dagger</artifactId>
+      <version>1.2.5</version>
     </dependency>
     <dependency>
       <groupId>org.testng</groupId>
